@@ -1,6 +1,6 @@
-# craroo
+# conformline
 
-Get your software ready for the EU Cyber Resilience Act: SBOM, vulnerability check and the documents, from one command.
+Prepare your EU Cyber Resilience Act evidence and see what still needs doing.
 
 This project is early and not released yet. The README will explain how to
 install and use it once the first version works.
