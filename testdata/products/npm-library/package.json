@@ -1,0 +1,7 @@
+{
+  "name": "library",
+  "description": "A library with unresolved runtime dependencies and no product version.",
+  "dependencies": {
+    "unresolved": "^2.0"
+  }
+}

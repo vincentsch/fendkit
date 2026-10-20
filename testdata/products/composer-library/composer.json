@@ -1,0 +1,8 @@
+{
+  "name": "maker/library",
+  "description": "A library with unresolved runtime dependencies and no product version.",
+  "require": {
+    "php": ">=8.1",
+    "vendor/unresolved": "^2.0"
+  }
+}
