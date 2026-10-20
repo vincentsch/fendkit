@@ -13,6 +13,7 @@ import (
 
 	"github.com/vincentsch/conformline/internal/detect"
 	"github.com/vincentsch/conformline/internal/docs"
+	"github.com/vincentsch/conformline/internal/incident"
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
 	"github.com/vincentsch/conformline/internal/vulns"
@@ -56,6 +57,7 @@ type Scan struct {
 	inventory.Inventory
 }
 type Result struct {
+	Incidents    []incident.View       `json:"incidents"`
 	LegalNotice  string                `json:"legal_notice"`
 	Strict       bool                  `json:"strict"`
 	Product      detect.Product        `json:"product"`
@@ -176,7 +178,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if p.Product.Type != nil {
 		product.Type = *p.Product.Type
 	}
-	r := Result{LegalNotice: Legal, Strict: strict, Product: product, Next: []string{}, ScanIssues: []string{}, Notes: []string{Scope}, Items: []Item{}, Documents: []Document{}}
+	r := Result{Incidents: []incident.View{}, LegalNotice: Legal, Strict: strict, Product: product, Next: []string{}, ScanIssues: []string{}, Notes: []string{Scope}, Items: []Item{}, Documents: []Document{}}
 	var saved Scan
 	invOK := readJSON(root, "inventory.json", &saved)
 	var vr vulns.Report
@@ -374,7 +376,34 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 		r.Items[len(r.Items)-1].Explanation += " " + Assessment + " " + AssessmentURL
 	}
 	docItem("Incident readiness", "cra/incident-checklist.md")
-	add("Open incidents", NA, "none", "No action needed.")
+	records, err := incident.List(root)
+	if err != nil {
+		return r, fmt.Errorf("cannot read incidents: %w", err)
+	}
+	incidentState, incidentWhy := NA, "none"
+	if len(records) > 0 {
+		incidentState = Evidenced
+		explanations := []string{}
+		for _, rec := range records {
+			v := incident.Describe(rec, now)
+			r.Incidents = append(r.Incidents, v)
+			for _, stage := range v.Stages {
+				explanations = append(explanations, sentence(rec.ID+" "+stage.Name+": "+stage.Description))
+				if stage.SubmittedAt == nil {
+					incidentState = Review
+				}
+				if stage.Overdue && p.Role.Answer != "not-in-scope" {
+					policy = true
+				}
+			}
+		}
+		incidentWhy = strings.Join(explanations, " ")
+	}
+	incidentAction := "No action needed."
+	if incidentState == Review {
+		incidentAction = "Review current deadlines and filing drafts with conformline incident show <id>; a person submits in ENISA's platform."
+	}
+	add("Open incidents", incidentState, incidentWhy, incidentAction)
 	if p.Role.Answer == "not-in-scope" {
 		for i := range r.Items {
 			if i != 0 && i != 4 && i != 5 {
@@ -423,6 +452,7 @@ type action struct {
 	text                  string
 	rank, severity, count int
 	name                  string
+	due                   time.Time
 }
 
 func severity(f vulns.Finding) int {
@@ -435,6 +465,27 @@ func severity(f vulns.Finding) int {
 }
 func rankActions(r Result) []action {
 	actions := []action{}
+	if len(r.Items) > 12 && r.Items[12].State != NA {
+		for _, v := range r.Incidents {
+			for _, s := range v.Stages {
+				if s.SubmittedAt != nil {
+					continue
+				}
+				rank := 1
+				due := time.Time{}
+				if s.DueAt != nil {
+					due = *s.DueAt
+				} else {
+					rank = 4
+				}
+				if s.Overdue {
+					rank = -1
+				}
+				text := fmt.Sprintf("%s %s: %s. Review %s; conformline incident show %s.", v.Record.ID, s.Name, s.Description, s.Draft, v.Record.ID)
+				actions = append(actions, action{text: text, rank: rank, name: v.Record.ID + " " + s.Name, due: due})
+			}
+		}
+	}
 	groups := map[string][]vulns.Finding{}
 	for _, f := range r.Findings {
 		if !Resolved(f) && (f.Component.Shipped == nil || *f.Component.Shipped) {
@@ -486,10 +537,10 @@ func rankActions(r Result) []action {
 		if rank == 0 {
 			text = "Known exploited: " + text
 		}
-		actions = append(actions, action{text, rank, sev, len(findings), c.Name + " " + c.PURL})
+		actions = append(actions, action{text: text, rank: rank, severity: sev, count: len(findings), name: c.Name + " " + c.PURL})
 	}
 	for i, it := range r.Items {
-		if it.State == Evidenced || it.State == NA {
+		if i == 12 || it.State == Evidenced || it.State == NA {
 			continue
 		}
 		rank := 5
@@ -509,11 +560,14 @@ func rankActions(r Result) []action {
 		if r.Strict && it.State == Missing {
 			rank = 0
 		}
-		actions = append(actions, action{it.Action, rank, 0, 0, name})
+		actions = append(actions, action{text: it.Action, rank: rank, name: name})
 	}
 	slices.SortStableFunc(actions, func(a, b action) int {
 		if a.rank != b.rank {
 			return a.rank - b.rank
+		}
+		if (a.rank == -1 || a.rank == 1) && !a.due.Equal(b.due) {
+			return a.due.Compare(b.due)
 		}
 		if a.rank == 4 && (a.name == "" || b.name == "") {
 			return strings.Compare(a.name, b.name)

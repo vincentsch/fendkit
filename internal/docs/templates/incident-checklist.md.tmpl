@@ -16,6 +16,9 @@ When you learn of an actively exploited vulnerability or a severe incident,
 record the awareness time, including its time zone.
 Use `conformline incident new --type exploited-vulnerability --aware <RFC3339-time> --title "<summary>"`
 or select `--type severe-incident`.
+Without `--aware`, the proposed current time needs your confirmation.
+Use `conformline incident list` and `conformline incident show <id>` to see
+current deadlines and the paths to filing drafts.
 [[Name the responsible person and escalation contact.]]
 
 ## Early warning within 24 hours
@@ -38,6 +41,10 @@ For an exploited vulnerability, the deadline is 14 days after a fix or mitigatio
 Include severity, impact, any known malicious actor and details of the update or measures.
 For a severe incident, it is one month after notification.
 Include severity, impact, likely threat or root cause, applied and ongoing mitigation.
+Use `conformline incident fix-available <id> --at <RFC3339-time>` for an
+exploited vulnerability. For a severe incident, recording notification submission
+sets the final deadline from the actual filing time; until then the notification
+due time is used provisionally.
 [[Record the fix availability or notification submission time and supporting facts.]]
 
 ## Submit through ENISA
@@ -45,6 +52,9 @@ Include severity, impact, likely threat or root cause, applied and ongoing mitig
 A person submits through ENISA's Single Reporting Platform.
 Prepare an EU Login account with multi-factor authentication (MFA).
 Check the live form before submitting; Conformline only prepares filing texts.
+After filing, use `conformline incident submitted <id> --stage early-warning`
+(or `notification` or `final`), with `--at <RFC3339-time>` when recording a past
+filing. This records your filing and sends nothing.
 [[Record who submits, submission times and references.]]
 
 ## Tell affected users

@@ -45,7 +45,7 @@ func Terminal(w io.Writer, r Result) {
 		for _, it := range r.Items {
 			if it.State == state {
 				name := it.Name
-				if it.Name == "Open incidents" {
+				if it.Name == "Open incidents" && it.Explanation == "none" {
 					name += " (none)"
 				}
 				names = append(names, name)
@@ -56,7 +56,7 @@ func Terminal(w io.Writer, r Result) {
 		}
 	}
 	for _, it := range r.Items {
-		if it.Name == "SBOM" && it.State != Evidenced {
+		if it.Name == "SBOM" && it.State != Evidenced || it.Name == "Open incidents" && it.State != NA {
 			fmt.Fprintln(w, "\n"+it.Explanation+" "+it.Action)
 		}
 	}
