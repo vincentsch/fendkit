@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -228,6 +229,9 @@ func TestPartialAnswersThroughPromptGate(t *testing.T) {
 }
 
 func TestGitIdentityReadOnly(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("The extensionless shell stub cannot replace Git on Windows")
+	}
 	root := t.TempDir()
 	fake := t.TempDir()
 	marker := filepath.Join(fake, "arguments")

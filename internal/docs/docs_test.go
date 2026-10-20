@@ -10,6 +10,7 @@ import (
 
 	"github.com/vincentsch/conformline/internal/detect"
 	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/conformline/internal/version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -118,7 +119,7 @@ func TestTemplateSectionsAndLegalWording(t *testing.T) {
 			}
 			parts := strings.SplitN(text, "---", 3)
 			var m map[string]string
-			if err := yaml.Unmarshal([]byte(parts[1]), &m); err != nil || m["status"] != "draft" || m["conformline"] != "0.1.0" || m["reviewed_on"] != "" || m["reviewed_by"] != "" {
+			if err := yaml.Unmarshal([]byte(parts[1]), &m); err != nil || m["status"] != "draft" || m["conformline"] != version.Version || m["reviewed_on"] != "" || m["reviewed_by"] != "" {
 				t.Fatalf("%s: %v %v", file, m, err)
 			}
 			if !strings.Contains(text, "[[") {

@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/vincentsch/conformline/internal/version"
 	"github.com/vincentsch/conformline/internal/vulns"
 	"github.com/vincentsch/rungrad/testutil"
 )
@@ -17,6 +18,9 @@ import (
 func TestDoctorSetupCoverageAndConnections(t *testing.T) {
 	var fail atomic.Bool
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if got := r.Header.Get("User-Agent"); got != "conformline/"+version.Version {
+			t.Errorf("User-Agent = %q", got)
+		}
 		if fail.Load() {
 			w.WriteHeader(503)
 			return

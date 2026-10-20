@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/vincentsch/conformline/internal/inventory"
+	"github.com/vincentsch/conformline/internal/version"
 	"github.com/vincentsch/conformline/internal/vulns"
 )
 
@@ -136,7 +137,7 @@ func Markdown(w io.Writer, r Result) {
 	for _, s := range r.Notes {
 		fmt.Fprintln(w, md(s))
 	}
-	fmt.Fprintln(w, "\nConformline 0.1.0. Data sources: OSV.dev; GitHub Advisory Database (CC-BY 4.0); CISA KEV.\n\n"+Legal)
+	fmt.Fprintln(w, "\nConformline "+version.Version+". Data sources: OSV.dev; GitHub Advisory Database (CC-BY 4.0); CISA KEV.\n\n"+Legal)
 }
 func Shipped(c inventory.Component) string {
 	if c.Shipped == nil {
@@ -181,7 +182,7 @@ func OrderedItems(r Result) []Item {
 	return out
 }
 func HTML(w io.Writer, r Result) error {
-	t, e := template.New("report.html").Funcs(template.FuncMap{"productType": ProductType, "slice": func(values ...string) []string { return values }, "value": Value, "scan": ScanLabel, "items": OrderedItems, "paths": Paths, "shipped": Shipped, "count": func(c inventory.Component) int { return Count(r, c) }, "findings": func(c inventory.Component) []vulns.Finding {
+	t, e := template.New("report.html").Funcs(template.FuncMap{"toolVersion": func() string { return version.Version }, "productType": ProductType, "slice": func(values ...string) []string { return values }, "value": Value, "scan": ScanLabel, "items": OrderedItems, "paths": Paths, "shipped": Shipped, "count": func(c inventory.Component) int { return Count(r, c) }, "findings": func(c inventory.Component) []vulns.Finding {
 		out := []vulns.Finding{}
 		for _, f := range r.Findings {
 			if f.Component.PURL == c.PURL {

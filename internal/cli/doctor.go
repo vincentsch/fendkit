@@ -15,6 +15,7 @@ import (
 	"github.com/vincentsch/conformline/internal/detect"
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/conformline/internal/version"
 	"github.com/vincentsch/conformline/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
@@ -124,7 +125,7 @@ func probe(ctx context.Context, client *http.Client, method, endpoint, body stri
 	if err != nil {
 		return fmt.Errorf("cannot create connection check")
 	}
-	req.Header.Set("User-Agent", "conformline/0.1.0")
+	req.Header.Set("User-Agent", "conformline/"+version.Version)
 	if body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}

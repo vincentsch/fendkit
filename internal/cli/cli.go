@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
 	"github.com/vincentsch/conformline/internal/sbom"
+	"github.com/vincentsch/conformline/internal/version"
 	"github.com/vincentsch/conformline/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
@@ -39,7 +41,7 @@ type Report struct {
 func New() *rungrad.App { return newApp(vulns.NewClient()) }
 
 func newApp(client *vulns.Client) *rungrad.App {
-	app := rungrad.New(rungrad.AppConfig{Name: "conformline", Short: "Prepare your Cyber Resilience Act evidence", Long: "Find your product and its dependencies, and record what still needs review.", Version: "0.1.0", ErrorPolicy: &rungrad.ErrorPolicy{
+	app := rungrad.New(rungrad.AppConfig{Name: "conformline", Short: "Prepare your Cyber Resilience Act evidence", Long: "Find your product and its dependencies, and record what still needs review.", Version: version.Version, ErrorPolicy: &rungrad.ErrorPolicy{
 		Render: func(ctx rungrad.ErrorContext) error {
 			var pending *incomplete
 			var checked *checkExit
@@ -58,6 +60,7 @@ func newApp(client *vulns.Client) *rungrad.App {
 			return e
 		},
 	}})
+	app.Root().SetVersionTemplate(fmt.Sprintf("conformline {{.Version}} (commit %s, %s)\n", version.Commit, runtime.Version()))
 	dir := "."
 	app.Root().PersistentFlags().StringVar(&dir, "dir", ".", "Project root")
 	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find dependencies and look up known vulnerabilities", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite inventory.json, sbom.cdx.json, vulnerabilities.json and vulnerabilities.md under cra/reports/.\nExport vex.openvex.json when saved triage matches findings.\nLookups send package names, versions and advisory ids to OSV.dev, and download CISA KEV.\nPackage names and versions can reveal product information.\nExit 0 for complete lookups, 11 for offline or failed lookups.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"conformline scan", "conformline scan --offline", "conformline scan --offline --dir ./my-plugin --json", "conformline scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
@@ -111,7 +114,7 @@ func writeReport(root string, r Report, prof *profile.Profile) error {
 		return fmt.Errorf("cannot write sbom.cdx.json; check cra/reports permissions")
 	}
 	defer os.Remove(sbomFile.Name())
-	bom := sbom.New(r.Inventory, prof, sbom.Provenance{ScanID: r.ScanID, ScannedAt: r.ScannedAt, InventoryDigest: r.InventoryDigest, Complete: r.Complete, Offline: r.Offline, IncompleteReasons: r.IncompleteReasons}, "0.1.0")
+	bom := sbom.New(r.Inventory, prof, sbom.Provenance{ScanID: r.ScanID, ScannedAt: r.ScannedAt, InventoryDigest: r.InventoryDigest, Complete: r.Complete, Offline: r.Offline, IncompleteReasons: r.IncompleteReasons}, version.Version)
 	e = sbom.Write(sbomFile, bom)
 	closeErr := sbomFile.Close()
 	if e == nil {

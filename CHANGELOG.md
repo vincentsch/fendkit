@@ -1,0 +1,11 @@
+# Changelog
+
+## Unreleased
+
+- Find WordPress, Composer and npm dependencies in source and release files.
+- Prepare a CycloneDX SBOM, vulnerability findings and OpenVEX decisions.
+- Record maker decisions and create draft CRA documents without replacing existing files.
+- Show evidence status and next actions in terminal, Markdown and HTML reports.
+- Track incident reporting deadlines and prepare filing drafts.
+- Try an embedded example offline and check setup with `doctor`.
+- Build binaries for Linux, macOS and Windows, with checked downloads and build provenance.

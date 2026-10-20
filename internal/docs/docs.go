@@ -17,6 +17,7 @@ import (
 
 	"github.com/vincentsch/conformline/internal/detect"
 	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/conformline/internal/version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,6 +34,7 @@ type Result struct {
 }
 type indexEntry struct{ Path, Label, Status string }
 type data struct {
+	ToolVersion     string
 	P               *profile.Profile
 	Now             time.Time
 	ProductVersion  *string
@@ -61,7 +63,7 @@ func https(value *string) string {
 }
 func securityFields(d data) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# status: draft\n# reviewed_by:\n# reviewed_on:\n# conformline: 0.1.0\n")
+	fmt.Fprintf(&b, "# status: draft\n# reviewed_by:\n# reviewed_on:\n# conformline: %s\n", version.Version)
 	if d.P.SecurityContact.Email != nil {
 		address, err := mail.ParseAddress(*d.P.SecurityContact.Email)
 		if err == nil {
@@ -240,6 +242,7 @@ func renderTemplate(name string, funcs template.FuncMap, d data) ([]byte, error)
 		return nil, err
 	}
 	var out bytes.Buffer
+	d.ToolVersion = version.Version
 	err = t.Execute(&out, d)
 	return out.Bytes(), err
 }

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/vincentsch/conformline/internal/inventory"
+	"github.com/vincentsch/conformline/internal/version"
 )
 
 const OSVURL = "https://api.osv.dev"
@@ -53,7 +54,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body any,
 			cancel()
 			return fmt.Errorf("invalid lookup URL")
 		}
-		req.Header.Set("User-Agent", "conformline/0.1.0")
+		req.Header.Set("User-Agent", "conformline/"+version.Version)
 		if body != nil {
 			req.Header.Set("Content-Type", "application/json")
 		}

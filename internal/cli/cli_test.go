@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -19,6 +20,9 @@ func TestCommandSurface(t *testing.T) { testutil.AssertConsistent(t, New) }
 
 func TestBuiltScan(t *testing.T) {
 	binary := filepath.Join(t.TempDir(), "conformline")
+	if runtime.GOOS == "windows" {
+		binary += ".exe"
+	}
 	build := exec.Command("go", "build", "-o", binary, "../../cmd/conformline")
 	if b, e := build.CombinedOutput(); e != nil {
 		t.Fatalf("build: %s %v", b, e)
