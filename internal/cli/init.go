@@ -50,7 +50,7 @@ func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 				}
 				renderScan(w, scan)
 				renderDocuments(w, docs)
-				status.Terminal(w, checked)
+				status.Terminal(w, checked, status.OutputWidth(f.Stdout))
 			}); err != nil {
 				return err
 			}

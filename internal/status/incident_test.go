@@ -38,7 +38,7 @@ func TestIncidentActionsAndPolicyClock(t *testing.T) {
 		t.Fatal(r.Next)
 	}
 	var terminalOutput, markdownOutput, htmlOutput bytes.Buffer
-	Terminal(&terminalOutput, r)
+	Terminal(&terminalOutput, r, 80)
 	Markdown(&markdownOutput, r)
 	if e := HTML(&htmlOutput, r); e != nil {
 		t.Fatal(e)
@@ -94,7 +94,7 @@ func TestIncidentActionsAndPolicyClock(t *testing.T) {
 		t.Fatal(r.Items[12])
 	}
 	var terminal bytes.Buffer
-	Terminal(&terminal, r)
+	Terminal(&terminal, r, 80)
 	if strings.Contains(terminal.String(), "Open incidents (none)") {
 		t.Fatal(terminal.String())
 	}

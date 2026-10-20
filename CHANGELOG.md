@@ -10,3 +10,5 @@
 - Try an embedded example offline and check setup with `doctor`.
 - Build binaries for Linux, macOS and Windows, with checked downloads and build provenance.
 - Check product releases in GitHub Actions, keep reports and optionally attach SBOM/VEX evidence.
+- Follow the first run with coding-agent instructions, a complete README, status screenshots and evidence guides.
+- Keep terminal checks compact and wrap status groups to the terminal width.

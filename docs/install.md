@@ -46,3 +46,15 @@ or run `go install ./cmd/conformline` to install into your Go bin directory.
 An untagged source build reports `dev`. Once a tag is public, a versioned install
 such as `go install github.com/vincentsch/conformline/cmd/conformline@v0.1.0`
 uses its module version.
+
+When Go is available and the public module is reachable, the latest tagged
+version can also be installed with:
+
+```bash
+go install github.com/vincentsch/conformline/cmd/conformline@latest
+```
+
+If there is no public release yet, report that limitation; do not skip checksum
+verification to install a binary. Source builds are available to contributors
+with checkout access. Return to [the README](../README.md#install-and-try-the-example)
+for the complete first run, or use [agent instructions](../AGENTS.md).

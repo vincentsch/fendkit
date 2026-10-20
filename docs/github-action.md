@@ -90,3 +90,14 @@ failures. A fatal scan or missing current SBOM prevents attachment.
 Reruns replace only the files supplied by that invocation. If a rerun has no
 local VEX, an older remote VEX asset remains. Remove that outdated release
 asset manually. The Action never deletes release assets.
+
+## Review the evidence locally
+
+Use [the README quickstart](../README.md#start-on-your-plugin) for the first
+interview. [cra.yml](cra-yml.md) holds saved answers; [inventory](inventory.md)
+explains release boundaries. Read [status items](status-items.md) and
+[vulnerabilities](vulnerabilities.md) before choosing a failure policy.
+Reports cover third-party components rather than your own code. Zero findings
+cannot prove the absence of vulnerabilities. Outputs are drafts and give no
+legal advice. Review [documents](documents.md) locally; the Action does not
+mark them reviewed or file [incident reports](incidents.md).

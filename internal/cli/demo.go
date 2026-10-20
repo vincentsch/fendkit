@@ -101,7 +101,7 @@ func demoCommand(client *vulns.Client) *rungrad.Command {
 		if err = f.WriteResult(r, func(w io.Writer) {
 			renderScan(w, result.Scan)
 			renderDocuments(w, result.Documents)
-			status.Terminal(w, result.Status)
+			status.Terminal(w, result.Status, status.OutputWidth(f.Stdout))
 			if r.LookupHint != "" {
 				fmt.Fprintln(w, r.LookupHint)
 			}

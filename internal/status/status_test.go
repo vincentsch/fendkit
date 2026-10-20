@@ -311,7 +311,7 @@ func TestRankingAndReports(t *testing.T) {
 		}
 	}
 	var terminal, markdown, page bytes.Buffer
-	Terminal(&terminal, r)
+	Terminal(&terminal, r, 80)
 	Markdown(&markdown, r)
 	if e := HTML(&page, r); e != nil {
 		t.Fatal(e)
@@ -335,8 +335,13 @@ func TestRankingAndReports(t *testing.T) {
 				t.Fatal(banned)
 			}
 		}
-		if !strings.Contains(html.UnescapeString(s), Legal) || !strings.Contains(html.UnescapeString(s), Scope) {
+		if !strings.Contains(html.UnescapeString(s), Legal) {
 			t.Fatal("missing legal wording")
+		}
+	}
+	for _, s := range []string{markdown.String(), page.String()} {
+		if !strings.Contains(html.UnescapeString(s), Scope) {
+			t.Fatal("missing report scope wording")
 		}
 	}
 	if strings.Contains(page.String(), "<script") || strings.Contains(page.String(), "<link") || strings.Contains(page.String(), "<img") {
@@ -460,7 +465,7 @@ func TestIncompleteScanExplanation(t *testing.T) {
 		t.Fatal(r.Items[5])
 	}
 	var terminal bytes.Buffer
-	Terminal(&terminal, r)
+	Terminal(&terminal, r, 80)
 	if strings.Count(terminal.String(), "Offline scan:") != 1 || strings.Contains(terminal.String(), "not run Run") {
 		t.Fatal(terminal.String())
 	}
@@ -469,7 +474,7 @@ func TestCurrentSBOMDoesNotAskForImmediateRescan(t *testing.T) {
 	root, p, _, _ := fixture(t)
 	r := evaluate(t, root, p, false)
 	var terminal bytes.Buffer
-	Terminal(&terminal, r)
+	Terminal(&terminal, r, 80)
 	if strings.Contains(terminal.String(), "The SBOM belongs") || strings.Contains(terminal.String(), "Run conformline scan.") {
 		t.Fatal(terminal.String())
 	}
@@ -485,14 +490,90 @@ func TestDeclarationReminderAndStewardNote(t *testing.T) {
 		t.Fatal(r.Items[10])
 	}
 	var terminal, markdown, page bytes.Buffer
-	Terminal(&terminal, r)
+	Terminal(&terminal, r, 80)
 	Markdown(&markdown, r)
 	if e := HTML(&page, r); e != nil {
 		t.Fatal(e)
 	}
-	for _, text := range []string{terminal.String(), markdown.String(), page.String()} {
+	for _, text := range []string{markdown.String(), page.String()} {
 		if !strings.Contains(text, "does not assess steward obligations under Art. 24.") || !strings.Contains(text, "sign before placing on the market from December 11, 2027.") {
 			t.Fatal("missing maker responsibility wording", text)
+		}
+	}
+	if strings.Contains(terminal.String(), "Art. 24") || strings.Contains(terminal.String(), "sign before placing") {
+		t.Fatal("report details leaked into terminal output", terminal.String())
+	}
+}
+
+func TestCompactTerminalStatus(t *testing.T) {
+	root, p, s, v := fixture(t)
+	p.Role.Answer = "open-source-steward"
+	p.Classification.Answer = "important-class-i"
+	for _, file := range docs.Files {
+		put(t, root, file, "Draft: [[review]]")
+	}
+	s.Complete, v.Complete = false, false
+	s.IncompleteReasons = []string{"Offline scan: vulnerability lookups have not run"}
+	v.Reason = s.IncompleteReasons
+	saveEvidence(t, root, s, v)
+	r := evaluate(t, root, p, false)
+	for _, width := range []int{60, 80, 100, 240} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			var terminal bytes.Buffer
+			Terminal(&terminal, r, width)
+			text := terminal.String()
+			for _, detail := range []string{Scope, Assessment, "sign before placing", "fill remaining placeholders", "Art. 24", "Coverage gap:"} {
+				if strings.Contains(text, detail) {
+					t.Fatalf("report detail %q in terminal: %s", detail, text)
+				}
+			}
+			for _, want := range []string{"Conformline  ", "\nNext\n", r.Next[0], r.Next[1], r.Next[2], r.Items[4].Explanation, r.ScanIssues[0], "\nFull status: cra/reports/status.html\n" + Legal + "\n"} {
+				if !strings.Contains(text, want) {
+					t.Fatalf("missing %q in terminal: %s", want, text)
+				}
+			}
+			if strings.Contains(text, "  4.") {
+				t.Fatal("terminal should highlight only three next actions")
+			}
+			_, rows, ok := strings.Cut(text, "\nStatus\n")
+			if !ok {
+				t.Fatal("missing status block")
+			}
+			rows, _, _ = strings.Cut(rows, "\n\n")
+			wrapped := false
+			for _, line := range strings.Split(rows, "\n") {
+				if len(line) > width {
+					t.Fatalf("status line exceeds width %d: %q", width, line)
+				}
+				if strings.HasPrefix(line, "   ") {
+					wrapped = true
+					if !strings.HasPrefix(line, strings.Repeat(" ", 17)) || line[17] == ' ' {
+						t.Fatalf("continuation must align with item names: %q", line)
+					}
+				}
+			}
+			if wrapped != (width < 240) {
+				t.Fatalf("unexpected wrapping at width %d: %s", width, rows)
+			}
+			normalized := strings.Join(strings.Fields(rows), " ")
+			if !strings.Contains(normalized, "Security contact, Disclosure policy, SBOM, Known vulnerabilities, Support period, User information, Risk assessment, Technical documentation, EU declaration of conformity, Incident readiness") || !strings.Contains(normalized, "Open incidents (none)") {
+				t.Fatal("wrapped output lost status items", rows)
+			}
+		})
+	}
+	if got := OutputWidth(&bytes.Buffer{}); got != 80 {
+		t.Fatalf("redirected output width = %d, want 80", got)
+	}
+	var markdown, page bytes.Buffer
+	Markdown(&markdown, r)
+	if err := HTML(&page, r); err != nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{markdown.String(), page.String()} {
+		for _, detail := range []string{Scope, Assessment, "sign before placing", "Art. 24"} {
+			if !strings.Contains(html.UnescapeString(text), detail) {
+				t.Fatalf("report lost %q", detail)
+			}
 		}
 	}
 }
@@ -525,7 +606,7 @@ func TestStatusLegalWordingAcrossEvidenceAndRoles(t *testing.T) {
 			}
 			r := evaluate(t, root, p, false)
 			var terminal, markdown, page bytes.Buffer
-			Terminal(&terminal, r)
+			Terminal(&terminal, r, 80)
 			Markdown(&markdown, r)
 			if e := HTML(&page, r); e != nil {
 				t.Fatal(e)

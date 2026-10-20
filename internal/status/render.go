@@ -14,6 +14,7 @@ import (
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/version"
 	"github.com/vincentsch/conformline/internal/vulns"
+	"golang.org/x/term"
 )
 
 //go:embed report.html
@@ -29,7 +30,19 @@ func ScanLabel(r Result) string {
 	}
 	return label + ", incomplete or stale"
 }
-func Terminal(w io.Writer, r Result) {
+
+// OutputWidth uses the destination rather than the renderer's buffered writer.
+// Redirected output uses a stable width for readable logs and copied examples.
+func OutputWidth(w io.Writer) int {
+	if file, ok := w.(interface{ Fd() uintptr }); ok {
+		if width, _, err := term.GetSize(int(file.Fd())); err == nil && width > 0 {
+			return width
+		}
+	}
+	return 80
+}
+
+func Terminal(w io.Writer, r Result, width int) {
 	fmt.Fprintf(w, "Conformline  %s %s (%s)   scan: %s\n\nNext\n", Value(r.Product.Name), Value(r.Product.Version), ProductType(r.Product.Type), ScanLabel(r))
 	for i, a := range r.Next {
 		if i == 3 {
@@ -53,7 +66,7 @@ func Terminal(w io.Writer, r Result) {
 			}
 		}
 		if len(names) > 0 {
-			fmt.Fprintf(w, "  %-14s %s\n", state, strings.Join(names, ", "))
+			statusLine(w, state, names, width)
 		}
 	}
 	for _, it := range r.Items {
@@ -64,21 +77,28 @@ func Terminal(w io.Writer, r Result) {
 	for _, s := range r.ScanIssues {
 		fmt.Fprintln(w, s)
 	}
-	for _, g := range r.CoverageGaps {
-		fmt.Fprintln(w, "Coverage gap: "+g.Message)
-	}
-	for _, note := range r.Notes {
-		fmt.Fprintln(w, note)
-	}
-	for _, it := range r.Items {
-		if strings.Contains(it.Explanation, Assessment) || it.Name == "EU declaration of conformity" && it.State != NA {
-			fmt.Fprintln(w, it.Explanation)
-		}
-	}
 	if r.DryRun {
 		fmt.Fprintln(w, "DRY RUN: would write status.md, status.html and cra/README.md")
 	}
 	fmt.Fprintln(w, "\nFull status: cra/reports/status.html\n"+Legal)
+}
+
+func statusLine(w io.Writer, state State, names []string, width int) {
+	prefix := fmt.Sprintf("  %-14s ", state)
+	indent := strings.Repeat(" ", len(prefix))
+	line := prefix
+	for _, word := range strings.Fields(strings.Join(names, ", ")) {
+		if len(line) > len(prefix) {
+			if len(line)+1+len(word) > width {
+				fmt.Fprintln(w, line)
+				line = indent
+			} else {
+				line += " "
+			}
+		}
+		line += word
+	}
+	fmt.Fprintln(w, line)
 }
 func md(s string) string {
 	s = html.EscapeString(s)

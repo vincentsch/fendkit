@@ -53,7 +53,7 @@ func checkCommand(dir *string) *rungrad.Command {
 					}
 				}
 			}
-			if e = f.WriteResult(r, func(w io.Writer) { status.Terminal(w, r) }); e != nil {
+			if e = f.WriteResult(r, func(w io.Writer) { status.Terminal(w, r, status.OutputWidth(f.Stdout)) }); e != nil {
 				return e
 			}
 			if r.ExitCode != 0 {

@@ -68,3 +68,15 @@ Confirm release attachments use the event repository and tag, including SBOM-onl
 runs and VEX reruns with replacement. A missing local VEX must leave an older remote
 asset alone; remove it manually when outdated. These hosted checks are unrun locally.
 See [the Action guide](docs/github-action.md) and [consumer example](examples/github-workflow.yml).
+
+## Public onboarding checks still needed
+
+After publication, run the README's copied prompt from an unrelated maker
+repository using only the public URL. Verify fresh installation via the latest
+installer, a pinned installer, native Windows checksums and `go install @latest`.
+The local onboarding acceptance uses an already built binary because the origin
+is private; it does not prove public access. Follow the README commands with a
+fresh maker profile and an existing profile, checking preservation of edited
+documents and unknown decisions. Confirm the published Action reference from
+that same product release. Reuse the hosted checks above for permissions,
+uploads and attachments; local stubs do not replace hosted evidence.
