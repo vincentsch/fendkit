@@ -15,10 +15,17 @@ has `DataTables 1.10.20` in its banner after the license text (byte 446).
 moment, dompurify and sweetalert2 carry the version inside the code
 (`c.version="2.24.0"`, `t.version="2.0.8"`, `Je.version="9.10.0"`).
 
+`selectwoo@1.0.1.js` is WooCommerce's fork of Select2, copied from The
+Events Calendar 6.18.2 (`common/vendor/tribe-selectWoo/dist/js/select2.min.js`).
+Its banner says `Select2 1.0.1`, but the code contains `selectWoo` (from byte
+67886). The expected result is SelectWoo 1.0.1
+(`pkg:github/woocommerce/selectwoo@1.0.1`), not Select2: SelectWoo is not on
+npm and no advisory database covers it, so it is listed and not looked up.
+
 ## Licenses
 
 The samples are excerpts of third-party libraries. They keep their original
 license headers and stay under their own licenses, not under this
 repository's MIT license: DOMPurify is MPL-2.0 or Apache-2.0; every other
-library here is MIT, except Isotope. Isotope is GPLv3 for open source use, so
+library here (including SelectWoo) is MIT, except Isotope. Isotope is GPLv3 for open source use, so
 `isotope-layout@3.0.6.js` contains only its banner comment and no code.
