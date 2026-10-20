@@ -14,6 +14,7 @@ import (
 	documents "github.com/vincentsch/conformline/internal/docs"
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/conformline/internal/status"
 	"github.com/vincentsch/conformline/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
@@ -22,12 +23,12 @@ type initResult struct {
 	Profile   string           `json:"profile"`
 	Scan      Report           `json:"scan"`
 	Documents documents.Result `json:"documents"`
-	Next      string           `json:"next"`
+	Status    status.Result    `json:"status"`
 }
 
 func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 	return &rungrad.Command{Use: "init", Short: "Record your decisions and prepare draft CRA documents",
-		Long:     "Show the detected product and dependencies, then ask for your decisions.\nWrite cra.yml, scan dependencies and create missing draft documents.\nUnknown answers stay unknown. An answers file is a partial cra.yml; null suppresses a question.\nWith --no-prompt, omitted maker decisions stay unknown. Detection still supplies product facts.\nLookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.\nExit 0 for complete lookups, 11 for offline or incomplete lookups; documents are still created.\nRefuse to replace cra.yml; use scan, docs and check after setup.\nUse --dry-run to preview without writes, lookups or Git subprocesses.",
+		Long:     "Show the detected product and dependencies, then ask for your decisions.\nWrite cra.yml, scan dependencies and create missing draft documents.\nUnknown answers stay unknown. An answers file is a partial cra.yml; null suppresses a question.\nWith --no-prompt, omitted maker decisions stay unknown. Detection still supplies product facts.\nLookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.\nFinish with the evidence status, even after incomplete lookups. Exit 10 for policy failures, 11 for incomplete or stale evidence; otherwise 0.\nRefuse to replace cra.yml; use scan, docs and check after setup.\nUse --dry-run to preview without writes, lookups or Git subprocesses.",
 		Examples: []string{"conformline init", "conformline init --answers answers.yml --no-prompt --release dist/plugin.zip", "conformline init --offline --no-prompt"},
 		Mutates:  true, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Args: cobra.NoArgs,
 		Configure: func(cmd *cobra.Command) {
@@ -113,7 +114,11 @@ func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 			if err != nil {
 				return rungrad.NewError(2, err.Error())
 			}
-			result := initResult{Profile: "cra.yml", Scan: scan, Documents: docs, Next: "Next: run `conformline check`"}
+			checked, err := evaluateStatus(*dir, p, false, f.DryRun())
+			if err != nil {
+				return err
+			}
+			result := initResult{Profile: "cra.yml", Scan: scan, Documents: docs, Status: checked}
 			if err = f.WriteResult(result, func(w io.Writer) {
 				if f.DryRun() {
 					fmt.Fprintln(w, "DRY RUN: would write cra.yml")
@@ -122,12 +127,12 @@ func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 				}
 				renderScan(w, scan)
 				renderDocuments(w, docs)
-				fmt.Fprintln(w, result.Next)
+				status.Terminal(w, checked)
 			}); err != nil {
 				return err
 			}
-			if !scan.Complete {
-				return &incomplete{}
+			if checked.ExitCode != 0 {
+				return &checkExit{checked.ExitCode}
 			}
 			return nil
 		}}
@@ -147,6 +152,13 @@ func docsCommand(dir *string) *rungrad.Command {
 			}
 			r, err := documents.Generate(*dir, p, time.Now().UTC(), f.DryRun())
 			if err != nil {
+				return rungrad.NewError(2, err.Error())
+			}
+			checked, err := status.Evaluate(*dir, p, time.Now().UTC(), false)
+			if err != nil {
+				return rungrad.NewError(2, err.Error())
+			}
+			if err = documents.WriteIndex(*dir, p, time.Now().UTC(), checked.Next, f.DryRun()); err != nil {
 				return rungrad.NewError(2, err.Error())
 			}
 			return f.WriteResult(r, func(w io.Writer) { renderDocuments(w, r) })

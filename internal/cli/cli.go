@@ -42,7 +42,8 @@ func newApp(client *vulns.Client) *rungrad.App {
 	app := rungrad.New(rungrad.AppConfig{Name: "conformline", Short: "Prepare your Cyber Resilience Act evidence", Long: "Find your product and its dependencies, and record what still needs review.", Version: "0.1.0", ErrorPolicy: &rungrad.ErrorPolicy{
 		Render: func(ctx rungrad.ErrorContext) error {
 			var pending *incomplete
-			if errors.As(ctx.Err, &pending) {
+			var checked *checkExit
+			if errors.As(ctx.Err, &pending) || errors.As(ctx.Err, &checked) {
 				return nil
 			}
 			if ctx.MachineOutput {
@@ -78,6 +79,7 @@ func newApp(client *vulns.Client) *rungrad.App {
 	app.AddCommand(triageCommand(&dir))
 	app.AddCommand(initCommand(&dir, client))
 	app.AddCommand(docsCommand(&dir))
+	app.AddCommand(checkCommand(&dir))
 	return app
 }
 

@@ -72,7 +72,7 @@ func TestInitScanAndDocumentFlow(t *testing.T) {
 			if err := json.Unmarshal(b, &result); err != nil {
 				t.Fatal(err)
 			}
-			if !result.Scan.Complete || result.Next != "Next: run `conformline check`" {
+			if !result.Scan.Complete || len(result.Status.Items) != 13 {
 				t.Fatal(string(b))
 			}
 			p, err := profile.Load(filepath.Join(root, "cra.yml"))
@@ -327,7 +327,7 @@ func TestInterviewReleaseCorrection(t *testing.T) {
 					t.Fatal(file, err)
 				}
 			}
-			if !strings.Contains(r.Stdout, "Next: run `conformline check`") {
+			if !strings.Contains(r.Stdout, "Full status: cra/reports/status.html") {
 				t.Fatal(r.Stdout)
 			}
 		})

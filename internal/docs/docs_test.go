@@ -243,3 +243,38 @@ func TestReportDatesFromContent(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexUsesSavedStatusTimeAndEscapesActions(t *testing.T) {
+	root := t.TempDir()
+	p := &profile.Profile{Version: 1, Role: profile.Role{Answer: "not-in-scope"}}
+	reportDir := filepath.Join(root, "cra/reports")
+	if e := os.MkdirAll(reportDir, 0755); e != nil {
+		t.Fatal(e)
+	}
+	for _, file := range []string{"status.md", "status.html"} {
+		if e := os.WriteFile(filepath.Join(reportDir, file), []byte("# Status\n\nScan: 2026-10-20 12:00 UTC, incomplete or stale\n"), 0644); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if e := WriteIndex(root, p, time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC), []string{"Review <adapter> & [source](https://example.com)."}, false); e != nil {
+		t.Fatal(e)
+	}
+	b, e := os.ReadFile(filepath.Join(root, "cra/README.md"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	text := string(b)
+	if strings.Count(text, "Scan: 2026-10-20 12:00 UTC, incomplete or stale") != 2 || strings.Contains(text, "2026-11-01") || strings.Contains(text, "<adapter>") || !strings.Contains(text, "&lt;adapter&gt;") {
+		t.Fatal(text)
+	}
+	if e = WriteIndex(root, p, time.Now(), []string{}, false); e != nil {
+		t.Fatal(e)
+	}
+	b, e = os.ReadFile(filepath.Join(root, "cra/README.md"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if !strings.Contains(string(b), "No outstanding actions.") {
+		t.Fatal(string(b))
+	}
+}

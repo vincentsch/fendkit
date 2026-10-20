@@ -17,6 +17,12 @@ Product: {{fact .P.Product.Name "product name"}}, version {{fact .ProductVersion
 Recorded role: {{.P.Role.Answer}}.
 Recorded classification: {{.P.Classification.Answer}}.
 
+## Next steps
+
+{{if .StatusEvaluated}}{{range .Next}}- {{escape .}}
+{{else}}No outstanding actions.
+{{end}}{{else}}Run `conformline check` to see the current next actions.
+{{end}}
 ## Documents
 
 {{range .Documents}}- [{{.Label}}]({{.Path}}): {{.Status}}

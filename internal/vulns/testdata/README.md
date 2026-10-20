@@ -20,3 +20,8 @@ Advisories: [OSV.dev](https://osv.dev/) and
 
 API and range formats follow the [OSV batch API](https://google.github.io/osv.dev/post-v1-querybatch/)
 and [OSV schema](https://ossf.github.io/osv-schema/).
+
+`status-findings.json` is authored ranking data for the status reports, with
+independent advisory groups and no KEV matches. Counts and source severity
+labels are frozen test facts, not live advisory counts. Lodash represents a
+non-shipped development dependency and must not displace shipped updates.

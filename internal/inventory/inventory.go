@@ -315,6 +315,8 @@ func buildMetadata(root string, product detect.Product) (Inventory, error) {
 	return inv, nil
 }
 func (inv Inventory) Digest() (string, error) {
+	// Discovery hints do not change the component evidence. Release replay may skip those hints.
+	inv.Product.Notes = nil
 	b, e := json.Marshal(inv)
 	if e != nil {
 		return "", e

@@ -1,0 +1,8 @@
+[
+  {"name":"guzzlehttp/guzzle","ecosystem":"Packagist","version":"7.4.0","fixed":"7.4.1","severity":"high","groups":13},
+  {"name":"jquery-validation","ecosystem":"npm","version":"1.19.1","fixed":"1.19.2","severity":"high","groups":4},
+  {"name":"moment","ecosystem":"npm","version":"2.24.0","fixed":"2.29.4","severity":"high","groups":2},
+  {"name":"guzzlehttp/psr7","ecosystem":"Packagist","version":"2.1.0","fixed":"2.1.1","severity":"moderate","groups":6},
+  {"name":"select2","ecosystem":"npm","version":"4.0.5","fixed":"4.0.6","severity":"moderate","groups":1},
+  {"name":"lodash","ecosystem":"npm","version":"4.17.15","fixed":"4.17.21","severity":"critical","groups":20}
+]

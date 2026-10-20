@@ -80,7 +80,7 @@ func Detect(root string) (Product, error) {
 			if stable := header(b, "Stable tag"); stable != "" {
 				p.Evidence = append(p.Evidence, "readme.txt")
 				if p.Version != nil && stable != "trunk" && stable != *p.Version {
-					p.Notes = append(p.Notes, "readme.txt Stable tag differs from the WordPress header; align both versions")
+					p.Notes = append(p.Notes, fmt.Sprintf("readme.txt Stable tag %s differs from WordPress header version %s; review and align both versions", stable, *p.Version))
 				}
 			}
 		} else if !os.IsNotExist(e) {

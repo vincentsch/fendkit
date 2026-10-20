@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io/fs"
 	"net/mail"
 	"net/url"
@@ -32,12 +33,14 @@ type Result struct {
 }
 type indexEntry struct{ Path, Label, Status string }
 type data struct {
-	P              *profile.Profile
-	Now            time.Time
-	ProductVersion *string
-	Documents      []indexEntry
-	Reports        []indexEntry
-	Message        string
+	P               *profile.Profile
+	Now             time.Time
+	ProductVersion  *string
+	Documents       []indexEntry
+	Reports         []indexEntry
+	Message         string
+	Next            []string
+	StatusEvaluated bool
 }
 
 func fact(value *string, hint string) string {
@@ -96,42 +99,14 @@ func securityFields(d data) string {
 
 func Generate(root string, p *profile.Profile, now time.Time, dry bool) (Result, error) {
 	r := Result{Created: []string{}, Existing: []string{}, DryRun: dry}
-	d := data{P: p, Now: now, ProductVersion: p.Product.Version}
-	// Detection supplies the current version when there is no explicit override.
-	if d.ProductVersion == nil {
-		if product, err := detect.Detect(root); err == nil {
-			d.ProductVersion = product.Version
-		}
-	}
-	// Saved reports can still supply facts when the source no longer identifies a version.
-	if b, err := os.ReadFile(filepath.Join(root, "cra/reports/inventory.json")); err == nil {
-		var saved struct {
-			Product   struct{ Version *string }
-			ScannedAt time.Time `json:"scanned_at"`
-		}
-		if json.Unmarshal(b, &saved) == nil && d.ProductVersion == nil {
-			d.ProductVersion = saved.Product.Version
-		}
-	}
-	if p.Role.Answer == "not-in-scope" {
-		r.Message = "Your recorded role is not-in-scope. Manufacturer documents are skipped; the decision and scan stay."
-	} else if p.Role.Answer == "open-source-steward" {
-		r.Message = "Conformline v0.1 follows the manufacturer preparation steps. It does not assess steward obligations under Art. 24."
-	} else if p.Role.Answer == "unknown" {
-		r.Message = "Your role needs your decision first. These manufacturer documents remain preparation drafts."
-	}
-	d.Message = r.Message
+	d := documentData(root, p, now)
+	r.Message = d.Message
 	funcs := template.FuncMap{"fact": fact, "securityFields": securityFields}
 	for _, file := range Files {
 		path := filepath.Join(root, filepath.FromSlash(file))
 		_, err := os.Lstat(path)
 		if err == nil {
 			r.Existing = append(r.Existing, file)
-			link := filepath.Base(file)
-			if file == "SECURITY.md" {
-				link = "../SECURITY.md"
-			}
-			d.Documents = append(d.Documents, indexEntry{link, file, documentStatus(path)})
 			continue
 		}
 		if !os.IsNotExist(err) {
@@ -164,31 +139,74 @@ func Generate(root string, p *profile.Profile, now time.Time, dry bool) (Result,
 			}
 		}
 		r.Created = append(r.Created, file)
-		link := filepath.Base(file)
-		if file == "SECURITY.md" {
-			link = "../SECURITY.md"
-		}
-		d.Documents = append(d.Documents, indexEntry{link, file, "draft"})
 	}
-	for _, file := range []string{"inventory.json", "sbom.cdx.json", "vulnerabilities.json", "vulnerabilities.md", "vex.openvex.json"} {
+	return r, WriteIndex(root, p, now, nil, dry)
+}
+
+func documentData(root string, p *profile.Profile, now time.Time) data {
+	d := data{P: p, Now: now, ProductVersion: p.Product.Version}
+	// Detection supplies the current version when there is no explicit override.
+	if d.ProductVersion == nil {
+		if product, err := detect.Detect(root); err == nil {
+			d.ProductVersion = product.Version
+		}
+	}
+	// Saved reports can still supply facts when the source no longer identifies a version.
+	if b, err := os.ReadFile(filepath.Join(root, "cra/reports/inventory.json")); err == nil {
+		var saved struct {
+			Product   struct{ Version *string }
+			ScannedAt time.Time `json:"scanned_at"`
+		}
+		if json.Unmarshal(b, &saved) == nil && d.ProductVersion == nil {
+			d.ProductVersion = saved.Product.Version
+		}
+	}
+	if p.Role.Answer == "not-in-scope" {
+		d.Message = "Your recorded role is not-in-scope. Manufacturer documents are skipped; the decision and scan stay."
+	} else if p.Role.Answer == "open-source-steward" {
+		d.Message = "Conformline v0.1 follows the manufacturer preparation steps. It does not assess steward obligations under Art. 24."
+	} else if p.Role.Answer == "unknown" {
+		d.Message = "Your role needs your decision first. These manufacturer documents remain preparation drafts."
+	}
+	return d
+}
+
+// WriteIndex preserves the preparation guidance and adds the evaluated next actions.
+func WriteIndex(root string, p *profile.Profile, now time.Time, next []string, dry bool) error {
+	d := documentData(root, p, now)
+	d.Next = next
+	d.StatusEvaluated = next != nil
+	for _, file := range Files {
+		path := filepath.Join(root, filepath.FromSlash(file))
+		if _, err := os.Lstat(path); err == nil {
+			link := filepath.Base(file)
+			if file == "SECURITY.md" {
+				link = "../SECURITY.md"
+			}
+			d.Documents = append(d.Documents, indexEntry{link, file, documentStatus(path)})
+		} else if !os.IsNotExist(err) {
+			return fmt.Errorf("cannot inspect %s; check project permissions", file)
+		}
+	}
+	for _, file := range []string{"inventory.json", "sbom.cdx.json", "vulnerabilities.json", "vulnerabilities.md", "vex.openvex.json", "status.md", "status.html"} {
 		path := filepath.Join(root, "cra/reports", file)
 		if _, err := os.Stat(path); err == nil {
 			label := reportDescription(path)
 			d.Reports = append(d.Reports, indexEntry{"reports/" + file, file, label})
 		}
 	}
-	b, err := renderTemplate("README.md.tmpl", funcs, d)
+	b, err := renderTemplate("README.md.tmpl", template.FuncMap{"fact": fact, "escape": markdownText}, d)
 	if err != nil {
-		return r, err
+		return err
 	}
 	if !dry {
 		if err = os.MkdirAll(filepath.Join(root, "cra"), 0755); err != nil {
-			return r, fmt.Errorf("cannot create cra; check project permissions")
+			return fmt.Errorf("cannot create cra; check project permissions")
 		}
 		// Replace the index through a temporary file, leaving symlink targets untouched.
 		f, err := os.CreateTemp(filepath.Join(root, "cra"), ".index-*")
 		if err != nil {
-			return r, fmt.Errorf("cannot write cra/README.md; check project permissions")
+			return fmt.Errorf("cannot write cra/README.md; check project permissions")
 		}
 		defer os.Remove(f.Name())
 		_, err = f.Write(b)
@@ -203,11 +221,15 @@ func Generate(root string, p *profile.Profile, now time.Time, dry bool) (Result,
 			err = os.Rename(f.Name(), filepath.Join(root, "cra/README.md"))
 		}
 		if err != nil {
-			return r, fmt.Errorf("cannot replace cra/README.md; check project permissions")
+			return fmt.Errorf("cannot replace cra/README.md; check project permissions")
 		}
 	}
-	return r, nil
+	return nil
 }
+func markdownText(s string) string {
+	return strings.NewReplacer("|", "&#124;", "\n", "<br>", "\r", "", "[", "&#91;", "]", "&#93;", "`", "&#96;", "*", "&#42;", "_", "&#95;").Replace(html.EscapeString(s))
+}
+
 func renderTemplate(name string, funcs template.FuncMap, d data) ([]byte, error) {
 	b, err := fs.ReadFile(templates, "templates/"+name)
 	if err != nil {
@@ -246,6 +268,17 @@ func documentStatus(path string) string {
 
 // Report dates come from report content, never from filesystem timestamps.
 func reportDescription(path string) string {
+	if filepath.Base(path) == "status.md" || filepath.Base(path) == "status.html" {
+		b, err := os.ReadFile(filepath.Join(filepath.Dir(path), "status.md"))
+		if err == nil {
+			for _, line := range strings.Split(string(b), "\n") {
+				if strings.HasPrefix(line, "Scan: ") {
+					return line
+				}
+			}
+		}
+		return "Saved status report; scan date unavailable"
+	}
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return "Saved report; unreadable"

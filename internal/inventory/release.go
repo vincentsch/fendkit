@@ -18,8 +18,9 @@ import (
 )
 
 type Options struct {
-	Release *string
-	Profile *profile.Profile
+	Release       *string
+	ReplayRelease bool
+	Profile       *profile.Profile
 }
 
 func Build(root string, product detect.Product) (Inventory, error) {
@@ -62,6 +63,9 @@ func ProductPURL(root string, p detect.Product) string {
 
 func selectRelease(root string, p *detect.Product, opts Options) (*string, error) {
 	selected := opts.Release
+	if opts.ReplayRelease && selected == nil {
+		return nil, nil
+	}
 	if selected == nil && opts.Profile != nil {
 		selected = opts.Profile.Product.Release
 	}
