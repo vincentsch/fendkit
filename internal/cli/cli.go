@@ -81,6 +81,8 @@ func newApp(client *vulns.Client) *rungrad.App {
 	app.AddCommand(docsCommand(&dir))
 	app.AddCommand(checkCommand(&dir))
 	app.AddCommand(incidentCommand(&dir, time.Now))
+	app.AddCommand(doctorCommand(&dir, client))
+	app.AddCommand(demoCommand(client))
 	return app
 }
 

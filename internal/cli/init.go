@@ -37,88 +37,11 @@ func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 			cmd.Flags().Bool("offline", false, "Skip vulnerability lookups and mark the scan incomplete")
 		},
 		Run: func(f *rungrad.Factory, cmd *cobra.Command, _ []string) error {
-			path := filepath.Join(*dir, "cra.yml")
-			if _, err := os.Lstat(path); err == nil {
-				return rungrad.NewError(1, "cra.yml already exists; use conformline scan, conformline docs and conformline check")
-			} else if !os.IsNotExist(err) {
-				return rungrad.NewError(2, "Cannot inspect cra.yml; check project permissions")
-			}
-			p := &profile.Profile{Version: 1, Role: profile.Role{Answer: "unknown"}, Classification: profile.Classification{Answer: "unknown"}}
-			answers, _ := cmd.Flags().GetString("answers")
-			if answers != "" {
-				var err error
-				p, err = profile.Load(answers)
-				if err != nil {
-					return rungrad.NewError(1, "Cannot read --answers: "+safeError(err))
-				}
-			}
-			product, err := detect.Detect(*dir)
-			if err != nil {
-				return rungrad.NewError(2, err.Error())
-			}
-			if p.Product.Version != nil {
-				product.Version = p.Product.Version
-			}
-			var release *string
-			if cmd.Flags().Changed("release") {
-				value, _ := cmd.Flags().GetString("release")
-				release = &value
-			}
-			inv, err := inventory.BuildWithOptions(*dir, product, inventory.Options{Release: release, Profile: p})
-			if err != nil {
-				return rungrad.NewError(2, err.Error())
-			}
-			// Only found facts are printed before the interview; scan results come afterwards.
-			if f.Flags == nil || (!f.Flags.JSON && f.Flags.JQ == "" && f.Flags.Template == "") {
-				renderFound(f.Stderr, Report{Inventory: inv})
-			}
-			if !p.HasAnswer("product.name") {
-				p.Product.Name = product.Name
-			}
-			if !p.HasAnswer("product.type") {
-				p.Product.Type = detect.String(product.Type)
-			}
-			if !p.HasAnswer("product.description") {
-				p.Product.Description = product.Description
-			}
-			if release == nil && !p.HasAnswer("product.release") {
-				release = inv.Release
-			}
-			if err = conductInterview(f, p, *dir, product, release); err != nil {
-				return err
-			}
-			if !f.DryRun() && (p.Role.DecidedBy == nil && !p.HasAnswer("role.decided_by") || p.Classification.DecidedBy == nil && !p.HasAnswer("classification.decided_by")) {
-				command := exec.CommandContext(cmd.Context(), "git", "-C", *dir, "config", "user.name")
-				name, _ := command.Output()
-				if !p.HasAnswer("role.decided_by") {
-					p.Role.DecidedBy = detect.String(string(bytes.TrimSpace(name)))
-				}
-				if !p.HasAnswer("classification.decided_by") {
-					p.Classification.DecidedBy = detect.String(string(bytes.TrimSpace(name)))
-				}
-			}
-			p.AddGuidance()
-			if !f.DryRun() {
-				if err = p.Save(path); err != nil {
-					if _, ok := err.(*os.PathError); ok {
-						return rungrad.NewError(2, "Cannot write cra.yml; check project permissions and free space")
-					}
-					return rungrad.NewError(1, "Cannot save cra.yml: "+safeError(err))
-				}
-			}
-			scan, err := scanProject(f, cmd, *dir, client, p)
+			result, err := initialize(f, cmd, *dir, client, nil)
 			if err != nil {
 				return err
 			}
-			docs, err := documents.Generate(*dir, p, time.Now().UTC(), f.DryRun())
-			if err != nil {
-				return rungrad.NewError(2, err.Error())
-			}
-			checked, err := evaluateStatus(*dir, p, false, f.DryRun())
-			if err != nil {
-				return err
-			}
-			result := initResult{Profile: "cra.yml", Scan: scan, Documents: docs, Status: checked}
+			scan, docs, checked := result.Scan, result.Documents, result.Status
 			if err = f.WriteResult(result, func(w io.Writer) {
 				if f.DryRun() {
 					fmt.Fprintln(w, "DRY RUN: would write cra.yml")
@@ -136,6 +59,95 @@ func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 			}
 			return nil
 		}}
+}
+
+func initialize(f *rungrad.Factory, cmd *cobra.Command, dir string, client *vulns.Client, supplied *profile.Profile) (initResult, error) {
+	path := filepath.Join(dir, "cra.yml")
+	if _, err := os.Lstat(path); err == nil {
+		return initResult{}, rungrad.NewError(1, "cra.yml already exists; use conformline scan, conformline docs and conformline check")
+	} else if !os.IsNotExist(err) {
+		return initResult{}, rungrad.NewError(2, "Cannot inspect cra.yml; check project permissions")
+	}
+	p := supplied
+	if p == nil {
+		p = &profile.Profile{Version: 1, Role: profile.Role{Answer: "unknown"}, Classification: profile.Classification{Answer: "unknown"}}
+		answers, _ := cmd.Flags().GetString("answers")
+		if answers != "" {
+			var err error
+			p, err = profile.Load(answers)
+			if err != nil {
+				return initResult{}, rungrad.NewError(1, "Cannot read --answers: "+safeError(err))
+			}
+		}
+	}
+	product, err := detect.Detect(dir)
+	if err != nil {
+		return initResult{}, rungrad.NewError(2, err.Error())
+	}
+	if p.Product.Version != nil {
+		product.Version = p.Product.Version
+	}
+	var release *string
+	if cmd.Flags().Changed("release") {
+		value, _ := cmd.Flags().GetString("release")
+		release = &value
+	}
+	inv, err := inventory.BuildWithOptions(dir, product, inventory.Options{Release: release, Profile: p})
+	if err != nil {
+		return initResult{}, rungrad.NewError(2, err.Error())
+	}
+	// Only found facts are printed before the interview; scan results come afterwards.
+	if f.Flags == nil || (!f.Flags.JSON && f.Flags.JQ == "" && f.Flags.Template == "") {
+		renderFound(f.Stderr, Report{Inventory: inv})
+	}
+	if !p.HasAnswer("product.name") {
+		p.Product.Name = product.Name
+	}
+	if !p.HasAnswer("product.type") {
+		p.Product.Type = detect.String(product.Type)
+	}
+	if !p.HasAnswer("product.description") {
+		p.Product.Description = product.Description
+	}
+	if release == nil && !p.HasAnswer("product.release") {
+		release = inv.Release
+	}
+	if err = conductInterview(f, p, dir, product, release); err != nil {
+		return initResult{}, err
+	}
+	if !f.DryRun() && (p.Role.DecidedBy == nil && !p.HasAnswer("role.decided_by") || p.Classification.DecidedBy == nil && !p.HasAnswer("classification.decided_by")) {
+		command := exec.CommandContext(cmd.Context(), "git", "-C", dir, "config", "user.name")
+		name, _ := command.Output()
+		if !p.HasAnswer("role.decided_by") {
+			p.Role.DecidedBy = detect.String(string(bytes.TrimSpace(name)))
+		}
+		if !p.HasAnswer("classification.decided_by") {
+			p.Classification.DecidedBy = detect.String(string(bytes.TrimSpace(name)))
+		}
+	}
+	p.AddGuidance()
+	if !f.DryRun() {
+		if err = p.Save(path); err != nil {
+			if _, ok := err.(*os.PathError); ok {
+				return initResult{}, rungrad.NewError(2, "Cannot write cra.yml; check project permissions and free space")
+			}
+			return initResult{}, rungrad.NewError(1, "Cannot save cra.yml: "+safeError(err))
+		}
+	}
+	scan, err := scanProject(f, cmd, dir, client, p)
+	if err != nil {
+		return initResult{}, err
+	}
+	docs, err := documents.Generate(dir, p, time.Now().UTC(), f.DryRun())
+	if err != nil {
+		return initResult{}, rungrad.NewError(2, err.Error())
+	}
+	checked, err := evaluateStatus(dir, p, false, f.DryRun())
+	if err != nil {
+		return initResult{}, err
+	}
+	result := initResult{Profile: "cra.yml", Scan: scan, Documents: docs, Status: checked}
+	return result, nil
 }
 
 func docsCommand(dir *string) *rungrad.Command {

@@ -1,0 +1,13 @@
+version: 1
+manufacturer:
+  name: Acme Plugins GmbH (demo)
+role:
+  answer: manufacturer
+  decided_by: Demo User
+classification:
+  categories: []
+  decided_by: Demo User
+security_contact:
+  email: security@example.com
+support:
+  end: '{{support_end}}'
