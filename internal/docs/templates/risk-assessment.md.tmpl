@@ -1,0 +1,147 @@
+---
+status: draft
+reviewed_by: ""
+reviewed_on: ""
+conformline: 0.1.0
+---
+
+# Cybersecurity risk assessment
+
+This draft needs your review. Replace each [[placeholder]] with your evidence.
+Conformline helps prepare evidence and does not give legal advice.
+
+## Intended purpose and use environment
+
+Product: {{fact .P.Product.Name "product name"}} {{fact .ProductVersion "version"}}.
+{{fact .P.Product.Description "intended purpose"}}
+[[Describe expected use, foreseeable misuse, deployment and trust boundaries.]]
+
+## Assets
+
+[[List data, functions and systems that need protection.]]
+
+## Threats
+
+[[Describe threats, likelihood, impact and the risks you accept or mitigate.]]
+
+## Appropriate security for the risks
+
+[[Explain how the product's cybersecurity level matches the assessed risks.]]
+
+## (a) Known exploitable vulnerabilities
+
+Explain how you review and address known exploitable vulnerabilities. See [findings](reports/vulnerabilities.md).
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (b) Secure defaults and reset
+
+Describe secure default configuration and restoring the original state.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (c) Security updates
+
+Describe update installation, automatic updates enabled by default, opt-out and notices.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (d) Unauthorised access
+
+Describe authentication, access control and reporting possible unauthorised access.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (e) Confidentiality
+
+Describe protection of stored, processed and transmitted data.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (f) Integrity
+
+Describe protection of data, commands, programs and settings, and corruption reports.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (g) Data minimisation
+
+Describe how you limit data to the intended purpose.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (h) Availability
+
+Describe continuity of essential functions after incidents and denial-of-service attacks.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (i) Effects on other systems
+
+Describe how you limit disruption of other devices and networks.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (j) Attack surfaces
+
+Describe exposed interfaces and how you limit them.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (k) Exploit mitigation
+
+Describe measures that limit incident impact.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (l) Security activity records
+
+Describe internal security monitoring and the user opt-out.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## (m) Removal and transfer of data
+
+Describe permanent secure removal of data and settings, and secure transfer where possible.
+
+Applies: [[yes, no with reason, or unknown]].
+How met: [[measures and remaining work]].
+Evidence: [[tests, review or document links]].
+
+## Third-party components and due diligence
+
+See the [SBOM](reports/sbom.cdx.json), [inventory](reports/inventory.json)
+and [known vulnerabilities](reports/vulnerabilities.md).
+Conformline checks third-party components; it does not check your own source code.
+A scan without findings does not prove the absence of vulnerabilities.
+[[Record component selection, upstream review, fixes and remaining coverage gaps.]]
+
+## Review and changes
+
+[[Name the owner and explain when the assessment is updated.]]
+
+Requirement: Art. 13(2)–(3), Art. 13(5), Annex I Part I.

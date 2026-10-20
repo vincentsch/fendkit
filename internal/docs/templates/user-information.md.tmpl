@@ -1,0 +1,68 @@
+---
+status: draft
+reviewed_by: ""
+reviewed_on: ""
+conformline: 0.1.0
+---
+
+# Information and instructions for users
+
+This draft needs your review. Replace each [[placeholder]] with your evidence.
+Conformline helps prepare evidence and does not give legal advice.
+
+## 1. Manufacturer and contact
+
+Name: {{fact .P.Manufacturer.Name "manufacturer name"}}.
+Postal address: {{fact .P.Manufacturer.Address "manufacturer postal address"}}.
+Website: {{fact .P.Manufacturer.Website "manufacturer website"}}.
+Digital contact: {{fact .P.SecurityContact.Email "contact email"}}.
+
+## 2. Reporting vulnerabilities
+
+Contact: {{fact .P.SecurityContact.Email "security email"}}.
+Reporting page: {{fact .P.SecurityContact.URL "HTTPS reporting page"}}.
+Disclosure policy: {{fact .P.SecurityContact.PolicyURL "published policy URL"}}.
+See the [draft policy](disclosure-policy.md).
+
+## 3. Product identity
+
+Name: {{fact .P.Product.Name "product name"}}.
+Type: {{fact .P.Product.Type "product type"}}.
+Version: {{fact .ProductVersion "product version"}}.
+[[Add other identifiers needed to distinguish this release.]]
+
+## 4. Purpose and security environment
+
+{{fact .P.Product.Description "intended purpose"}}
+[[Describe essential functions, security properties and the required environment.]]
+
+## 5. Risks and foreseeable misuse
+
+[[Explain known risks and reasonably foreseeable misuse, with precautions.]]
+
+## 6. EU declaration
+
+[[Add the published declaration URL where applicable after review and signing.]]
+The [local declaration](eu-declaration-of-conformity.md) is an unsigned draft.
+
+## 7. Security support
+
+Version line: {{fact .P.Support.Versions "version line"}}.
+Support ends: {{fact .P.Support.End "support end date"}}.
+Updates: {{fact .P.Support.Updates "update delivery"}}.
+See the [support statement](support-period.md).
+
+## 8. Secure use throughout the product lifetime
+
+[[Give secure setup and everyday use instructions.]]
+[[Explain how product changes affect data security.]]
+[[Explain installation of security updates and turning automatic updates off.]]
+[[Explain secure decommissioning and permanent removal of data and settings.]]
+[[Give integration instructions where the product becomes part of another product.]]
+
+## 9. Software bill of materials
+
+The [local SBOM](reports/sbom.cdx.json) lists detected third-party components.
+[[Decide whether to share it with users and, if so, give its published location.]]
+
+Requirement: Annex II items 1–9.

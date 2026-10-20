@@ -63,61 +63,12 @@ func newApp(client *vulns.Client) *rungrad.App {
 		cmd.Flags().String("release", "", "Release ZIP or folder, relative to --dir (overrides product.release)")
 		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups and mark the scan incomplete")
 	}, Run: func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
-		p, e := detect.Detect(dir)
-		if e != nil {
-			return rungrad.NewError(2, e.Error())
+		r, err := scanProject(f, cmd, dir, client, nil)
+		if err != nil {
+			return err
 		}
-		prof, e := profile.Load(filepath.Join(dir, "cra.yml"))
-		if e != nil && !os.IsNotExist(e) {
-			return rungrad.NewError(1, "Cannot load cra.yml: "+safeError(e)+"; correct cra.yml and run conformline scan again")
-		}
-		if prof != nil && prof.Product.Version != nil {
-			p.Version = prof.Product.Version
-			if p.DetectedVersion != nil && *p.Version != *p.DetectedVersion {
-				p.Notes = append(p.Notes, "product.version overrides the detected version; review both versions in inventory.json")
-			}
-		}
-		var release *string
-		if cmd.Flags().Changed("release") {
-			value, _ := cmd.Flags().GetString("release")
-			release = &value
-		}
-		inv, e := inventory.BuildWithOptions(dir, p, inventory.Options{Release: release, Profile: prof})
-		if e != nil {
-			return rungrad.NewError(2, e.Error())
-		}
-		digest, e := inv.Digest()
-		if e != nil {
-			return e
-		}
-		id := make([]byte, 16)
-		if _, e = rand.Read(id); e != nil {
-			return rungrad.NewError(2, "Cannot create scan identity; run conformline scan again")
-		}
-		offline, _ := cmd.Flags().GetBool("offline")
-		// A preview avoids disclosing package information through lookups.
-		findings, reasons := client.Lookup(cmd.Context(), inv, offline || f.DryRun())
-		if f.DryRun() && !offline {
-			reasons = []string{"Dry run: vulnerability lookups have not run"}
-		}
-		r := Report{ScanID: hex.EncodeToString(id), ScannedAt: time.Now().UTC(), ProductVersion: inv.Product.Version, InventoryDigest: digest, Complete: len(reasons) == 0, Offline: offline, DryRun: f.DryRun(), Output: "cra/reports/inventory.json", IncompleteReasons: reasons, Inventory: inv}
-		vr := vulns.Report{ScanID: r.ScanID, ScannedAt: r.ScannedAt, ProductVersion: r.ProductVersion, ProductPURL: inv.Product.PURL, InventoryDigest: digest, Complete: r.Complete, Reason: reasons, Findings: findings, CoverageGaps: inv.CoverageGaps}
-		vulns.Apply(&vr, prof)
-		r.FindingCount = len(vr.Findings)
-		if _, e = vulns.VEX(vr, prof); e != nil {
-			return rungrad.NewError(1, e.Error())
-		}
-
-		if !f.DryRun() {
-			if e := vulns.Write(dir, vr, prof); e != nil {
-				return rungrad.NewError(2, e.Error())
-			}
-			if e := writeReport(dir, r, prof); e != nil {
-				return rungrad.NewError(2, e.Error())
-			}
-		}
-		if e := f.WriteResult(r, func(w io.Writer) { render(w, r) }); e != nil {
-			return e
+		if err = f.WriteResult(r, func(w io.Writer) { render(w, r) }); err != nil {
+			return err
 		}
 		if !r.Complete {
 			return &incomplete{}
@@ -125,6 +76,8 @@ func newApp(client *vulns.Client) *rungrad.App {
 		return nil
 	}})
 	app.AddCommand(triageCommand(&dir))
+	app.AddCommand(initCommand(&dir, client))
+	app.AddCommand(docsCommand(&dir))
 	return app
 }
 
@@ -186,6 +139,10 @@ func writeReport(root string, r Report, prof *profile.Profile) error {
 	return nil
 }
 func render(w io.Writer, r Report) {
+	renderFound(w, r)
+	renderScan(w, r)
+}
+func renderFound(w io.Writer, r Report) {
 	labels := map[string]string{"wordpress-plugin": "WordPress plugin", "wordpress-theme": "WordPress theme", "composer-package": "Composer package", "npm-package": "npm package", "other": "Product", "application": "Application"}
 	name := "unknown"
 	if r.Product.Name != nil {
@@ -249,6 +206,8 @@ func render(w io.Writer, r Report) {
 	if r.Product.Version == nil {
 		fmt.Fprintln(w, "  Next               Set product.version in cra.yml; the product version is unknown")
 	}
+}
+func renderScan(w io.Writer, r Report) {
 	if r.DryRun {
 		fmt.Fprintln(w, "\nDRY RUN: would write "+r.Output+" and cra/reports/sbom.cdx.json, vulnerabilities.json, vulnerabilities.md and matching VEX; no changes were made")
 	} else {
@@ -334,4 +293,66 @@ func renderBundled(w io.Writer, components []inventory.Component) {
 			fmt.Fprintln(w, "  Note               "+c.Note)
 		}
 	}
+}
+
+func scanProject(f *rungrad.Factory, cmd *cobra.Command, dir string, client *vulns.Client, supplied *profile.Profile) (Report, error) {
+	p, e := detect.Detect(dir)
+	if e != nil {
+		return Report{}, rungrad.NewError(2, e.Error())
+	}
+	prof := supplied
+	var eLoad error
+	if prof == nil {
+		prof, eLoad = profile.Load(filepath.Join(dir, "cra.yml"))
+	}
+	e = eLoad
+	if e != nil && !os.IsNotExist(e) {
+		return Report{}, rungrad.NewError(1, "Cannot load cra.yml: "+safeError(e)+"; correct cra.yml and run conformline scan again")
+	}
+	if prof != nil && prof.Product.Version != nil {
+		p.Version = prof.Product.Version
+		if p.DetectedVersion != nil && *p.Version != *p.DetectedVersion {
+			p.Notes = append(p.Notes, "product.version overrides the detected version; review both versions in inventory.json")
+		}
+	}
+	var release *string
+	if cmd.Flags().Changed("release") {
+		value, _ := cmd.Flags().GetString("release")
+		release = &value
+	}
+	inv, e := inventory.BuildWithOptions(dir, p, inventory.Options{Release: release, Profile: prof})
+	if e != nil {
+		return Report{}, rungrad.NewError(2, e.Error())
+	}
+	digest, e := inv.Digest()
+	if e != nil {
+		return Report{}, e
+	}
+	id := make([]byte, 16)
+	if _, e = rand.Read(id); e != nil {
+		return Report{}, rungrad.NewError(2, "Cannot create scan identity; run conformline scan again")
+	}
+	offline, _ := cmd.Flags().GetBool("offline")
+	// A preview avoids disclosing package information through lookups.
+	findings, reasons := client.Lookup(cmd.Context(), inv, offline || f.DryRun())
+	if f.DryRun() && !offline {
+		reasons = []string{"Dry run: vulnerability lookups have not run"}
+	}
+	r := Report{ScanID: hex.EncodeToString(id), ScannedAt: time.Now().UTC(), ProductVersion: inv.Product.Version, InventoryDigest: digest, Complete: len(reasons) == 0, Offline: offline, DryRun: f.DryRun(), Output: "cra/reports/inventory.json", IncompleteReasons: reasons, Inventory: inv}
+	vr := vulns.Report{ScanID: r.ScanID, ScannedAt: r.ScannedAt, ProductVersion: r.ProductVersion, ProductPURL: inv.Product.PURL, InventoryDigest: digest, Complete: r.Complete, Reason: reasons, Findings: findings, CoverageGaps: inv.CoverageGaps}
+	vulns.Apply(&vr, prof)
+	r.FindingCount = len(vr.Findings)
+	if _, e = vulns.VEX(vr, prof); e != nil {
+		return Report{}, rungrad.NewError(1, e.Error())
+	}
+
+	if !f.DryRun() {
+		if e := vulns.Write(dir, vr, prof); e != nil {
+			return Report{}, rungrad.NewError(2, e.Error())
+		}
+		if e := writeReport(dir, r, prof); e != nil {
+			return Report{}, rungrad.NewError(2, e.Error())
+		}
+	}
+	return r, nil
 }

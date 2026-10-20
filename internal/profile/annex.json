@@ -1,0 +1,222 @@
+[
+  {
+    "id": "i-1",
+    "name": "identity management systems and privileged access management software and hardware, including authentication and access control readers, including biometric readers",
+    "explanation": "Controls who can sign in and what they can access.",
+    "examples": [
+      "An identity provider",
+      "A privileged access manager"
+    ]
+  },
+  {
+    "id": "i-2",
+    "name": "standalone and embedded browsers",
+    "explanation": "Displays and runs web pages as a core function.",
+    "examples": [
+      "A desktop browser",
+      "An embedded browser"
+    ]
+  },
+  {
+    "id": "i-3",
+    "name": "password managers",
+    "explanation": "Stores and fills passwords for users.",
+    "examples": [
+      "A password vault",
+      "A password manager plugin"
+    ]
+  },
+  {
+    "id": "i-4",
+    "name": "software that searches for, removes, or quarantines malicious software",
+    "explanation": "Finds or removes malicious software.",
+    "examples": [
+      "An antivirus application",
+      "A malware quarantine tool"
+    ]
+  },
+  {
+    "id": "i-5",
+    "name": "products with digital elements with the function of virtual private network (VPN)",
+    "explanation": "Provides a private network connection over another network.",
+    "examples": [
+      "A VPN client",
+      "A VPN gateway"
+    ]
+  },
+  {
+    "id": "i-6",
+    "name": "network management systems",
+    "explanation": "Manages or monitors network devices and connections.",
+    "examples": [
+      "A network administration console"
+    ]
+  },
+  {
+    "id": "i-7",
+    "name": "security information and event management (SIEM) systems",
+    "explanation": "Collects and analyses security events across systems.",
+    "examples": [
+      "A SIEM server"
+    ]
+  },
+  {
+    "id": "i-8",
+    "name": "boot managers",
+    "explanation": "Selects and starts an operating system.",
+    "examples": [
+      "A boot loader"
+    ]
+  },
+  {
+    "id": "i-9",
+    "name": "public key infrastructure and digital certificate issuance software",
+    "explanation": "Issues or manages digital certificates and public keys.",
+    "examples": [
+      "A certificate authority server"
+    ]
+  },
+  {
+    "id": "i-10",
+    "name": "physical and virtual network interfaces",
+    "explanation": "Connects a system to a network through a physical or virtual interface.",
+    "examples": [
+      "A virtual network adapter"
+    ]
+  },
+  {
+    "id": "i-11",
+    "name": "operating systems",
+    "explanation": "Provides the base system on which applications run.",
+    "examples": [
+      "A Linux distribution"
+    ]
+  },
+  {
+    "id": "i-12",
+    "name": "routers, modems intended for the connection to the internet, and switches",
+    "explanation": "Routes or switches network traffic, including internet connections.",
+    "examples": [
+      "Router firmware",
+      "An internet modem"
+    ]
+  },
+  {
+    "id": "i-13",
+    "name": "microprocessors with security-related functionalities",
+    "explanation": "This hardware category covers microprocessors with security functions.",
+    "examples": [
+      "A processor with secure boot"
+    ]
+  },
+  {
+    "id": "i-14",
+    "name": "microcontrollers with security-related functionalities",
+    "explanation": "This hardware category covers microcontrollers with security functions.",
+    "examples": [
+      "A secure IoT microcontroller"
+    ]
+  },
+  {
+    "id": "i-15",
+    "name": "application specific integrated circuits (ASIC) and field-programmable gate arrays (FPGA) with security-related functionalities",
+    "explanation": "This hardware category covers ASICs and FPGAs with security functions.",
+    "examples": [
+      "A security FPGA"
+    ]
+  },
+  {
+    "id": "i-16",
+    "name": "smart home general purpose virtual assistants",
+    "explanation": "Provides a general purpose voice or virtual assistant in a smart home.",
+    "examples": [
+      "Smart speaker assistant software"
+    ]
+  },
+  {
+    "id": "i-17",
+    "name": "smart home products with security functionalities, including smart door locks, security cameras, baby monitoring systems and alarm systems",
+    "explanation": "This hardware category covers smart home products whose purpose includes security.",
+    "examples": [
+      "A smart door lock",
+      "A security camera"
+    ]
+  },
+  {
+    "id": "i-18",
+    "name": "internet connected toys covered by Directive 2009/48/EC that have social interactive features (e.g. speaking or filming) or that have location tracking features",
+    "explanation": "This hardware category covers connected toys with social interaction or location tracking.",
+    "examples": [
+      "A connected talking toy"
+    ]
+  },
+  {
+    "id": "i-19",
+    "name": "personal wearable products to be worn or placed on a human body that have a health monitoring (such as tracking) purpose and to which Regulation (EU) 2017/745 or (EU) 2017/746 do not apply, or personal wearable products that are intended for the use by and for children",
+    "explanation": "This hardware category covers health tracking wearables outside the named medical rules and wearables for children.",
+    "examples": [
+      "A fitness tracker",
+      "A child location watch"
+    ]
+  },
+  {
+    "id": "ii-1",
+    "name": "hypervisors and container runtime systems that support virtualised execution of operating systems and similar environments",
+    "explanation": "Runs isolated operating systems or similar virtual environments.",
+    "examples": [
+      "A hypervisor",
+      "A container runtime"
+    ]
+  },
+  {
+    "id": "ii-2",
+    "name": "firewalls, intrusion detection and prevention systems",
+    "explanation": "Filters traffic or detects and prevents intrusions.",
+    "examples": [
+      "A software firewall",
+      "An intrusion prevention system"
+    ]
+  },
+  {
+    "id": "ii-3",
+    "name": "tamper-resistant microprocessors",
+    "explanation": "This hardware category covers microprocessors designed to resist tampering.",
+    "examples": [
+      "A tamper-resistant processor"
+    ]
+  },
+  {
+    "id": "ii-4",
+    "name": "tamper-resistant microcontrollers",
+    "explanation": "This hardware category covers microcontrollers designed to resist tampering.",
+    "examples": [
+      "A tamper-resistant controller"
+    ]
+  },
+  {
+    "id": "iv-1",
+    "name": "hardware devices with security boxes",
+    "explanation": "This hardware category covers devices with security boxes.",
+    "examples": [
+      "A hardware security box"
+    ]
+  },
+  {
+    "id": "iv-2",
+    "name": "smart meter gateways within smart metering systems as defined in Article 2, point (23) of Directive (EU) 2019/944 and other devices for advanced security purposes, including for secure cryptoprocessing",
+    "explanation": "This hardware category covers smart meter gateways and advanced security devices.",
+    "examples": [
+      "A smart meter gateway",
+      "A hardware cryptoprocessor"
+    ]
+  },
+  {
+    "id": "iv-3",
+    "name": "smartcards or similar devices, including secure elements",
+    "explanation": "This hardware category covers smartcards and similar secure devices.",
+    "examples": [
+      "A smartcard",
+      "An embedded secure element"
+    ]
+  }
+]

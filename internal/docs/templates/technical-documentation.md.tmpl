@@ -1,0 +1,94 @@
+---
+status: draft
+reviewed_by: ""
+reviewed_on: ""
+conformline: 0.1.0
+---
+
+# Technical documentation
+
+This draft needs your review. Replace each [[placeholder]] with your evidence.
+Conformline helps prepare evidence and does not give legal advice.
+
+## 1. General description
+
+Product: {{fact .P.Product.Name "product name"}}, {{fact .P.Product.Type "type"}},
+version {{fact .ProductVersion "version"}}.
+{{fact .P.Product.Description "intended purpose"}}
+[[List security-relevant software versions and, for hardware, illustrations.]]
+See [user information](user-information.md).
+
+## 2. Design, development, production and vulnerability handling
+
+[[Describe architecture, components, production and monitoring, and their validation.]]
+See the [SBOM](reports/sbom.cdx.json), [disclosure policy](disclosure-policy.md),
+[reporting contact](../SECURITY.md) and [update delivery](support-period.md).
+
+### 2.1. Components and vulnerabilities
+
+See [inventory](reports/inventory.json) and [findings](reports/vulnerabilities.md).
+[[Record how you identify and document components and vulnerabilities.]]
+
+### 2.2. Fixes and separate security updates
+
+[[Explain how fixes are delivered without delay and separated from features where feasible.]]
+
+### 2.3. Regular security testing
+
+[[Describe your security testing and review schedule, including your own code.]]
+
+### 2.4. Published vulnerability information
+
+[[Describe advisories after a fix: product, impact, severity and user actions.
+Record the reasons for any justified delay.]]
+
+### 2.5. Coordinated disclosure
+
+See [disclosure policy](disclosure-policy.md).
+[[Record who enforces it and how it is used.]]
+
+### 2.6. Reporting contact
+
+See [SECURITY.md](../SECURITY.md) and [security.txt](security.txt).
+[[Record proof that users can reach the published contact.]]
+
+### 2.7. Secure update distribution
+
+Updates: {{fact .P.Support.Updates "secure update delivery"}}.
+[[Describe verification and timely distribution of fixes and mitigations.]]
+
+### 2.8. Free security updates and user advice
+
+[[Explain delivery without delay and free of charge, with advice for users.
+Record any agreed exception for a tailor-made business product.]]
+
+## 3. Cybersecurity risk assessment
+
+See [risk assessment](risk-assessment.md).
+[[Record how Annex I Part I applies and any remaining work.]]
+
+## 4. Basis for the support period
+
+See [support period](support-period.md).
+[[Record expected use, available information and the reasoning for the end date.]]
+
+## 5. Standards and specifications
+
+[[List standards, common specifications or schemes applied, with versions.
+Where none apply, explain how the essential requirements are met.]]
+
+## 6. Test reports
+
+[[Link tests and reviews showing how Annex I Parts I and II are met.]]
+
+## 7. EU declaration
+
+See the [unsigned draft](eu-declaration-of-conformity.md).
+[[Add the signed declaration after the responsible person completes review.]]
+
+## 8. SBOM for authorities
+
+See the [SBOM](reports/sbom.cdx.json).
+[[Describe how you provide it on a reasoned request from a market surveillance authority.]]
+
+Requirement: Annex VII points 1–8; Annex I Part II points 1–8.

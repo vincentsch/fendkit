@@ -107,6 +107,23 @@ func selectRelease(root string, p *detect.Product, opts Options) (*string, error
 	return nil, nil
 }
 
+// ValidateRelease checks an interview answer before it becomes a saved release boundary.
+func ValidateRelease(root string, product detect.Product, path string) error {
+	selected, err := selectRelease(root, &product, Options{Release: &path})
+	if err != nil {
+		return err
+	}
+	if selected == nil {
+		return fmt.Errorf("release pattern needs product.version; use a literal release path while the version is unknown")
+	}
+	tree, close, err := openRelease(root, *selected)
+	if err != nil {
+		return err
+	}
+	defer close()
+	return releaseProduct(tree, product)
+}
+
 func openRelease(root, selected string) (fs.FS, func(), error) {
 	filename := selected
 	if !filepath.IsAbs(filename) {

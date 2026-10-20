@@ -1,0 +1,63 @@
+---
+status: draft
+reviewed_by: ""
+reviewed_on: ""
+conformline: 0.1.0
+---
+
+# CRA preparation documents
+
+Conformline writes this index on every run. Edit the linked documents instead.
+{{if .Message}}
+{{.Message}}
+{{end}}
+## Product and decisions
+
+Product: {{fact .P.Product.Name "product name"}}, version {{fact .ProductVersion "product version"}}.
+Recorded role: {{.P.Role.Answer}}.
+Recorded classification: {{.P.Classification.Answer}}.
+
+## Documents
+
+{{range .Documents}}- [{{.Label}}]({{.Path}}): {{.Status}}
+{{else}}No manufacturer documents were created.
+{{end}}
+{{if ne .P.Role.Answer "not-in-scope"}}Each draft needs your review. Replace [[placeholders]], then set status,
+reviewed_by and reviewed_on. security.txt keeps these fields in comments.{{end}}
+
+## Saved reports
+
+{{range .Reports}}- [{{.Label}}]({{.Path}}): {{.Status}}
+{{else}}No saved reports are available. Run `conformline scan`.
+{{end}}
+Lookups send package names, versions and advisory ids to OSV.dev and download
+CISA KEV. Package information can reveal details about your product.
+Advisory sources: OSV, GitHub Advisory Database (CC-BY 4.0), CISA KEV.
+A failed lookup stays incomplete. A scan without findings does not prove
+the absence of vulnerabilities. Conformline checks third-party components,
+not your own source code.
+
+{{if ne .P.Role.Answer "not-in-scope"}}## Publish the reporting contact
+
+Review [security.txt](security.txt), replace its placeholders and publish it
+over HTTPS at `/.well-known/security.txt` on your product's domain.
+Contact must contain a mailto: email URI or an HTTPS URL. Set Canonical to
+the published URL and refresh Expires before it passes.
+Publish the disclosure policy and set its public URL in cra.yml.
+Conformline cannot check that these files are published.
+{{end}}
+
+## Regulatory context
+
+As of October 20, 2026, no harmonised CRA standard is cited in the Official
+Journal, so no presumption of conformity is available from one.
+The Commission guidance C(2026) 5252 of July 27, 2026 is non-binding.
+Check current sources before making a declaration.
+
+## Review before use
+
+Conformline helps prepare evidence and does not give legal advice.
+The EU declaration remains an unsigned draft until a responsible person
+reviews and signs it. Conformline does not sign it or submit reports to ENISA.
+
+Requirement: Art. 13, Art. 14; Annex I, II, V and VII.

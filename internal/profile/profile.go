@@ -118,6 +118,9 @@ func Parse(b []byte) (*Profile, error) {
 	if p.Version != 1 {
 		return nil, fmt.Errorf("version: unsupported schema; set version: 1")
 	}
+	if _, err := Classify(p.Classification.Categories); err != nil {
+		return nil, err
+	}
 	for _, t := range p.Triage {
 		if err := ValidateTriage(t); err != nil {
 			return nil, err
@@ -214,9 +217,22 @@ func (p *Profile) Save(path string) error {
 	if p.Classification.Answer == "" {
 		p.Classification.Answer = "unknown"
 	}
+	if _, err := Classify(p.Classification.Categories); err != nil {
+		return err
+	}
 	var fresh yaml.Node
 	if e := fresh.Encode(p); e != nil {
 		return e
+	}
+	for i := 0; i < len(fresh.Content); i += 2 {
+		section := fresh.Content[i].Value
+		value := fresh.Content[i+1]
+		for j := 0; j < len(value.Content); j += 2 {
+			if section == "classification" && value.Content[j].Value == "categories" && p.Classification.Categories == nil ||
+				section == "product" && value.Content[j].Value == "distribution" && p.Product.Distribution == nil {
+				value.Content[j+1] = &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!null", Value: "null"}
+			}
+		}
 	}
 	if e := validateTypes(&fresh, reflect.TypeOf(*p), ""); e != nil {
 		return e
@@ -231,6 +247,29 @@ func (p *Profile) Save(path string) error {
 		p.node = yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{&fresh}}
 	} else {
 		merge(p.node.Content[0], &fresh)
+	}
+	if strings.HasPrefix(p.node.Content[0].HeadComment, "Conformline preparation record.") {
+		comments := map[string]string{
+			"product":          "Detected product facts and the release boundary",
+			"manufacturer":     "Maker details; fill unknown facts before review",
+			"role":             "Your scope decision; detection never chooses your role",
+			"classification":   "Your core function categories; the highest class wins",
+			"security_contact": "Where people can report vulnerabilities",
+			"support":          "Security update period for this version line",
+			"components":       "Manual component additions or corrections",
+			"triage":           "Your decisions about exact advisory and component versions",
+		}
+		for i := 0; i < len(p.node.Content[0].Content); i += 2 {
+			key := p.node.Content[0].Content[i]
+			value := p.node.Content[0].Content[i+1]
+			if value.Kind == yaml.ScalarNode || value.Style&yaml.FlowStyle != 0 || value.Kind == yaml.SequenceNode && len(value.Content) == 0 {
+				if value.LineComment == "" {
+					value.LineComment = comments[key.Value]
+				}
+			} else if key.LineComment == "" {
+				key.LineComment = comments[key.Value]
+			}
+		}
 	}
 	var b bytes.Buffer
 	enc := yaml.NewEncoder(&b)
