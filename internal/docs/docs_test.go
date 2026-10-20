@@ -257,7 +257,7 @@ func TestIndexUsesSavedStatusTimeAndEscapesActions(t *testing.T) {
 			t.Fatal(e)
 		}
 	}
-	if e := WriteIndex(root, p, time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC), []string{"Review <adapter> & [source](https://example.com)."}, false); e != nil {
+	if e := WriteIndex(root, p, time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC), []string{"Review <adapter> & [source](https://example.com)."}, "complete", false); e != nil {
 		t.Fatal(e)
 	}
 	b, e := os.ReadFile(filepath.Join(root, "cra/README.md"))
@@ -265,10 +265,10 @@ func TestIndexUsesSavedStatusTimeAndEscapesActions(t *testing.T) {
 		t.Fatal(e)
 	}
 	text := string(b)
-	if strings.Count(text, "Scan: 2026-10-20 12:00 UTC, incomplete or stale") != 2 || strings.Contains(text, "2026-11-01") || strings.Contains(text, "<adapter>") || !strings.Contains(text, "&lt;adapter&gt;") {
+	if strings.Count(text, "Recorded scan: 2026-10-20 12:00 UTC") != 2 || !strings.Contains(text, "Scan: complete") || strings.Contains(text, "2026-11-01") || strings.Contains(text, "<adapter>") || !strings.Contains(text, "&lt;adapter&gt;") {
 		t.Fatal(text)
 	}
-	if e = WriteIndex(root, p, time.Now(), []string{}, false); e != nil {
+	if e = WriteIndex(root, p, time.Now(), []string{}, "complete", false); e != nil {
 		t.Fatal(e)
 	}
 	b, e = os.ReadFile(filepath.Join(root, "cra/README.md"))

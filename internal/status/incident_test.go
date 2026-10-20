@@ -2,6 +2,10 @@ package status
 
 import (
 	"bytes"
+	"github.com/vincentsch/conformline/internal/detect"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -148,5 +152,75 @@ func TestFinalReportingPolicyAndTimelySubmissions(t *testing.T) {
 				t.Fatal(r.ExitCode, r.Items[12])
 			}
 		})
+	}
+}
+
+func TestRecoveryBetweenPolicyAndUpcomingActions(t *testing.T) {
+	root, p, s, v := fixture(t)
+	s.Complete, v.Complete, s.Offline = false, false, true
+	exploited := finding("exploited-library", "critical", true)
+	exploited.KnownExploited = true
+	v.Findings = []vulns.Finding{exploited, finding("ordinary-library", "high", true)}
+	saveEvidence(t, root, s, v)
+	rec := incident.Record{Version: 1, ID: "inc-1", Type: incident.Exploited, Title: "Exploitation", AwareAt: frozenTime.Add(-25 * time.Hour), TimeZone: "UTC", Submissions: map[string]incident.Submission{}}
+	if err := incident.Create(root, rec, nil); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(root, "cra/reports/sbom.cdx.json")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(root, "cra/user-information.md")); err != nil {
+		t.Fatal(err)
+	}
+	r := evaluate(t, root, p, true)
+	if r.ExitCode != 10 || r.Items[4].State != Missing || r.ScanState != "incomplete" {
+		t.Fatal(r)
+	}
+	actions := rankActions(r)
+	for i, text := range []string{"inc-1 early-warning:", "Known exploited:", "Review cra/user-information.md", r.ScanRecovery, "inc-1 notification:", "Update ordinary-library"} {
+		if !strings.Contains(actions[i].text, text) {
+			t.Fatal(actions)
+		}
+	}
+	recoveryCount := 0
+	for _, a := range actions {
+		if a.text == r.ScanRecovery {
+			recoveryCount++
+		}
+		if a.text == "Run conformline scan." {
+			t.Fatal("duplicate scan-only action")
+		}
+	}
+	if recoveryCount != 1 || len(r.Next) != 5 {
+		t.Fatal(r.Next)
+	}
+	p.Product.Version = detect.String("2.0.0")
+	r = evaluate(t, root, p, true)
+	found := false
+	for _, a := range rankActions(r) {
+		found = found || strings.HasPrefix(a.text, "Review product.version in cra.yml")
+	}
+	if !found {
+		t.Fatal("product version repair lost")
+	}
+	p.Product.Version = nil
+	for _, file := range []string{"cra/disclosure-policy.md", "cra/support-period.md", "cra/risk-assessment.md", "cra/technical-documentation.md"} {
+		if err := os.Remove(filepath.Join(root, file)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r = evaluate(t, root, p, true)
+	if slices.Contains(r.Next, r.ScanRecovery) {
+		t.Fatal("policy actions should fill the five slots", r.Next)
+	}
+	var markdown, page bytes.Buffer
+	Markdown(&markdown, r)
+	if err := HTML(&page, r); err != nil {
+		t.Fatal(err)
+	}
+	for _, text := range []string{markdown.String(), page.String()} {
+		if !strings.Contains(text, "The last scan is incomplete.") || !strings.Contains(text, "incomplete (lookups did not run)") {
+			t.Fatal("scan causes lost when urgent actions fill the limit")
+		}
 	}
 }

@@ -170,7 +170,7 @@ func docsCommand(dir *string) *rungrad.Command {
 			if err != nil {
 				return rungrad.NewError(2, err.Error())
 			}
-			if err = documents.WriteIndex(*dir, p, time.Now().UTC(), checked.Next, f.DryRun()); err != nil {
+			if err = documents.WriteIndex(*dir, p, time.Now().UTC(), checked.Next, status.ScanLabel(checked), f.DryRun()); err != nil {
 				return rungrad.NewError(2, err.Error())
 			}
 			return f.WriteResult(r, func(w io.Writer) { renderDocuments(w, r) })

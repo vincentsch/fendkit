@@ -17,6 +17,12 @@ import (
 	"github.com/vincentsch/conformline/internal/profile"
 )
 
+// ReleaseError identifies a failure while reading the selected release.
+type ReleaseError struct{ Err error }
+
+func (e *ReleaseError) Error() string { return e.Err.Error() }
+func (e *ReleaseError) Unwrap() error { return e.Err }
+
 type Options struct {
 	Release       *string
 	ReplayRelease bool
@@ -431,15 +437,15 @@ func BuildWithOptions(root string, p detect.Product, opts Options) (Inventory, e
 	if selected != nil {
 		tree, close, e := openRelease(root, *selected)
 		if e != nil {
-			return inv, e
+			return inv, &ReleaseError{Err: e}
 		}
 		defer close()
 		if e = releaseProduct(tree, p); e != nil {
-			return inv, e
+			return inv, &ReleaseError{Err: e}
 		}
 		cs, e := scanTree(tree, true, nil)
 		if e != nil {
-			return inv, e
+			return inv, &ReleaseError{Err: e}
 		}
 		absolute := *selected
 		if !filepath.IsAbs(absolute) {

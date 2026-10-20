@@ -72,7 +72,7 @@ func evaluateStatus(root string, p *profile.Profile, strict, dry bool) (status.R
 		if e = status.Write(root, r); e != nil {
 			return r, rungrad.NewError(2, e.Error())
 		}
-		if e = documents.WriteIndex(root, p, time.Now().UTC(), r.Next, false); e != nil {
+		if e = documents.WriteIndex(root, p, time.Now().UTC(), r.Next, status.ScanLabel(r), false); e != nil {
 			return r, rungrad.NewError(2, e.Error())
 		}
 	}

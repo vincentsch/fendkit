@@ -17,7 +17,9 @@ Product: {{fact .P.Product.Name "product name"}}, version {{fact .ProductVersion
 Recorded role: {{.P.Role.Answer}}.
 Recorded classification: {{.P.Classification.Answer}}.
 
-## Next steps
+{{if .ScanLabel}}Scan: {{escape .ScanLabel}}
+
+{{end}}## Next steps
 
 {{if .StatusEvaluated}}{{range .Next}}- {{escape .}}
 {{else}}No outstanding actions.

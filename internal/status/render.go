@@ -21,14 +21,10 @@ import (
 var templates embed.FS
 
 func ScanLabel(r Result) string {
-	label := "no saved scan"
-	if !r.ScannedAt.IsZero() {
-		label = r.ScannedAt.Format("2006-01-02 15:04 UTC")
+	if r.ScanState == "missing" {
+		return "missing"
 	}
-	if r.ScanComplete {
-		return label + ", complete"
-	}
-	return label + ", incomplete or stale"
+	return r.ScannedAt.Format("2006-01-02 15:04 UTC") + ", " + r.ScanDetail
 }
 
 // OutputWidth uses the destination rather than the renderer's buffered writer.
@@ -71,7 +67,11 @@ func Terminal(w io.Writer, r Result, width int) {
 	}
 	for _, it := range r.Items {
 		if it.Name == "SBOM" && it.State != Evidenced || it.Name == "Open incidents" && it.State != NA {
-			fmt.Fprintln(w, "\n"+it.Explanation+" "+it.Action)
+			action := it.Action
+			if it.Name == "SBOM" && r.ScanRecovery != "" && action == "Run conformline scan." {
+				action = ""
+			}
+			fmt.Fprintln(w, "\n"+strings.TrimSpace(it.Explanation+" "+action))
 		}
 	}
 	for _, s := range r.ScanIssues {

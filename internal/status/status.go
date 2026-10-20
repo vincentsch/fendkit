@@ -53,6 +53,7 @@ type Scan struct {
 	ProductVersion    *string   `json:"product_version"`
 	InventoryDigest   string    `json:"inventory_digest"`
 	Complete          bool      `json:"complete"`
+	Offline           bool      `json:"offline"`
 	IncompleteReasons []string  `json:"incomplete_reasons"`
 	inventory.Inventory
 }
@@ -63,6 +64,9 @@ type Result struct {
 	Product      detect.Product        `json:"product"`
 	ScannedAt    time.Time             `json:"scanned_at"`
 	ScanComplete bool                  `json:"scan_complete"`
+	ScanState    string                `json:"scan_state"`
+	ScanDetail   string                `json:"-"`
+	ScanRecovery string                `json:"-"`
 	ScanIssues   []string              `json:"scan_issues"`
 	Items        []Item                `json:"items"`
 	Next         []string              `json:"next_actions"`
@@ -179,85 +183,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 		product.Type = *p.Product.Type
 	}
 	r := Result{Incidents: []incident.View{}, LegalNotice: Legal, Strict: strict, Product: product, Next: []string{}, ScanIssues: []string{}, Notes: []string{Scope}, Items: []Item{}, Documents: []Document{}}
-	var saved Scan
-	invOK := readJSON(root, "inventory.json", &saved)
-	var vr vulns.Report
-	vulnOK := readJSON(root, "vulnerabilities.json", &vr)
-	issue := func(s string) { r.ScanIssues = append(r.ScanIssues, sentence(s)+" Run conformline scan.") }
-	if !invOK || saved.ScanID == "" || saved.InventoryDigest == "" || saved.ScannedAt.IsZero() {
-		issue("Inventory scan evidence is missing or unreadable.")
-	} else {
-		r.ScannedAt = saved.ScannedAt
-		r.Components = saved.Components
-		r.CoverageGaps = saved.CoverageGaps
-		digest, _ := saved.Inventory.Digest()
-		if digest != saved.InventoryDigest {
-			issue("Saved inventory content differs from its scan digest.")
-		}
-		current, err := inventory.BuildWithOptions(root, product, inventory.Options{Release: saved.Release, ReplayRelease: true, Profile: p})
-		if err != nil {
-			if saved.Release != nil {
-				issue("The recorded release " + *saved.Release + " is missing, unreadable or differs from the product; restore that release and review the product version.")
-			} else {
-				issue("Local inventory cannot be rebuilt; check source files and permissions.")
-			}
-		} else {
-			d, _ := current.Digest()
-			r.Product = current.Product
-			if d != saved.InventoryDigest {
-				issue("Inventory content changed since the saved scan.")
-			}
-		}
-		if !same(saved.ProductVersion, r.Product.Version) {
-			issue("Product version changed since the saved scan.")
-		}
-		if now.Sub(saved.ScannedAt) > 7*24*time.Hour {
-			issue("The scan is older than seven days.")
-		}
-	}
-	if !vulnOK || vr.ScanID == "" {
-		issue("Vulnerability scan evidence is missing or unreadable.")
-	} else {
-		// Keep known policy failures visible even when scan evidence is mixed.
-		vulns.Apply(&vr, p)
-		r.Findings = vr.Findings
-		for _, f := range r.Findings {
-			if !slices.ContainsFunc(r.Components, func(c inventory.Component) bool { return c.PURL == f.Component.PURL }) {
-				r.Components = append(r.Components, f.Component)
-			}
-		}
-		r.CoverageGaps = append(r.CoverageGaps, vr.CoverageGaps...)
-		if !invOK || vr.ScanID != saved.ScanID || vr.InventoryDigest != saved.InventoryDigest || !vr.ScannedAt.Equal(saved.ScannedAt) || !same(vr.ProductVersion, saved.ProductVersion) || vr.Complete != saved.Complete {
-			issue("Inventory and vulnerability evidence do not belong to the same scan.")
-		}
-	}
-	if invOK && !saved.Complete || vulnOK && !vr.Complete {
-		reasons := []string{}
-		for _, reason := range append(append([]string{}, saved.IncompleteReasons...), vr.Reason...) {
-			reason = sentence(reason)
-			if reason != "" && !slices.Contains(reasons, reason) {
-				reasons = append(reasons, reason)
-			}
-		}
-		issue("The last scan is incomplete. " + strings.Join(reasons, " "))
-	}
-	var bom struct {
-		Metadata struct {
-			Component  struct{ Version string }
-			Properties []struct{ Name, Value string }
-		}
-	}
-	bomOK := readJSON(root, "sbom.cdx.json", &bom)
-	props := map[string]string{}
-	for _, v := range bom.Metadata.Properties {
-		props[v.Name] = v.Value
-	}
-	if !bomOK {
-		issue("SBOM scan evidence is missing or unreadable.")
-	} else if props["conformline:scan_id"] != saved.ScanID || props["conformline:inventory_digest"] != saved.InventoryDigest || props["conformline:scanned_at"] != saved.ScannedAt.Format(time.RFC3339Nano) || props["conformline:complete"] != fmt.Sprint(saved.Complete) || (saved.ProductVersion == nil && bom.Metadata.Component.Version != "" || saved.ProductVersion != nil && bom.Metadata.Component.Version != *saved.ProductVersion) {
-		issue("SBOM evidence does not belong to the saved scan.")
-	}
-	r.ScanComplete = len(r.ScanIssues) == 0
+	bomOK, bomVersion := evaluateScan(root, p, now, &r)
 	add := func(name string, state State, explanation, action string) {
 		r.Items = append(r.Items, Item{name, state, explanation, action})
 	}
@@ -296,20 +222,23 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if sec.State == Missing || txt.State == Missing {
 		securityState = Missing
 	}
-	add("Security contact", securityState, sec.Explanation+" "+txt.Explanation+" Publication cannot be checked locally.", "Review SECURITY.md and cra/security.txt; publish the policy and /.well-known/security.txt over HTTPS.")
+	add("Security contact", securityState, securityExplanation(sec, txt), "Review SECURITY.md and cra/security.txt, then set status: reviewed, reviewed_by and reviewed_on in SECURITY.md front matter and security.txt comment metadata; publish the policy and /.well-known/security.txt over HTTPS.")
 	docItem := func(name, file string) {
 		d := documentMap[file]
-		add(name, d.State, d.Explanation, "Review "+file+" and set status: reviewed, reviewed_by and reviewed_on.")
+		add(name, d.State, d.Explanation, "Review "+file+", then set status: reviewed, reviewed_by and reviewed_on in its front matter.")
 	}
 	docItem("Disclosure policy", "cra/disclosure-policy.md")
 	sbomState := Evidenced
 	sbomWhy := "The SBOM belongs to the current scan and product version."
 	if !bomOK {
 		sbomState = Missing
-		sbomWhy = "The SBOM is absent or unreadable."
-	} else if !r.ScanComplete || r.Product.Version == nil || bom.Metadata.Component.Version != Value(r.Product.Version) {
+		sbomWhy = "The SBOM is absent or unreadable. Scan evidence is " + r.ScanDetail + "."
+	} else if !r.ScanComplete || r.Product.Version == nil || bomVersion != Value(r.Product.Version) {
 		sbomState = Review
-		sbomWhy = "Review the SBOM: scan evidence or product version is incomplete or stale."
+		sbomWhy = "Scan evidence is " + r.ScanDetail + "."
+		if r.Product.Version != nil && bomVersion != Value(r.Product.Version) {
+			sbomWhy += " The SBOM product version differs from the current product version."
+		}
 	}
 	productAction := "Run conformline scan."
 	if sbomState == Evidenced {
@@ -357,9 +286,9 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	}
 	vulnExplanation := fmt.Sprintf("%d open advisory groups in shipped or possibly shipped components. Coverage gaps: %d. %s", open, len(uniqueGaps(r.CoverageGaps)), Scope)
 	if !r.ScanComplete {
-		vulnExplanation = "Scan evidence is incomplete or stale; saved finding counts do not show current coverage. " + strings.Join(r.ScanIssues, " ") + " " + vulnExplanation
+		vulnExplanation = "Scan evidence is " + r.ScanDetail + "; saved finding counts do not show current coverage. " + strings.Join(r.ScanIssues, " ") + " " + vulnExplanation
 	}
-	add("Known vulnerabilities", vulnState, vulnExplanation, "Review cra/reports/vulnerabilities.md; record decisions with conformline triage and run conformline scan for incomplete evidence.")
+	add("Known vulnerabilities", vulnState, vulnExplanation, "Review cra/reports/vulnerabilities.md and record decisions with conformline triage.")
 	r.CoverageGaps = uniqueGaps(r.CoverageGaps)
 	docItem("Support period", "cra/support-period.md")
 	if p.Support.End == nil {
@@ -465,18 +394,21 @@ func severity(f vulns.Finding) int {
 }
 func rankActions(r Result) []action {
 	actions := []action{}
+	if r.ScanRecovery != "" {
+		actions = append(actions, action{text: r.ScanRecovery, rank: 2})
+	}
 	if len(r.Items) > 12 && r.Items[12].State != NA {
 		for _, v := range r.Incidents {
 			for _, s := range v.Stages {
 				if s.SubmittedAt != nil {
 					continue
 				}
-				rank := 1
+				rank := 3
 				due := time.Time{}
 				if s.DueAt != nil {
 					due = *s.DueAt
 				} else {
-					rank = 4
+					rank = 5
 				}
 				if s.Overdue {
 					rank = -1
@@ -494,7 +426,7 @@ func rankActions(r Result) []action {
 	}
 	for _, findings := range groups {
 		c := findings[0].Component
-		rank, sev := 3, 0
+		rank, sev := 4, 0
 		hasFix := false
 		for _, f := range findings {
 			if f.KnownExploited {
@@ -506,7 +438,7 @@ func rankActions(r Result) []action {
 			}
 		}
 		if rank != 0 && !hasFix {
-			rank = 4
+			rank = 5
 		}
 		verb := "Update "
 		if !hasFix {
@@ -540,25 +472,25 @@ func rankActions(r Result) []action {
 		actions = append(actions, action{text: text, rank: rank, severity: sev, count: len(findings), name: c.Name + " " + c.PURL})
 	}
 	for i, it := range r.Items {
-		if i == 12 || it.State == Evidenced || it.State == NA {
+		if i == 12 || it.State == Evidenced || it.State == NA || (i == 4 && r.ScanRecovery != "" && it.Action == "Run conformline scan.") {
 			continue
 		}
-		rank := 5
+		rank := 6
 		if it.State == Missing {
-			rank = 6
+			rank = 7
 		}
 		if i == 0 {
-			rank = 4
+			rank = 5
 		}
 		if i == 1 || (i == 4 && r.Product.Version == nil) || (i == 6 && it.State == Missing) {
-			rank = 4
+			rank = 5
 		}
 		name := it.Name
 		if i == 0 {
 			name = ""
 		}
 		if r.Strict && it.State == Missing {
-			rank = 0
+			rank = 1
 		}
 		actions = append(actions, action{text: it.Action, rank: rank, name: name})
 	}
@@ -566,10 +498,10 @@ func rankActions(r Result) []action {
 		if a.rank != b.rank {
 			return a.rank - b.rank
 		}
-		if (a.rank == -1 || a.rank == 1) && !a.due.Equal(b.due) {
+		if (a.rank == -1 || a.rank == 3) && !a.due.Equal(b.due) {
 			return a.due.Compare(b.due)
 		}
-		if a.rank == 4 && (a.name == "" || b.name == "") {
+		if a.rank == 5 && (a.name == "" || b.name == "") {
 			return strings.Compare(a.name, b.name)
 		}
 		if a.severity != b.severity {
@@ -589,4 +521,27 @@ func sentence(text string) string {
 		text += "."
 	}
 	return text
+}
+
+func securityExplanation(sec, txt Document) string {
+	if sec.Explanation == txt.Explanation {
+		return "SECURITY.md and cra/security.txt: " + sec.Explanation + " Publication cannot be checked locally."
+	}
+	drafts := []string{}
+	for _, d := range []Document{sec, txt} {
+		if d.Explanation == "Review the draft, fill remaining placeholders and record the reviewer and review date." {
+			drafts = append(drafts, d.Path)
+		}
+	}
+	parts := []string{}
+	if len(drafts) > 0 {
+		parts = append(parts, "Review "+strings.Join(drafts, " and ")+", fill remaining placeholders and record the reviewer and review date.")
+	}
+	for _, d := range []Document{sec, txt} {
+		if d.Explanation == "Review the draft, fill remaining placeholders and record the reviewer and review date." {
+			continue
+		}
+		parts = append(parts, d.Path+": "+d.Explanation)
+	}
+	return strings.Join(parts, " ") + " Publication cannot be checked locally."
 }

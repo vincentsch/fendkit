@@ -42,6 +42,7 @@ type data struct {
 	Reports         []indexEntry
 	Message         string
 	Next            []string
+	ScanLabel       string
 	StatusEvaluated bool
 }
 
@@ -142,7 +143,7 @@ func Generate(root string, p *profile.Profile, now time.Time, dry bool) (Result,
 		}
 		r.Created = append(r.Created, file)
 	}
-	return r, WriteIndex(root, p, now, nil, dry)
+	return r, WriteIndex(root, p, now, nil, "", dry)
 }
 
 func documentData(root string, p *profile.Profile, now time.Time) data {
@@ -174,9 +175,10 @@ func documentData(root string, p *profile.Profile, now time.Time) data {
 }
 
 // WriteIndex preserves the preparation guidance and adds the evaluated next actions.
-func WriteIndex(root string, p *profile.Profile, now time.Time, next []string, dry bool) error {
+func WriteIndex(root string, p *profile.Profile, now time.Time, next []string, scanLabel string, dry bool) error {
 	d := documentData(root, p, now)
 	d.Next = next
+	d.ScanLabel = scanLabel
 	d.StatusEvaluated = next != nil
 	for _, file := range Files {
 		path := filepath.Join(root, filepath.FromSlash(file))
@@ -276,7 +278,8 @@ func reportDescription(path string) string {
 		if err == nil {
 			for _, line := range strings.Split(string(b), "\n") {
 				if strings.HasPrefix(line, "Scan: ") {
-					return line
+					stamp, _, _ := strings.Cut(strings.TrimPrefix(line, "Scan: "), ",")
+					return "Recorded scan: " + stamp
 				}
 			}
 		}

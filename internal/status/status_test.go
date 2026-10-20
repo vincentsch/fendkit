@@ -177,10 +177,65 @@ func finding(name, label string, shipped bool) vulns.Finding {
 	return vulns.Finding{IDs: []string{a.ID}, Component: c, Advisories: []vulns.Advisory{a}, Status: "untriaged"}
 }
 func TestScanEvidenceAndPolicyPrecedence(t *testing.T) {
-	for _, scenario := range []string{"missing inventory", "missing vulnerabilities", "missing sbom", "mixed vulnerabilities", "mixed sbom", "wrong sbom version", "changed inventory", "changed version", "expired", "incomplete", "coverage"} {
+	for _, scenario := range []string{"missing inventory", "missing vulnerabilities", "missing sbom", "mixed vulnerabilities", "mixed sbom", "wrong sbom version", "changed inventory", "changed version", "expired", "incomplete", "coverage", "offline", "digest mismatch", "missing metadata", "unreadable inventory", "release missing", "expired release missing", "offline release missing", "source error", "source error with release", "source and release error", "incomplete and changed", "unreadable vulnerabilities", "unreadable sbom", "source read error", "missing digest", "missing time", "complete"} {
 		t.Run(scenario, func(t *testing.T) {
 			root, p, s, v := fixture(t)
 			switch scenario {
+			case "complete":
+			case "unreadable vulnerabilities":
+				put(t, root, "cra/reports/vulnerabilities.json", "{")
+			case "unreadable sbom":
+				put(t, root, "cra/reports/sbom.cdx.json", "{")
+			case "source read error":
+				if err := os.Mkdir(filepath.Join(root, "composer.lock"), 0755); err != nil {
+					t.Fatal(err)
+				}
+			case "missing digest", "missing time":
+				if scenario == "missing digest" {
+					s.InventoryDigest = ""
+				} else {
+					s.ScannedAt = time.Time{}
+				}
+				writeJSON(t, root, "inventory.json", s)
+			case "offline", "offline release missing", "incomplete and changed":
+				s.Complete, v.Complete = false, false
+				s.Offline = scenario != "incomplete and changed"
+				if scenario == "incomplete and changed" {
+					put(t, root, "package.json", `{"name":"sample","version":"2.0.0"}`)
+				}
+				if scenario == "offline release missing" {
+					s.Release = detect.String("../artifacts/maker's release.zip")
+					s.InventoryDigest, _ = s.Inventory.Digest()
+					v.InventoryDigest = s.InventoryDigest
+				}
+				saveEvidence(t, root, s, v)
+			case "digest mismatch":
+				s.Components = append(s.Components, inventory.Component{Name: "edited"})
+				saveEvidence(t, root, s, v)
+			case "missing metadata":
+				s.ScanID = ""
+				writeJSON(t, root, "inventory.json", s)
+			case "unreadable inventory":
+				put(t, root, "cra/reports/inventory.json", "{")
+			case "release missing", "expired release missing", "source error with release", "source and release error":
+				s.Release = detect.String("../artifacts/maker's release.zip")
+				if scenario == "source error with release" {
+					release := filepath.Join(root, "release")
+					put(t, release, "package.json", `{"name":"sample","version":"1.0.0"}`)
+					s.Release = detect.String("release")
+				}
+				if scenario == "expired release missing" {
+					s.ScannedAt = frozenTime.Add(-8 * 24 * time.Hour)
+					v.ScannedAt = s.ScannedAt
+				}
+				s.InventoryDigest, _ = s.Inventory.Digest()
+				v.InventoryDigest = s.InventoryDigest
+				saveEvidence(t, root, s, v)
+				if strings.HasPrefix(scenario, "source") {
+					put(t, root, "composer.lock", "{")
+				}
+			case "source error":
+				put(t, root, "composer.lock", "{")
 			case "missing inventory":
 				os.Remove(filepath.Join(root, "cra/reports/inventory.json"))
 			case "missing vulnerabilities":
@@ -218,13 +273,96 @@ func TestScanEvidenceAndPolicyPrecedence(t *testing.T) {
 				saveEvidence(t, root, s, v)
 			}
 			r := evaluate(t, root, p, false)
-			if r.ExitCode != 11 {
-				t.Fatal(r.ExitCode, r.ScanIssues)
+			wantState, detail := "incomplete", "incomplete (reports do not match)"
+			wantCode := 11
+			switch scenario {
+			case "missing inventory", "missing metadata", "unreadable inventory", "missing digest", "missing time":
+				wantState, detail = "missing", "missing"
+			case "changed inventory", "changed version", "coverage":
+				wantState, detail = "stale", "stale (components changed)"
+			case "expired", "expired release missing":
+				wantState, detail = "stale", "stale (older than seven days)"
+			case "release missing", "source and release error":
+				wantState, detail = "stale", "stale (release unavailable)"
+			case "source error", "source error with release", "source read error":
+				wantState, detail = "stale", "stale (inventory unavailable)"
+			case "offline", "offline release missing":
+				detail = "incomplete (lookups did not run)"
+			case "incomplete", "incomplete and changed":
+				detail = "incomplete (lookups failed)"
+			case "complete":
+				wantState, detail, wantCode = "complete", "complete", 0
+			}
+			if r.ExitCode != wantCode || r.ScanState != wantState || r.ScanDetail != detail || r.ScanComplete != (wantState == "complete") {
+				t.Fatal(r.ExitCode, r.ScanState, r.ScanDetail, r.ScanIssues)
+			}
+			wantLabel := s.ScannedAt.Format("2006-01-02 15:04 UTC") + ", " + detail
+			if wantState == "missing" {
+				wantLabel = "missing"
+			}
+			if ScanLabel(r) != wantLabel {
+				t.Fatal(ScanLabel(r), wantLabel)
+			}
+			if wantCode == 11 {
+				if len(r.Next) == 0 || r.Next[0] != r.ScanRecovery || strings.Count(r.ScanRecovery, "conformline scan") != 1 {
+					t.Fatal(r.Next, r.ScanRecovery)
+				}
+				for _, a := range rankActions(r) {
+					if a.text == "Run conformline scan." {
+						t.Fatal("duplicate SBOM recovery", a)
+					}
+				}
+			} else if r.ScanRecovery != "" {
+				t.Fatal(r.ScanRecovery)
+			}
+			for _, issue := range r.ScanIssues {
+				if strings.Contains(issue, "conformline scan") {
+					t.Fatal(issue)
+				}
+			}
+			if s.Release != nil {
+				if !strings.Contains(r.ScanRecovery, "--release "+shellQuote(*s.Release)) {
+					t.Fatal(r.ScanRecovery)
+				}
+				if scenario == "source error with release" {
+					if strings.Contains(r.ScanRecovery, "Restore") || !strings.Contains(r.ScanRecovery, "composer.lock: invalid Composer lockfile") {
+						t.Fatal(r.ScanRecovery)
+					}
+				} else if !strings.Contains(r.ScanRecovery, "Restore the recorded release "+*s.Release) {
+					t.Fatal(r.ScanRecovery)
+				}
+			}
+			if strings.HasPrefix(scenario, "source") && scenario != "source read error" && !strings.Contains(r.ScanRecovery, "composer.lock: invalid Composer lockfile") {
+				t.Fatal(r.ScanRecovery)
+			}
+			expected := map[string]string{
+				"missing inventory":    "No usable saved scan is available. Run conformline scan.",
+				"unreadable inventory": "No usable saved scan is available. Run conformline scan.",
+				"missing metadata":     "No usable saved scan is available. Run conformline scan.",
+				"offline":              "Vulnerability lookups did not run. Run conformline scan with network access.",
+				"incomplete":           "Vulnerability lookups failed: the saved scan did not finish. Run conformline scan again, or conformline doctor to check the connection.",
+				"missing sbom":         "Saved reports are missing or do not belong to one scan. Run conformline scan.",
+				"digest mismatch":      "Saved reports are missing or do not belong to one scan. Run conformline scan.",
+				"changed inventory":    "Your components or product version changed since the last scan. Run conformline scan.",
+				"expired":              "The last scan is older than seven days. Run conformline scan.",
+			}
+			if want, ok := expected[scenario]; ok && r.ScanRecovery != want {
+				t.Fatal(r.ScanRecovery, want)
+			}
+			diagnostics := map[string]string{"missing inventory": "is missing: cra/reports/inventory.json", "unreadable inventory": "is unreadable: cra/reports/inventory.json", "missing metadata": "missing metadata: scan_id", "missing digest": "missing metadata: inventory_digest", "missing time": "missing metadata: scanned_at", "source read error": "composer.lock: cannot read; check permissions"}
+			if want, ok := diagnostics[scenario]; ok && !strings.Contains(strings.Join(r.ScanIssues, " "), want) {
+				t.Fatal(r.ScanIssues, want)
+			}
+			if scenario == "offline release missing" && !strings.Contains(r.ScanRecovery, "with network access") {
+				t.Fatal(r.ScanRecovery)
+			}
+			if scenario == "incomplete and changed" && !strings.Contains(strings.Join(r.ScanIssues, " "), "Product version changed") {
+				t.Fatal(r.ScanIssues)
 			}
 			if scenario == "missing sbom" && r.Items[4].State != Missing {
 				t.Fatal("absent SBOM must be missing", r.Items[4])
 			}
-			if r.Items[5].State != Review {
+			if scenario != "complete" && r.Items[5].State != Review {
 				t.Fatal(r.Items[5])
 			}
 		})
@@ -447,27 +585,50 @@ func TestSourceSeverityOrdering(t *testing.T) {
 }
 
 func TestIncompleteScanExplanation(t *testing.T) {
-	root, p, s, v := fixture(t)
-	s.Complete = false
-	v.Complete = false
-	s.IncompleteReasons = []string{"Offline scan: vulnerability lookups have not run"}
-	v.Reason = s.IncompleteReasons
-	saveEvidence(t, root, s, v)
-	r := evaluate(t, root, p, false)
-	if r.ExitCode != 11 || len(r.ScanIssues) != 1 {
-		t.Fatal(r.ExitCode, r.ScanIssues)
-	}
-	want := "The last scan is incomplete. Offline scan: vulnerability lookups have not run. Run conformline scan."
-	if r.ScanIssues[0] != want {
-		t.Fatal(r.ScanIssues)
-	}
-	if r.Items[5].State != Review || !strings.Contains(r.Items[5].Explanation, want) {
-		t.Fatal(r.Items[5])
-	}
-	var terminal bytes.Buffer
-	Terminal(&terminal, r, 80)
-	if strings.Count(terminal.String(), "Offline scan:") != 1 || strings.Contains(terminal.String(), "not run Run") {
-		t.Fatal(terminal.String())
+	for _, failure := range []string{"Offline scan: vulnerability lookups have not run", "CISA KEV: HTTP 503; run conformline scan again", "OSV GHSA-example: HTTP 503; run conformline scan again."} {
+		t.Run(failure, func(t *testing.T) {
+			root, p, s, v := fixture(t)
+			s.Complete, v.Complete = false, false
+			s.Offline = strings.HasPrefix(failure, "Offline")
+			s.IncompleteReasons = []string{" ", failure}
+			v.Reason = []string{failure}
+			saveEvidence(t, root, s, v)
+			beforeInv := readText(t, root, "cra/reports/inventory.json")
+			beforeVuln := readText(t, root, "cra/reports/vulnerabilities.json")
+			r := evaluate(t, root, p, false)
+			if r.ExitCode != 11 || r.ScanState != "incomplete" || len(r.ScanIssues) != 1 {
+				t.Fatal(r)
+			}
+			clean := scanReason(failure)
+			if !strings.Contains(r.ScanIssues[0], clean) || strings.Contains(r.ScanIssues[0], "run conformline scan") || !strings.Contains(r.Items[5].Explanation, clean) {
+				t.Fatal(r.ScanIssues, r.Items[5])
+			}
+			if strings.Count(r.ScanRecovery, "conformline scan") != 1 || strings.Contains(r.ScanRecovery, "; run conformline scan again") {
+				t.Fatal(r.ScanRecovery)
+			}
+			if s.Offline {
+				if !strings.Contains(r.ScanRecovery, "with network access") {
+					t.Fatal(r.ScanRecovery)
+				}
+			} else if !strings.Contains(r.ScanRecovery, "Vulnerability lookups failed: "+clean+". Run conformline scan again, or conformline doctor") {
+				t.Fatal(r.ScanRecovery)
+			}
+			var terminal bytes.Buffer
+			Terminal(&terminal, r, 80)
+			if strings.Contains(terminal.String(), "; run conformline scan again") {
+				t.Fatal(terminal.String())
+			}
+			if beforeInv != readText(t, root, "cra/reports/inventory.json") || beforeVuln != readText(t, root, "cra/reports/vulnerabilities.json") {
+				t.Fatal("presentation changed saved evidence")
+			}
+			s.IncompleteReasons = []string{" "}
+			saveEvidence(t, root, s, v)
+			fallback := evaluate(t, root, p, false)
+			if fallback.ScanRecovery != r.ScanRecovery {
+				t.Fatal("vulnerability reason fallback", fallback.ScanRecovery, r.ScanRecovery)
+			}
+
+		})
 	}
 }
 func TestCurrentSBOMDoesNotAskForImmediateRescan(t *testing.T) {
@@ -614,7 +775,7 @@ func TestStatusLegalWordingAcrossEvidenceAndRoles(t *testing.T) {
 			if e := Write(root, r); e != nil {
 				t.Fatal(e)
 			}
-			if e := docs.WriteIndex(root, p, frozenTime, r.Next, false); e != nil {
+			if e := docs.WriteIndex(root, p, frozenTime, r.Next, ScanLabel(r), false); e != nil {
 				t.Fatal(e)
 			}
 			encoded, e := json.Marshal(r)
@@ -638,4 +799,39 @@ func readText(t *testing.T, root, file string) string {
 		t.Fatal(e)
 	}
 	return string(b)
+}
+
+func TestSecurityContactReviewExplanations(t *testing.T) {
+	for _, scenario := range []struct {
+		name, securityStatus, textStatus, want string
+		state                                  State
+	}{
+		{"different review dates", "reviewed", "reviewed", "SECURITY.md: Review recorded by Ana on 2026-10-20. cra/security.txt: Review recorded by Ana on 2026-10-21. Publication cannot be checked locally.", Evidenced},
+		{"security policy reviewed", "reviewed", "draft", "Review cra/security.txt, fill remaining placeholders and record the reviewer and review date. SECURITY.md: Review recorded by Ana on 2026-10-20. Publication cannot be checked locally.", Review},
+		{"security text reviewed", "draft", "reviewed", "Review SECURITY.md, fill remaining placeholders and record the reviewer and review date. cra/security.txt: Review recorded by Ana on 2026-10-21. Publication cannot be checked locally.", Review},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			root, p, _, _ := fixture(t)
+			put(t, root, "SECURITY.md", "---\nstatus: "+scenario.securityStatus+"\nreviewed_by: Ana\nreviewed_on: 2026-10-20\n---\nContact: security@example.com\n")
+			put(t, root, "cra/security.txt", "# status: "+scenario.textStatus+"\n# reviewed_by: Ana\n# reviewed_on: 2026-10-21\nContact: mailto:security@example.com\nExpires: 2027-10-19T12:00:00Z\n")
+			r := evaluate(t, root, p, false)
+			if row := r.Items[2]; row.State != scenario.state || row.Explanation != scenario.want {
+				t.Fatalf("Security contact: %+v; want %s / %s", row, scenario.state, scenario.want)
+			}
+			var markdown, page bytes.Buffer
+			Markdown(&markdown, r)
+			if err := HTML(&page, r); err != nil {
+				t.Fatal(err)
+			}
+			encoded, err := json.Marshal(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, output := range []string{markdown.String(), page.String(), string(encoded)} {
+				if !strings.Contains(html.UnescapeString(output), scenario.want) {
+					t.Fatal("review explanation differs across outputs", output)
+				}
+			}
+		})
+	}
 }

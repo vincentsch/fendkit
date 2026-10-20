@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/vincentsch/conformline/internal/detect"
+	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
 	"github.com/vincentsch/conformline/internal/status"
 	"github.com/vincentsch/conformline/internal/vulns"
@@ -133,13 +134,16 @@ func TestCheckCISummaryAndIndex(t *testing.T) {
 	b := runCheckCLI(t, client, root, 0, "check", "--ci")
 	var r status.Result
 	json.Unmarshal(b, &r)
+	if r.ScanState != "complete" || !strings.Contains(string(b), `"scan_state": "complete"`) {
+		t.Fatal(string(b))
+	}
 	report, _ := os.ReadFile(filepath.Join(root, "cra/reports/status.md"))
 	summaryBytes, _ := os.ReadFile(summary)
 	if string(summaryBytes) != string(report)+"\n" {
 		t.Fatal("summary differs from report")
 	}
 	index, _ := os.ReadFile(filepath.Join(root, "cra/README.md"))
-	if !strings.Contains(string(index), "reports/status.html") {
+	if !strings.Contains(string(index), "reports/status.html") || !strings.Contains(string(index), "Scan: "+r.ScannedAt.Format("2006-01-02 15:04 UTC")+", complete") {
 		t.Fatal("missing report link")
 	}
 	runCheckCLI(t, client, root, 10, "check", "--strict")
@@ -272,6 +276,28 @@ func TestFrozenLookupStatusReports(t *testing.T) {
 			t.Fatal(result.Next)
 		}
 	}
+	if result.ScanState != "complete" {
+		t.Fatal(result.ScanState)
+	}
+	for _, a := range result.Next {
+		if strings.Contains(a, "conformline scan") {
+			t.Fatal(result.Next)
+		}
+	}
+	security := result.Items[2]
+	if !strings.Contains(security.Explanation, "SECURITY.md needs a vulnerability reporting contact.") || !strings.Contains(security.Explanation, "security.txt needs a valid contact and a future Expires date.") || strings.Contains(security.Explanation, "fill remaining placeholders") || !strings.Contains(security.Action, "comment metadata") {
+		t.Fatal(security)
+	}
+	for _, it := range result.Items {
+		if it.Name == "Disclosure policy" && it.Action != "Review cra/disclosure-policy.md, then set status: reviewed, reviewed_by and reviewed_on in its front matter." {
+			t.Fatal(it)
+		}
+		for _, sentence := range strings.Split(it.Explanation, ". ") {
+			if len(sentence) > 25 && strings.Count(it.Explanation, sentence) > 1 {
+				t.Fatal("repeated checklist explanation", it)
+			}
+		}
+	}
 	if len(result.Findings) != 46 {
 		t.Fatal("expected frozen groups including non-shipped", len(result.Findings))
 	}
@@ -291,6 +317,44 @@ func TestFrozenLookupStatusReports(t *testing.T) {
 
 func TestPreparationIndexAcrossCommands(t *testing.T) {
 	client := checkClient(t)
+	t.Run("docs evaluates removed recorded release", func(t *testing.T) {
+		base := t.TempDir()
+		root := filepath.Join(base, "acme-booking")
+		copyTree(t, "../../testdata/wp-plugin/acme-booking", root)
+		copyTree(t, "../../testdata/wp-plugin/dist", filepath.Join(base, "artifacts"))
+		release := "../artifacts/acme-booking-2.3.1.zip"
+		put(t, root, "cra.yml", "version: 1\nrole: {answer: manufacturer}\n")
+		runCheckCLI(t, client, root, 0, "scan", "--release", release)
+		var complete status.Result
+		json.Unmarshal(runCheckCLI(t, client, root, 0, "check"), &complete)
+		oldStatus := readFile(t, root, "cra/reports/status.md")
+		releasePath := filepath.Join(root, release)
+		if err := os.Rename(releasePath, releasePath+".parked"); err != nil {
+			t.Fatal(err)
+		}
+		runCheckCLI(t, client, root, 0, "docs")
+		index := html.UnescapeString(readFile(t, root, "cra/README.md"))
+		for _, text := range []string{"stale (release unavailable)", "Restore the recorded release " + release, "--release '" + release + "'", complete.ScannedAt.Format(time.RFC3339), "Recorded scan: " + complete.ScannedAt.Format("2006-01-02 15:04 UTC")} {
+			if !strings.Contains(index, text) {
+				t.Fatalf("missing %q in %s", text, index)
+			}
+		}
+		if strings.Contains(index, ", complete") || oldStatus != readFile(t, root, "cra/reports/status.md") {
+			t.Fatal("docs reused or rewrote old status", index)
+		}
+		if err := os.Rename(releasePath+".parked", releasePath); err != nil {
+			t.Fatal(err)
+		}
+		runCheckCLI(t, client, root, 0, "scan", "--release", release)
+		var inv inventory.Inventory
+		if err := json.Unmarshal([]byte(readFile(t, root, "cra/reports/inventory.json")), &inv); err != nil {
+			t.Fatal(err)
+		}
+		if inv.Release == nil || *inv.Release != release {
+			t.Fatal("lost release boundary", inv)
+		}
+	})
+
 	for _, role := range []string{"manufacturer", "not-in-scope", "unknown", "open-source-steward"} {
 		t.Run(role, func(t *testing.T) {
 			root := t.TempDir()
@@ -335,7 +399,10 @@ func TestPreparationIndexAcrossCommands(t *testing.T) {
 				}
 				return index
 			}
-			verifyIndex(initialized.Status.Next)
+			initialIndex := verifyIndex(initialized.Status.Next)
+			if !strings.Contains(initialIndex, "Scan: "+initialized.Status.ScannedAt.Format("2006-01-02 15:04 UTC")+", complete") {
+				t.Fatal("init omitted its evaluated scan label", initialIndex)
+			}
 			for _, command := range []string{"docs", "check", "docs", "check"} {
 				b = runCheckCLI(t, client, root, 0, command)
 				var current status.Result
