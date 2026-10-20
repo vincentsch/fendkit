@@ -10,6 +10,8 @@ import (
 )
 
 type Product struct {
+	PURL            string   `json:"purl"`
+	PackageName     string   `json:"-"`
 	Type            string   `json:"type"`
 	Name            *string  `json:"name"`
 	Version         *string  `json:"version"`
@@ -102,6 +104,7 @@ func Detect(root string) (Product, error) {
 			if file == "package.json" {
 				p.Type = "npm-package"
 			}
+			p.PackageName = m.Name
 			p.Name = String(m.Name)
 			p.Version = String(m.Version)
 			p.Description = String(m.Description)

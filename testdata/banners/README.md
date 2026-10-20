@@ -2,10 +2,10 @@
 
 Real files from cdnjs (`https://cdnjs.cloudflare.com/ajax/libs/<library>/<version>/`)
 for the bundled-library detection tests, downloaded on 2026-10-20. Most files
-are cut to their first 4 KB (the banner comment and some code). Six files are
+are cut to their first 4 KB (the banner comment and some code). Seven files are
 complete because the version sits further inside the file or the file has
 none: moment@2.24.0, popper.js@1.16.0, slick-carousel@1.8.1,
-datatables.net@1.10.20, dompurify@2.0.8, sweetalert2@9.10.0.
+datatables.net@1.10.20, dompurify@2.0.8, sweetalert2@9.10.0, lodash@4.17.15.
 
 File names are `<npm package>@<version>.js`. The test expects detection of
 exactly that package and version, except for popper.js@1.16.0 and
@@ -21,6 +21,10 @@ Its banner says `Select2 1.0.1`, but the code contains `selectWoo` (from byte
 67886). The expected result is SelectWoo 1.0.1
 (`pkg:github/woocommerce/selectwoo@1.0.1`), not Select2: SelectWoo is not on
 npm and no advisory database covers it, so it is listed and not looked up.
+
+Lodash carries `An.VERSION="4.17.15"` inside its code. Its banner credits
+`Underscore.js 1.8.3`; that credit must not produce an Underscore result.
+The detector reads file content and never uses fixture filenames.
 
 ## Licenses
 

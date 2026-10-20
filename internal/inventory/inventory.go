@@ -16,9 +16,11 @@ import (
 )
 
 type Evidence struct {
-	File   string `json:"file"`
-	Method string `json:"method"`
-	Path   string `json:"path"`
+	File    string `json:"file"`
+	Method  string `json:"method"`
+	Path    string `json:"path"`
+	Banner  string `json:"banner,omitempty"`
+	Shipped *bool  `json:"shipped"`
 }
 type Component struct {
 	Name          string     `json:"name"`
@@ -28,6 +30,8 @@ type Component struct {
 	PURL          string     `json:"purl"`
 	Shipped       *bool      `json:"shipped"`
 	Development   bool       `json:"development"`
+	Modified      bool       `json:"modified"`
+	Note          string     `json:"note,omitempty"`
 	Source        Evidence   `json:"source"`
 	Evidence      []Evidence `json:"evidence"`
 }
@@ -61,6 +65,7 @@ func component(eco, name, version string, dev bool, ev Evidence) Component {
 	if eco == "composer" || dev {
 		shipped = boolPtr(!dev)
 	}
+	ev.Shipped = shipped
 	return Component{Name: name, Version: detect.String(version), LookupVersion: detect.String(strings.TrimPrefix(version, "v")), Ecosystem: eco, PURL: PURL(eco, name, version), Shipped: shipped, Development: dev, Source: ev, Evidence: []Evidence{ev}}
 }
 
@@ -91,7 +96,7 @@ func ComposerLock(b []byte, file string) ([]Component, error) {
 			if p.Name == "" || p.Version == "" {
 				return nil, fmt.Errorf("%s: package name or version missing; regenerate it with Composer", file)
 			}
-			out = append(out, component("composer", p.Name, p.Version, group.dev, Evidence{file, "composer.lock", "vendor/" + p.Name}))
+			out = append(out, component("composer", p.Name, p.Version, group.dev, Evidence{File: file, Method: "composer.lock", Path: "vendor/" + p.Name}))
 		}
 	}
 	return out, nil
@@ -132,7 +137,7 @@ func Installed(b []byte, file string) ([]Component, error) {
 		if p.InstallPath != "" {
 			occurrence = path.Join(path.Dir(file), p.InstallPath)
 		}
-		out = append(out, component("composer", p.Name, p.Version, dev, Evidence{file, "installed.json", occurrence}))
+		out = append(out, component("composer", p.Name, p.Version, dev, Evidence{File: file, Method: "installed.json", Path: occurrence}))
 	}
 	return out, nil
 }
@@ -174,7 +179,7 @@ func NPMLock(b []byte, file string) ([]Component, error) {
 		if name == "" {
 			return nil, fmt.Errorf("%s: package name missing; regenerate it with npm", file)
 		}
-		out = append(out, component("npm", name, p.Version, p.Dev, Evidence{file, "npm lockfile", k}))
+		out = append(out, component("npm", name, p.Version, p.Dev, Evidence{File: file, Method: "npm lockfile", Path: k}))
 	}
 	return out, nil
 }
@@ -185,7 +190,7 @@ func read(root, file string) ([]byte, error) {
 	}
 	return b, e
 }
-func Build(root string, product detect.Product) (Inventory, error) {
+func buildMetadata(root string, product detect.Product) (Inventory, error) {
 	inv := Inventory{Product: product, Components: []Component{}, CoverageGaps: []Gap{}}
 	add := func(cs []Component) {
 		for _, c := range cs {

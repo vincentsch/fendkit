@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/vincentsch/conformline/internal/detect"
+	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/rungrad/testutil"
 )
 
@@ -42,6 +44,75 @@ func TestBuiltScan(t *testing.T) {
 		}
 		return out.String(), err.String()
 	}
+
+	t.Run("installed development packages", func(t *testing.T) {
+		project := t.TempDir()
+		copyTree(t, "../../testdata/wp-plugin/acme-booking", project)
+		files := map[string]string{
+			"node_modules/webpack/package.json":            `{"name":"webpack","version":"4.46.0"}`,
+			"node_modules/lodash/package.json":             `{"name":"lodash","version":"4.17.15"}`,
+			"node_modules/lodash/lib.js":                   "/*! jQuery v1.0.0 */",
+			"vendor/phpunit/phpunit/coverage/jquery.js":    "/*! jQuery v3.7.1 */",
+			"vendor/phpunit/phpunit/coverage/bootstrap.js": "/*! Bootstrap v5.3.6 */",
+		}
+		for file, data := range files {
+			if e := os.MkdirAll(filepath.Dir(filepath.Join(project, file)), 0755); e != nil {
+				t.Fatal(e)
+			}
+			put(t, project, file, data)
+		}
+		release, e := filepath.Abs("../../testdata/wp-plugin/dist/acme-booking-2.3.1.zip")
+		if e != nil {
+			t.Fatal(e)
+		}
+		for _, extra := range [][]string{nil, {"--release", release}} {
+			args := append([]string{"scan", "--offline"}, extra...)
+			out, _ := run(t, project, 11, args...)
+			if !strings.Contains(out, "2 build tools (not shipped)") || !strings.Contains(out, "4 packages to ship, 1 for development only") {
+				t.Fatalf("installed packages changed found counts: %s", out)
+			}
+			if !strings.Contains(out, "not listed anywhere (not shipped):") || !strings.Contains(out, "jQuery 3.7.1") {
+				t.Fatal(out)
+			}
+			data, e := os.ReadFile(filepath.Join(project, "cra/reports/inventory.json"))
+			if e != nil {
+				t.Fatal(e)
+			}
+			var report Report
+			if e = json.Unmarshal(data, &report); e != nil {
+				t.Fatal(e)
+			}
+			want := map[string]bool{"webpack": false, "lodash": false, "phpunit/phpunit": false, "jquery": false, "bootstrap": false}
+			for _, c := range report.Components {
+				if _, ok := want[c.Name]; ok {
+					if c.Shipped == nil || *c.Shipped || !c.Development {
+						t.Fatalf("development package escaped exclusion: %+v", c)
+					}
+					want[c.Name] = true
+				}
+			}
+			for name, found := range want {
+				if !found {
+					t.Fatalf("missing %s", name)
+				}
+			}
+			data, e = os.ReadFile(filepath.Join(project, "cra/reports/sbom.cdx.json"))
+			if e != nil {
+				t.Fatal(e)
+			}
+			var bom struct {
+				Components []struct{ Name, Scope string }
+			}
+			if e = json.Unmarshal(data, &bom); e != nil {
+				t.Fatal(e)
+			}
+			for _, c := range bom.Components {
+				if want[c.Name] && c.Scope != "excluded" {
+					t.Fatalf("development package required by SBOM: %+v", c)
+				}
+			}
+		}
+	})
 	root := t.TempDir()
 	copyTree(t, "../../testdata/wp-plugin/acme-booking", root)
 	out, errout := run(t, root, 11, "scan", "--offline", "--dry-run")
@@ -52,7 +123,7 @@ func TestBuiltScan(t *testing.T) {
 		t.Fatal("dry-run created cra")
 	}
 	out, errout = run(t, root, 11, "scan", "--offline")
-	for _, want := range []string{"Found", "Acme Booking 2.3.1", "4 packages to ship, 1 for development only", "2 build tools (not shipped)", "Bundled JS         not checked yet", "Release file       not checked yet", "cra/reports/inventory.json"} {
+	for _, want := range []string{"Found", "Acme Booking 2.3.1", "4 packages to ship, 1 for development only", "2 build tools (not shipped)", "Bundled JS         3 libraries in assets/js/vendor/ not listed anywhere:", "moment.js 2.24.0", "Select2 4.0.5", "jQuery Validation 1.19.1", "Release file       none;", "cra/reports/inventory.json"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("missing %q in %s", want, out)
 		}
@@ -68,7 +139,7 @@ func TestBuiltScan(t *testing.T) {
 	if e = json.Unmarshal(b, &saved); e != nil {
 		t.Fatal(e)
 	}
-	if saved.ScanID == "" || saved.ScannedAt.IsZero() || saved.Complete || !saved.Offline || len(saved.Components) != 7 || len(saved.InventoryDigest) != 64 || saved.Release != nil {
+	if saved.ScanID == "" || saved.ScannedAt.IsZero() || saved.Complete || !saved.Offline || len(saved.Components) != 10 || len(saved.InventoryDigest) != 64 || saved.Release != nil {
 		t.Fatalf("bad provenance: %+v", saved)
 	}
 	out, errout = run(t, root, 11, "scan", "--json")
@@ -87,13 +158,13 @@ func TestBuiltScan(t *testing.T) {
 	if _, e = os.Stat(filepath.Join(root, "cra.yml")); !os.IsNotExist(e) {
 		t.Fatal("scan created profile")
 	}
-	put(t, root, "cra.yml", "version: 1\nproduct:\n  version: 3.0.0\n  release: absent.zip\ncomponents: [{name: manual, version: '5', ecosystem: npm, shipped: true}]\n")
+	put(t, root, "cra.yml", "version: 1\nproduct:\n  version: 3.0.0\ncomponents: [{name: manual, version: '5', ecosystem: npm, shipped: true}]\n")
 	out, _ = run(t, root, 11, "scan", "--json")
-	if json.Unmarshal([]byte(out), &result) != nil || *result.ProductVersion != "3.0.0" || *result.Product.DetectedVersion != "2.3.1" || len(result.Components) != 7 {
+	if json.Unmarshal([]byte(out), &result) != nil || *result.ProductVersion != "3.0.0" || *result.Product.DetectedVersion != "2.3.1" || len(result.Components) != 11 {
 		t.Fatalf("wrong override: %s", out)
 	}
 	digestBeforeTriage := result.InventoryDigest
-	put(t, root, "cra.yml", "version: 1\nproduct: {version: 3.0.0}\nmanufacturer: {name: Example Maker}\ntriage: [{advisory: GHSA-example, component: 'pkg:npm/lodash@4.17.15', status: under_investigation, reason: Reviewing use, decided_on: 2026-10-20}]\n")
+	put(t, root, "cra.yml", "version: 1\nproduct: {version: 3.0.0}\ncomponents: [{name: manual, version: '5', ecosystem: npm, shipped: true}]\nmanufacturer: {name: Example Maker}\ntriage: [{advisory: GHSA-example, component: 'pkg:npm/lodash@4.17.15', status: under_investigation, reason: Reviewing use, decided_on: 2026-10-20}]\n")
 	out, _ = run(t, root, 11, "scan", "--json")
 	if json.Unmarshal([]byte(out), &result) != nil || result.InventoryDigest != digestBeforeTriage {
 		t.Fatal("triage or manufacturer changed inventory digest")
@@ -146,6 +217,63 @@ func TestBuiltScan(t *testing.T) {
 			}
 		})
 	}
+
+	release, e := filepath.Abs("../../testdata/wp-plugin/dist/acme-booking-2.3.1.zip")
+	if e != nil {
+		t.Fatal(e)
+	}
+	out, _ = run(t, root, 11, "scan", "--offline", "--release", release, "--json")
+	if e = json.Unmarshal([]byte(out), &result); e != nil || result.Release == nil {
+		t.Fatalf("missing release provenance: %s", out)
+	}
+	data, e := os.ReadFile(filepath.Join(root, "cra/reports/sbom.cdx.json"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	var bom struct {
+		Metadata struct {
+			Component struct {
+				PURL string `json:"purl"`
+			}
+			Properties []struct{ Name, Value string }
+		}
+	}
+	if e = json.Unmarshal(data, &bom); e != nil || bom.Metadata.Component.PURL != result.Product.PURL {
+		t.Fatalf("wrong SBOM: %s", data)
+	}
+	props := map[string]string{}
+	for _, p := range bom.Metadata.Properties {
+		props[p.Name] = p.Value
+	}
+	if props["conformline:scan_id"] != result.ScanID || props["conformline:inventory_digest"] != result.InventoryDigest || props["conformline:complete"] != "false" {
+		t.Fatal("SBOM provenance differs")
+	}
+	before, _ = os.ReadFile(filepath.Join(root, "cra/reports/inventory.json"))
+	out, errout = run(t, root, 2, "scan", "--release", "missing.zip", "--json")
+	if out != "" || !json.Valid([]byte(errout)) || !strings.Contains(errout, "missing or unreadable") {
+		t.Fatalf("wrong missing-release error: %s %s", out, errout)
+	}
+	put(t, root, "cra.yml", "version: 1\nproduct: {version: 9.0.0}\n")
+	out, errout = run(t, root, 2, "scan", "--release", release)
+	if out != "" || !strings.Contains(errout, "release version 2.3.1 differs from project version 9.0.0") || !strings.Contains(errout, "rebuild the release") {
+		t.Fatalf("wrong version error: %s %s", out, errout)
+	}
+	after, _ = os.ReadFile(filepath.Join(root, "cra/reports/inventory.json"))
+	if !bytes.Equal(before, after) {
+		t.Fatal("release error replaced inventory")
+	}
+	put(t, root, "cra.yml", "version: 1\ncomponents: [{path: assets/js/vendor/select2.min.js, version: 4.0.13, shipped: false}]\n")
+	out, _ = run(t, root, 11, "scan", "--offline", "--json")
+	if !strings.Contains(out, "pkg:npm/select2@4.0.13") || strings.Contains(out, "pkg:npm/select2@4.0.5") {
+		t.Fatal("manual correction not applied")
+	}
+	// A folder boundary gives the same inventory components as its ZIP.
+	folder := t.TempDir()
+	copyTree(t, "../../testdata/wp-plugin/acme-booking", folder)
+	out, _ = run(t, root, 11, "scan", "--offline", "--release", folder, "--json")
+	if json.Unmarshal([]byte(out), &result) != nil || result.Release == nil {
+		t.Fatal("folder release rejected")
+	}
 	out, errout = run(t, root, 1, "scan", "--unknown")
 	if !strings.Contains(errout, "unknown flag") {
 		t.Fatalf("bad usage: %s %s", out, errout)
@@ -180,3 +308,16 @@ func copyTree(t *testing.T, source, target string) {
 		t.Fatal(e)
 	}
 }
+
+func TestBundledSummaryDistinguishesListedLibraries(t *testing.T) {
+	var out bytes.Buffer
+	renderBundled(&out, []inventory.Component{
+		{Name: "moment", Version: detect.String("2.24.0"), Shipped: boolPointer(true), Evidence: []inventory.Evidence{{Path: "assets/vendor/moment.js", Method: "bundled JavaScript"}}},
+		{Name: "select2", Version: detect.String("4.0.5"), Shipped: boolPointer(true), Evidence: []inventory.Evidence{{Path: "node_modules/select2", Method: "npm lockfile"}, {Path: "assets/vendor/select2.js", Method: "release bundled JavaScript"}}},
+	})
+	text := out.String()
+	if !strings.Contains(text, "1 library in assets/vendor/ not listed anywhere:\n                     moment.js 2.24.0") || !strings.Contains(text, "1 library in assets/vendor/:\n                     Select2 4.0.5") {
+		t.Fatal(text)
+	}
+}
+func boolPointer(v bool) *bool { return &v }

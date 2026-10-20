@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/vincentsch/conformline/internal/detect"
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/conformline/internal/sbom"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -53,7 +55,8 @@ func New() *rungrad.App {
 	}})
 	dir := "."
 	app.Root().PersistentFlags().StringVar(&dir, "dir", ".", "Project root")
-	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find the product and inventory its dependencies offline", Long: "Read WordPress headers, Composer and npm metadata. Write cra/reports/inventory.json.\nScans currently run offline and exit 11 because vulnerability lookups have not run.\nAn existing cra.yml is validated; only product.version is applied.\nUse --dry-run to preview the result without writing files.", Examples: []string{"conformline scan --offline", "conformline scan --offline --dir ./my-plugin --json", "conformline scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
+	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find the product and inventory its dependencies offline", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite cra/reports/inventory.json and sbom.cdx.json.\nScans currently run offline and exit 11 because vulnerability lookups have not run.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"conformline scan --offline", "conformline scan --offline --dir ./my-plugin --json", "conformline scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
+		cmd.Flags().String("release", "", "Release ZIP or folder, relative to --dir (overrides product.release)")
 		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups (currently always offline)")
 	}, Run: func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
 		p, e := detect.Detect(dir)
@@ -70,7 +73,12 @@ func New() *rungrad.App {
 				p.Notes = append(p.Notes, "product.version overrides the detected version; review both versions in inventory.json")
 			}
 		}
-		inv, e := inventory.Build(dir, p)
+		var release *string
+		if cmd.Flags().Changed("release") {
+			value, _ := cmd.Flags().GetString("release")
+			release = &value
+		}
+		inv, e := inventory.BuildWithOptions(dir, p, inventory.Options{Release: release, Profile: prof})
 		if e != nil {
 			return rungrad.NewError(2, e.Error())
 		}
@@ -82,12 +90,12 @@ func New() *rungrad.App {
 		if _, e = rand.Read(id); e != nil {
 			return rungrad.NewError(2, "Cannot create scan identity; run conformline scan again")
 		}
-		r := Report{ScanID: hex.EncodeToString(id), ScannedAt: time.Now().UTC(), ProductVersion: p.Version, InventoryDigest: digest, Offline: true, DryRun: f.DryRun(), Output: "cra/reports/inventory.json", IncompleteReasons: []string{"Offline scan: vulnerability lookups have not run"}, Inventory: inv}
+		r := Report{ScanID: hex.EncodeToString(id), ScannedAt: time.Now().UTC(), ProductVersion: inv.Product.Version, InventoryDigest: digest, Offline: true, DryRun: f.DryRun(), Output: "cra/reports/inventory.json", IncompleteReasons: []string{"Offline scan: vulnerability lookups have not run"}, Inventory: inv}
 		for _, gap := range inv.CoverageGaps {
 			r.IncompleteReasons = append(r.IncompleteReasons, gap.Message)
 		}
 		if !f.DryRun() {
-			if e := writeReport(dir, r); e != nil {
+			if e := writeReport(dir, r, prof); e != nil {
 				return rungrad.NewError(2, e.Error())
 			}
 		}
@@ -110,7 +118,7 @@ func safeError(e error) string {
 	}
 	return e.Error()
 }
-func writeReport(root string, r Report) error {
+func writeReport(root string, r Report, prof *profile.Profile) error {
 	dir := filepath.Join(root, "cra", "reports")
 	if e := os.MkdirAll(dir, 0755); e != nil {
 		return fmt.Errorf("cannot create cra/reports; check project permissions")
@@ -118,6 +126,20 @@ func writeReport(root string, r Report) error {
 	b, e := json.MarshalIndent(r, "", "  ")
 	if e != nil {
 		return e
+	}
+	sbomFile, e := os.CreateTemp(dir, ".sbom-*.json")
+	if e != nil {
+		return fmt.Errorf("cannot write sbom.cdx.json; check cra/reports permissions")
+	}
+	defer os.Remove(sbomFile.Name())
+	bom := sbom.New(r.Inventory, prof, sbom.Provenance{ScanID: r.ScanID, ScannedAt: r.ScannedAt, InventoryDigest: r.InventoryDigest, Complete: r.Complete, Offline: r.Offline, IncompleteReasons: r.IncompleteReasons}, "0.1.0")
+	e = sbom.Write(sbomFile, bom)
+	closeErr := sbomFile.Close()
+	if e == nil {
+		e = closeErr
+	}
+	if e != nil {
+		return fmt.Errorf("cannot encode sbom.cdx.json: %w", e)
 	}
 	b = append(b, '\n')
 	f, e := os.CreateTemp(dir, ".inventory-*.json")
@@ -137,10 +159,13 @@ func writeReport(root string, r Report) error {
 	if e != nil {
 		return fmt.Errorf("cannot replace inventory.json; check cra/reports permissions")
 	}
+	if e = os.Rename(sbomFile.Name(), filepath.Join(dir, "sbom.cdx.json")); e != nil {
+		return fmt.Errorf("cannot replace sbom.cdx.json; check cra/reports permissions")
+	}
 	return nil
 }
 func render(w io.Writer, r Report) {
-	labels := map[string]string{"wordpress-plugin": "WordPress plugin", "wordpress-theme": "WordPress theme", "composer-package": "Composer package", "npm-package": "npm package", "other": "Product"}
+	labels := map[string]string{"wordpress-plugin": "WordPress plugin", "wordpress-theme": "WordPress theme", "composer-package": "Composer package", "npm-package": "npm package", "other": "Product", "application": "Application"}
 	name := "unknown"
 	if r.Product.Name != nil {
 		name = *r.Product.Name
@@ -155,34 +180,45 @@ func render(w io.Writer, r Report) {
 	}
 	fmt.Fprintln(w)
 	for _, eco := range []string{"composer", "npm"} {
-		runtime, dev, unknown := 0, 0, 0
+		shipped, dev, excluded, unknown := 0, 0, 0, 0
 		for _, c := range r.Components {
-			if c.Ecosystem != eco {
+			if c.Ecosystem != eco || strings.Contains(c.Source.Method, "bundled JavaScript") {
 				continue
 			}
-			if c.Development {
-				dev++
+			if c.Shipped != nil && *c.Shipped {
+				shipped++
 			} else if c.Shipped == nil {
 				unknown++
-			} else if *c.Shipped {
-				runtime++
+			} else if c.Development {
+				dev++
+			} else {
+				excluded++
 			}
 		}
 		label := "Composer"
 		if eco == "npm" {
 			label = "npm"
 		}
-		if eco == "npm" && runtime == 0 && unknown == 0 && dev > 0 {
+		if eco == "npm" && shipped == 0 && unknown == 0 && excluded == 0 && dev > 0 {
 			fmt.Fprintf(w, "  %-18s %d build tools (not shipped)\n", label, dev)
 			continue
 		}
-		fmt.Fprintf(w, "  %-18s %d packages to ship, %d for development only (not shipped)", label, runtime, dev)
+		fmt.Fprintf(w, "  %-18s %d packages to ship, %d for development only (not shipped)", label, shipped, dev)
+		if excluded > 0 {
+			fmt.Fprintf(w, ", %d absent from release (not shipped)", excluded)
+		}
 		if unknown > 0 {
-			fmt.Fprintf(w, ", %d shipped: unknown (may be compiled into your bundles); set product.release", unknown)
+			fmt.Fprintf(w, ", %d shipped: unknown (may be compiled into your bundles)", unknown)
 		}
 		fmt.Fprintln(w)
 	}
-	fmt.Fprintln(w, "  Bundled JS         not checked yet\n  Release file       not checked yet")
+	renderBundled(w, r.Components)
+	release := "none; set product.release to confirm what ships"
+	if r.Release != nil {
+		release = *r.Release
+	}
+	fmt.Fprintln(w, "  Release file       "+release)
+	fmt.Fprintln(w, "  Note               Development packages compiled into bundles need a manual shipped correction or a move to dependencies")
 	for _, note := range r.Product.Notes {
 		fmt.Fprintln(w, "  Note               "+note)
 	}
@@ -193,9 +229,81 @@ func render(w io.Writer, r Report) {
 		fmt.Fprintln(w, "  Next               Set product.version in cra.yml; the product version is unknown")
 	}
 	if r.DryRun {
-		fmt.Fprintln(w, "\nDRY RUN: would write "+r.Output+"; no changes were made")
+		fmt.Fprintln(w, "\nDRY RUN: would write "+r.Output+" and cra/reports/sbom.cdx.json; no changes were made")
 	} else {
-		fmt.Fprintln(w, "\nInventory: "+r.Output)
+		fmt.Fprintln(w, "\nInventory: "+r.Output+"\nSBOM: cra/reports/sbom.cdx.json")
 	}
 	fmt.Fprintln(w, "Offline scan incomplete: vulnerability lookups have not run.")
+}
+
+func renderBundled(w io.Writer, components []inventory.Component) {
+	type group struct {
+		directory, state string
+		unlisted         bool
+		libraries        []string
+	}
+	groups := []group{}
+	for _, c := range components {
+		directory := ""
+		unlisted := true
+		for _, ev := range c.Evidence {
+			if strings.Contains(ev.Method, "bundled JavaScript") {
+				if directory == "" {
+					directory = path.Dir(ev.Path) + "/"
+				}
+			} else {
+				unlisted = false
+			}
+		}
+		if directory == "" {
+			continue
+		}
+		version := "version unknown"
+		if c.Version != nil {
+			version = *c.Version
+		}
+		state := "shipped: unknown"
+		if c.Shipped != nil {
+			if *c.Shipped {
+				state = ""
+			} else {
+				state = "not shipped"
+			}
+		}
+		index := -1
+		for i, g := range groups {
+			if g.directory == directory && g.state == state && g.unlisted == unlisted {
+				index = i
+				break
+			}
+		}
+		if index < 0 {
+			index = len(groups)
+			groups = append(groups, group{directory: directory, state: state, unlisted: unlisted})
+		}
+		groups[index].libraries = append(groups[index].libraries, inventory.LibraryDisplayName(c.Name)+" "+version)
+	}
+	if len(groups) == 0 {
+		fmt.Fprintln(w, "  Bundled JS         none detected")
+	}
+	for _, g := range groups {
+		label := "libraries"
+		if len(g.libraries) == 1 {
+			label = "library"
+		}
+		fmt.Fprintf(w, "  Bundled JS         %d %s in %s", len(g.libraries), label, g.directory)
+		if g.unlisted {
+			fmt.Fprint(w, " not listed anywhere")
+		}
+		if g.state != "" {
+			fmt.Fprintf(w, " (%s)", g.state)
+		}
+		fmt.Fprintln(w, ":")
+		fmt.Fprintln(w, "                     "+strings.Join(g.libraries, ", "))
+	}
+	for _, c := range components {
+		if c.Note != "" {
+			fmt.Fprintln(w, "  Note               "+c.Note)
+		}
+	}
 }

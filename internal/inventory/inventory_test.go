@@ -20,16 +20,16 @@ func TestFixtureInventory(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	if len(inv.Components) != 7 || len(inv.CoverageGaps) != 0 {
+	if len(inv.Components) != 10 || len(inv.CoverageGaps) != 0 {
 		t.Fatalf("components %d gaps %+v", len(inv.Components), inv.CoverageGaps)
 	}
-	runtime := map[string]bool{"guzzlehttp/guzzle": true, "guzzlehttp/psr7": true, "guzzlehttp/promises": true, "psr/http-message": true}
+	runtime := map[string]bool{"guzzlehttp/guzzle": true, "guzzlehttp/psr7": true, "guzzlehttp/promises": true, "psr/http-message": true, "jquery-validation": true, "moment": true, "select2": true}
 	for _, c := range inv.Components {
 		want := runtime[c.Name]
-		if c.Shipped == nil || *c.Shipped != want || c.Development == want {
+		if c.Shipped == nil || *c.Shipped != want || (c.Development == want && c.Ecosystem == "composer") {
 			t.Fatalf("wrong boundary: %+v", c)
 		}
-		if want && len(c.Evidence) != 2 {
+		if want && c.Ecosystem == "composer" && len(c.Evidence) != 2 {
 			t.Fatalf("missing occurrences: %+v", c)
 		}
 	}
