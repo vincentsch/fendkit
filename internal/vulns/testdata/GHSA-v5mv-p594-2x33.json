@@ -1,0 +1,108 @@
+{
+  "id": "GHSA-v5mv-p594-2x33",
+  "aliases": [
+    "CVE-2026-69246"
+  ],
+  "summary": "Guzzle: Noncanonical host can bypass host-based checks",
+  "published": "2026-08-03T21:07:26Z",
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-v5mv-p594-2x33"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/pull/3907"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/pull/3908"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/commit/3aeea0406aab88cbbd86531313d7cebf8ae149a4"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/commit/744101956d78b7c1384d0cbf379db13e859167bf"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/guzzle/guzzle"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/releases/tag/7.15.2"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/guzzle/guzzle/releases/tag/8.0.1"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "name": "guzzlehttp/guzzle",
+        "ecosystem": "Packagist",
+        "purl": "pkg:composer/guzzlehttp/guzzle"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "7.15.2"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/08/GHSA-v5mv-p594-2x33/GHSA-v5mv-p594-2x33.json"
+      }
+    },
+    {
+      "package": {
+        "name": "guzzlehttp/guzzle",
+        "ecosystem": "Packagist",
+        "purl": "pkg:composer/guzzlehttp/guzzle"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "8.0.0"
+            },
+            {
+              "fixed": "8.0.1"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "source": "https://github.com/github/advisory-database/blob/main/advisories/github-reviewed/2026/08/GHSA-v5mv-p594-2x33/GHSA-v5mv-p594-2x33.json"
+      }
+    }
+  ],
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N"
+    }
+  ],
+  "database_specific": {
+    "nvd_published_at": null,
+    "cwe_ids": [
+      "CWE-180",
+      "CWE-436",
+      "CWE-918",
+      "CWE-941"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-08-03T21:07:26Z"
+  }
+}

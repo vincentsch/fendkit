@@ -18,6 +18,7 @@ import (
 	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
 	"github.com/vincentsch/conformline/internal/sbom"
+	"github.com/vincentsch/conformline/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -31,10 +32,13 @@ type Report struct {
 	Offline           bool      `json:"offline"`
 	DryRun            bool      `json:"dry_run"`
 	Output            string    `json:"output"`
+	FindingCount      int       `json:"finding_count"`
 	inventory.Inventory
 }
 
-func New() *rungrad.App {
+func New() *rungrad.App { return newApp(vulns.NewClient()) }
+
+func newApp(client *vulns.Client) *rungrad.App {
 	app := rungrad.New(rungrad.AppConfig{Name: "conformline", Short: "Prepare your Cyber Resilience Act evidence", Long: "Find your product and its dependencies, and record what still needs review.", Version: "0.1.0", ErrorPolicy: &rungrad.ErrorPolicy{
 		Render: func(ctx rungrad.ErrorContext) error {
 			var pending *incomplete
@@ -55,9 +59,9 @@ func New() *rungrad.App {
 	}})
 	dir := "."
 	app.Root().PersistentFlags().StringVar(&dir, "dir", ".", "Project root")
-	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find the product and inventory its dependencies offline", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite cra/reports/inventory.json and sbom.cdx.json.\nScans currently run offline and exit 11 because vulnerability lookups have not run.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"conformline scan --offline", "conformline scan --offline --dir ./my-plugin --json", "conformline scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
+	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find dependencies and look up known vulnerabilities", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite inventory.json, sbom.cdx.json, vulnerabilities.json and vulnerabilities.md under cra/reports/.\nExport vex.openvex.json when saved triage matches findings.\nLookups send package names, versions and advisory ids to OSV.dev, and download CISA KEV.\nPackage names and versions can reveal product information.\nExit 0 for complete lookups, 11 for offline or failed lookups.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"conformline scan", "conformline scan --offline", "conformline scan --offline --dir ./my-plugin --json", "conformline scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
 		cmd.Flags().String("release", "", "Release ZIP or folder, relative to --dir (overrides product.release)")
-		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups (currently always offline)")
+		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups and mark the scan incomplete")
 	}, Run: func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
 		p, e := detect.Detect(dir)
 		if e != nil {
@@ -90,11 +94,24 @@ func New() *rungrad.App {
 		if _, e = rand.Read(id); e != nil {
 			return rungrad.NewError(2, "Cannot create scan identity; run conformline scan again")
 		}
-		r := Report{ScanID: hex.EncodeToString(id), ScannedAt: time.Now().UTC(), ProductVersion: inv.Product.Version, InventoryDigest: digest, Offline: true, DryRun: f.DryRun(), Output: "cra/reports/inventory.json", IncompleteReasons: []string{"Offline scan: vulnerability lookups have not run"}, Inventory: inv}
-		for _, gap := range inv.CoverageGaps {
-			r.IncompleteReasons = append(r.IncompleteReasons, gap.Message)
+		offline, _ := cmd.Flags().GetBool("offline")
+		// A preview avoids disclosing package information through lookups.
+		findings, reasons := client.Lookup(cmd.Context(), inv, offline || f.DryRun())
+		if f.DryRun() && !offline {
+			reasons = []string{"Dry run: vulnerability lookups have not run"}
 		}
+		r := Report{ScanID: hex.EncodeToString(id), ScannedAt: time.Now().UTC(), ProductVersion: inv.Product.Version, InventoryDigest: digest, Complete: len(reasons) == 0, Offline: offline, DryRun: f.DryRun(), Output: "cra/reports/inventory.json", IncompleteReasons: reasons, Inventory: inv}
+		vr := vulns.Report{ScanID: r.ScanID, ScannedAt: r.ScannedAt, ProductVersion: r.ProductVersion, ProductPURL: inv.Product.PURL, InventoryDigest: digest, Complete: r.Complete, Reason: reasons, Findings: findings, CoverageGaps: inv.CoverageGaps}
+		vulns.Apply(&vr, prof)
+		r.FindingCount = len(vr.Findings)
+		if _, e = vulns.VEX(vr, prof); e != nil {
+			return rungrad.NewError(1, e.Error())
+		}
+
 		if !f.DryRun() {
+			if e := vulns.Write(dir, vr, prof); e != nil {
+				return rungrad.NewError(2, e.Error())
+			}
 			if e := writeReport(dir, r, prof); e != nil {
 				return rungrad.NewError(2, e.Error())
 			}
@@ -102,15 +119,19 @@ func New() *rungrad.App {
 		if e := f.WriteResult(r, func(w io.Writer) { render(w, r) }); e != nil {
 			return e
 		}
-		return &incomplete{}
+		if !r.Complete {
+			return &incomplete{}
+		}
+		return nil
 	}})
+	app.AddCommand(triageCommand(&dir))
 	return app
 }
 
 // A scan result has already been printed; incompleteness is an exit status.
 type incomplete struct{}
 
-func (*incomplete) Error() string { return "Offline scan incomplete" }
+func (*incomplete) Error() string { return "Vulnerability scan incomplete" }
 func (*incomplete) ExitCode() int { return 11 }
 func safeError(e error) string {
 	if _, ok := e.(*os.PathError); ok {
@@ -229,11 +250,18 @@ func render(w io.Writer, r Report) {
 		fmt.Fprintln(w, "  Next               Set product.version in cra.yml; the product version is unknown")
 	}
 	if r.DryRun {
-		fmt.Fprintln(w, "\nDRY RUN: would write "+r.Output+" and cra/reports/sbom.cdx.json; no changes were made")
+		fmt.Fprintln(w, "\nDRY RUN: would write "+r.Output+" and cra/reports/sbom.cdx.json, vulnerabilities.json, vulnerabilities.md and matching VEX; no changes were made")
 	} else {
 		fmt.Fprintln(w, "\nInventory: "+r.Output+"\nSBOM: cra/reports/sbom.cdx.json")
 	}
-	fmt.Fprintln(w, "Offline scan incomplete: vulnerability lookups have not run.")
+	if r.Complete {
+		fmt.Fprintf(w, "%d advisory groups found.\n", r.FindingCount)
+		fmt.Fprintln(w, "Vulnerability lookups complete. Review cra/reports/vulnerabilities.md.")
+	} else {
+		for _, reason := range r.IncompleteReasons {
+			fmt.Fprintln(w, "Scan incomplete: "+reason)
+		}
+	}
 }
 
 func renderBundled(w io.Writer, components []inventory.Component) {

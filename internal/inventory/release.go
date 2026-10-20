@@ -477,8 +477,8 @@ func BuildWithOptions(root string, p detect.Product, opts Options) (Inventory, e
 		gaps = append(gaps, gap)
 	}
 	for _, c := range inv.Components {
-		if c.Ecosystem == "github" {
-			gaps = append(gaps, Gap{Code: "unsupported_advisory_ecosystem", File: c.Source.File, Package: c.Name, Message: c.Name + ": advisory lookups are not available for this fork; review its upstream security information"})
+		if c.Ecosystem != "composer" && c.Ecosystem != "npm" {
+			gaps = append(gaps, Gap{Code: "unsupported_advisory_ecosystem", File: c.Source.File, Package: c.Name, Message: c.Name + ": advisory lookups are not available for this component; review its upstream security information"})
 		}
 		if c.Version == nil {
 			gaps = append(gaps, Gap{Code: "unknown_version", File: c.Source.File, Package: c.Name, Message: c.Name + ": version unknown; confirm it with a manual components entry in cra.yml"})

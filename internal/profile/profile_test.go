@@ -78,7 +78,8 @@ triage:
 			advisory, status, reason := "GHSA-example", "under_investigation", "Reviewing use"
 			p.Manufacturer.Name = &name
 			p.Components = []Component{{Name: &name, Version: &version, Ecosystem: &eco}}
-			p.Triage = []Triage{{Advisory: &advisory, Status: &status, Reason: &reason}}
+			component, date := "pkg:composer/maker/library@1.0.0", "2026-10-20"
+			p.Triage = []Triage{{Advisory: &advisory, Component: &component, Status: &status, Reason: &reason, DecidedOn: &date}}
 			file := filepath.Join(t.TempDir(), "cra.yml")
 			for save := 0; save < 2; save++ {
 				if e = p.Save(file); e != nil {

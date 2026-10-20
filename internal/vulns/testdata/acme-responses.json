@@ -1,0 +1,3048 @@
+{
+  "queries": {
+    "composer:guzzlehttp/guzzle@7.4.0": [
+      "GHSA-25mq-v84q-4j7r",
+      "GHSA-94pj-82f3-465w",
+      "GHSA-cwmx-hcrq-mhc3",
+      "GHSA-cwxw-98qj-8qjx",
+      "GHSA-f283-ghqc-fg79",
+      "GHSA-f2wf-25xc-69c9",
+      "GHSA-f7vp-7xgx-4w4r",
+      "GHSA-g446-98w2-8p5w",
+      "GHSA-h95v-h523-3mw8",
+      "GHSA-q559-8m2m-g699",
+      "GHSA-v5mv-p594-2x33",
+      "GHSA-w248-ffj2-4v5q",
+      "GHSA-wm3w-8rrp-j577",
+      "GHSA-wpwq-4j6v-78m3"
+    ],
+    "composer:guzzlehttp/psr7@2.1.0": [
+      "GHSA-34xg-wgjx-8xph",
+      "GHSA-c2w2-prh8-qm98",
+      "GHSA-hq7v-mx3g-29hw",
+      "GHSA-q7rv-6hp3-vh96",
+      "GHSA-vm85-hxw5-5432",
+      "GHSA-wxmh-65f7-jcvw"
+    ],
+    "composer:phpunit/phpunit@9.5.0": [
+      "GHSA-vvj3-c3rp-c85p"
+    ],
+    "npm:jquery-validation@1.19.1": [
+      "GHSA-ffmh-x56j-9rc3",
+      "GHSA-j9m2-h2pv-wvph",
+      "GHSA-jxwx-85vp-gvwm",
+      "GHSA-rrj2-ph5q-jxw2"
+    ],
+    "npm:lodash@4.17.15": [
+      "GHSA-29mw-wpgm-hmr9",
+      "GHSA-35jh-r3h4-6jhm",
+      "GHSA-f23m-r3pf-42rh",
+      "GHSA-p6mc-m468-83gw",
+      "GHSA-r5fr-rjxr-66jc",
+      "GHSA-xxjr-mmjv-4gpg"
+    ],
+    "npm:moment@2.24.0": [
+      "GHSA-8hfj-j24r-96c4",
+      "GHSA-wc69-rhjr-hc9g"
+    ],
+    "npm:select2@4.0.5": [
+      "GHSA-rf66-hmqf-q3fc"
+    ],
+    "npm:webpack@5.75.0": [
+      "GHSA-38r7-794h-5758",
+      "GHSA-4vvj-4cpr-p986",
+      "GHSA-8fgc-7cc6-rx7x",
+      "GHSA-hc6q-2mpp-qw7j"
+    ]
+  },
+  "advisories": {
+    "GHSA-cwmx-hcrq-mhc3": {
+      "id": "GHSA-cwmx-hcrq-mhc3",
+      "aliases": [
+        "BIT-drupal-2022-29248",
+        "CVE-2022-29248",
+        "DRUPAL-CORE-2022-010"
+      ],
+      "summary": "Cross-domain cookie leakage in Guzzle",
+      "published": "2022-05-25T18:09:55Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "6.5.6"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "7.0.0"
+                },
+                {
+                  "fixed": "7.4.3"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "7.0.0",
+            "7.0.1",
+            "7.1.0",
+            "7.4.0",
+            "7.4.1",
+            "7.4.2"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-cwmx-hcrq-mhc3"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-29248"
+        }
+      ]
+    },
+    "GHSA-f2wf-25xc-69c9": {
+      "id": "GHSA-f2wf-25xc-69c9",
+      "aliases": [
+        "BIT-drupal-2022-31042",
+        "BIT-drupal-2022-31043",
+        "CVE-2022-31042",
+        "CVE-2022-31043",
+        "DRUPAL-CORE-2022-011",
+        "GHSA-w248-ffj2-4v5q"
+      ],
+      "summary": "Failure to strip the Cookie header on change in host or HTTP downgrade",
+      "published": "2022-06-09T23:47:25Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "6.5.7"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.1",
+            "4.0.2",
+            "6.5.4",
+            "6.5.5",
+            "6.5.6"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "7.0.0"
+                },
+                {
+                  "fixed": "7.4.4"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "7.0.0",
+            "7.0.1",
+            "7.1.0",
+            "7.4.1",
+            "7.4.2",
+            "7.4.3"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-f2wf-25xc-69c9"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31042"
+        }
+      ]
+    },
+    "GHSA-w248-ffj2-4v5q": {
+      "id": "GHSA-w248-ffj2-4v5q",
+      "aliases": [
+        "BIT-drupal-2022-31042",
+        "BIT-drupal-2022-31043",
+        "CVE-2022-31042",
+        "CVE-2022-31043",
+        "DRUPAL-CORE-2022-011",
+        "GHSA-f2wf-25xc-69c9"
+      ],
+      "summary": "Fix failure to strip Authorization header on HTTP downgrade",
+      "published": "2022-06-09T23:47:23Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "6.5.7"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.1",
+            "4.0.2",
+            "6.5.4",
+            "6.5.5",
+            "6.5.6"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "7.0.0"
+                },
+                {
+                  "fixed": "7.4.4"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "7.0.0",
+            "7.0.1",
+            "7.1.0",
+            "7.4.1",
+            "7.4.2",
+            "7.4.3"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-w248-ffj2-4v5q"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31043"
+        }
+      ]
+    },
+    "GHSA-25mq-v84q-4j7r": {
+      "id": "GHSA-25mq-v84q-4j7r",
+      "aliases": [
+        "CVE-2022-31090"
+      ],
+      "summary": "CURLOPT_HTTPAUTH option not cleared on change of origin",
+      "published": "2022-06-21T16:57:10Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "6.5.8"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "7.0.0"
+                },
+                {
+                  "fixed": "7.4.5"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "7.0.0",
+            "7.0.1",
+            "7.1.0",
+            "7.4.2",
+            "7.4.3",
+            "7.4.4"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-25mq-v84q-4j7r"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31090"
+        }
+      ]
+    },
+    "GHSA-q559-8m2m-g699": {
+      "id": "GHSA-q559-8m2m-g699",
+      "aliases": [
+        "CVE-2022-31091"
+      ],
+      "summary": "Change in port should be considered a change in origin",
+      "published": "2022-06-21T20:07:16Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "6.5.8"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "7.0.0"
+                },
+                {
+                  "fixed": "7.4.5"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "7.0.0",
+            "7.0.1",
+            "7.1.0",
+            "7.4.2",
+            "7.4.3",
+            "7.4.4"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-q559-8m2m-g699"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31091"
+        }
+      ]
+    },
+    "GHSA-wpwq-4j6v-78m3": {
+      "id": "GHSA-wpwq-4j6v-78m3",
+      "aliases": [
+        "CVE-2026-55568"
+      ],
+      "summary": "guzzlehttp/guzzle: Silent HTTPS-Proxy Downgrade to Cleartext",
+      "published": "2026-06-19T14:17:59Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.12.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-wpwq-4j6v-78m3"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/guzzle/guzzle"
+        }
+      ]
+    },
+    "GHSA-cwxw-98qj-8qjx": {
+      "id": "GHSA-cwxw-98qj-8qjx",
+      "aliases": [
+        "CVE-2026-55767"
+      ],
+      "summary": "guzzlehttp/guzzle: Dot-Only Cookie Domains Match All Hosts",
+      "published": "2026-06-19T14:37:29Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.12.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-cwxw-98qj-8qjx"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-55767"
+        }
+      ]
+    },
+    "GHSA-g446-98w2-8p5w": {
+      "id": "GHSA-g446-98w2-8p5w",
+      "aliases": [
+        "CVE-2026-59883"
+      ],
+      "summary": "Guzzle: Cookie Disclosure and Injection via IP-Address Domains",
+      "published": "2026-07-20T22:00:09Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.12.3"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-g446-98w2-8p5w"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59883"
+        }
+      ]
+    },
+    "GHSA-94pj-82f3-465w": {
+      "id": "GHSA-94pj-82f3-465w",
+      "aliases": [
+        "CVE-2026-67339"
+      ],
+      "summary": "Guzzle: Proxy-Authorization headers can be sent to origin servers",
+      "published": "2026-07-20T21:46:02Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.14.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-94pj-82f3-465w"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67339"
+        }
+      ]
+    },
+    "GHSA-f283-ghqc-fg79": {
+      "id": "GHSA-f283-ghqc-fg79",
+      "aliases": [
+        "CVE-2026-67353"
+      ],
+      "summary": "Guzzle: Unbounded response cookies risk denial of service",
+      "published": "2026-07-20T23:27:02Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.15.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-f283-ghqc-fg79"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67353"
+        }
+      ]
+    },
+    "GHSA-h95v-h523-3mw8": {
+      "id": "GHSA-h95v-h523-3mw8",
+      "aliases": [
+        "CVE-2026-67354"
+      ],
+      "summary": "Guzzle: URI fragments disclosed in redirect Referer headers",
+      "published": "2026-07-20T23:28:36Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.15.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-h95v-h523-3mw8"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67354"
+        }
+      ]
+    },
+    "GHSA-wm3w-8rrp-j577": {
+      "id": "GHSA-wm3w-8rrp-j577",
+      "aliases": [
+        "CVE-2026-67355"
+      ],
+      "summary": "Guzzle: Host-only cookie scope is not preserved",
+      "published": "2026-07-20T23:27:49Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.15.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-wm3w-8rrp-j577"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-67355"
+        }
+      ]
+    },
+    "GHSA-f7vp-7xgx-4w4r": {
+      "id": "GHSA-f7vp-7xgx-4w4r",
+      "aliases": [
+        "CVE-2026-69245"
+      ],
+      "summary": "Guzzle: Noncanonical cookie domain keeps subdomain scope",
+      "published": "2026-08-03T21:05:26Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.15.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.0.0"
+                },
+                {
+                  "fixed": "8.0.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "8.0.0"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-f7vp-7xgx-4w4r"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/pull/3907"
+        }
+      ]
+    },
+    "GHSA-v5mv-p594-2x33": {
+      "id": "GHSA-v5mv-p594-2x33",
+      "aliases": [
+        "CVE-2026-69246"
+      ],
+      "summary": "Guzzle: Noncanonical host can bypass host-based checks",
+      "published": "2026-08-03T21:07:26Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "7.15.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.0.0-rc.1",
+            "4.0.0-rc.2",
+            "v3.7.4",
+            "v3.8.0",
+            "v3.8.1"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/guzzle",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "8.0.0"
+                },
+                {
+                  "fixed": "8.0.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "8.0.0"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/security/advisories/GHSA-v5mv-p594-2x33"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/guzzle/pull/3907"
+        }
+      ]
+    },
+    "GHSA-q7rv-6hp3-vh96": {
+      "id": "GHSA-q7rv-6hp3-vh96",
+      "aliases": [
+        "BIT-drupal-2022-24775",
+        "CVE-2022-24775",
+        "DRUPAL-CORE-2022-006"
+      ],
+      "summary": "Improper Input Validation in guzzlehttp/psr7",
+      "published": "2022-03-25T19:26:33Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.8.4"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.0.0",
+            "1.1.0",
+            "1.2.0",
+            "1.8.1",
+            "1.8.2",
+            "1.8.3"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "2.1.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "2.0.0",
+            "2.1.0"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-q7rv-6hp3-vh96"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-24775"
+        }
+      ]
+    },
+    "GHSA-wxmh-65f7-jcvw": {
+      "id": "GHSA-wxmh-65f7-jcvw",
+      "aliases": [
+        "CVE-2023-29197"
+      ],
+      "summary": "Improper header name validation in guzzlehttp/psr7",
+      "published": "2023-04-19T18:25:53Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.9.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.0.0",
+            "1.1.0",
+            "1.2.0",
+            "1.8.4",
+            "1.8.5",
+            "1.9.0"
+          ]
+        },
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.0.0"
+                },
+                {
+                  "fixed": "2.4.5"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "2.0.0",
+            "2.1.0",
+            "2.1.1",
+            "2.4.2",
+            "2.4.3",
+            "2.4.4"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-q7rv-6hp3-vh96"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-wxmh-65f7-jcvw"
+        }
+      ]
+    },
+    "GHSA-34xg-wgjx-8xph": {
+      "id": "GHSA-34xg-wgjx-8xph",
+      "aliases": [
+        "CVE-2026-48998"
+      ],
+      "summary": "guzzlehttp/psr7 has Host Confusion via Authority Reinterpretation",
+      "published": "2026-06-11T13:04:53Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.10.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.0.0",
+            "1.1.0",
+            "1.2.0",
+            "2.8.1",
+            "2.9.0",
+            "2.9.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-34xg-wgjx-8xph"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-48998"
+        }
+      ]
+    },
+    "GHSA-hq7v-mx3g-29hw": {
+      "id": "GHSA-hq7v-mx3g-29hw",
+      "aliases": [
+        "CVE-2026-49214"
+      ],
+      "summary": "guzzlehttp/psr7 has CRLF Injection via URI Host Component",
+      "published": "2026-06-11T13:04:47Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.10.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.0.0",
+            "1.1.0",
+            "1.2.0",
+            "2.8.1",
+            "2.9.0",
+            "2.9.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-hq7v-mx3g-29hw"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-49214"
+        }
+      ]
+    },
+    "GHSA-vm85-hxw5-5432": {
+      "id": "GHSA-vm85-hxw5-5432",
+      "aliases": [
+        "CVE-2026-55766"
+      ],
+      "summary": "guzzlehttp/psr7: CRLF Injection in HTTP Start-Line Serialization",
+      "published": "2026-06-19T14:35:57Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.12.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.0.0",
+            "1.1.0",
+            "1.2.0",
+            "2.8.1",
+            "2.9.0",
+            "2.9.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-vm85-hxw5-5432"
+        },
+        {
+          "type": "PACKAGE",
+          "url": "https://github.com/guzzle/psr7"
+        }
+      ]
+    },
+    "GHSA-c2w2-prh8-qm98": {
+      "id": "GHSA-c2w2-prh8-qm98",
+      "aliases": [
+        "CVE-2026-59882"
+      ],
+      "summary": "guzzlehttp/psr7: Host Confusion via Weak URI Host Validation",
+      "published": "2026-07-21T18:35:25Z",
+      "affected": [
+        {
+          "package": {
+            "name": "guzzlehttp/psr7",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.12.3"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.0.0",
+            "1.1.0",
+            "1.2.0",
+            "2.8.1",
+            "2.9.0",
+            "2.9.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/guzzle/psr7/security/advisories/GHSA-c2w2-prh8-qm98"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-59882"
+        }
+      ]
+    },
+    "GHSA-vvj3-c3rp-c85p": {
+      "id": "GHSA-vvj3-c3rp-c85p",
+      "aliases": [
+        "CVE-2026-24765"
+      ],
+      "summary": "PHPUnit Vulnerable to Unsafe Deserialization in PHPT Code Coverage Handling",
+      "published": "2026-01-27T22:26:22Z",
+      "affected": [
+        {
+          "package": {
+            "name": "phpunit/phpunit",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "8.5.52"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "3.7.0",
+            "3.7.1",
+            "3.7.10",
+            "8.5.7",
+            "8.5.8",
+            "8.5.9"
+          ]
+        },
+        {
+          "package": {
+            "name": "phpunit/phpunit",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "9.0.0"
+                },
+                {
+                  "fixed": "9.6.33"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "9.0.0",
+            "9.0.1",
+            "9.0.2",
+            "9.6.7",
+            "9.6.8",
+            "9.6.9"
+          ]
+        },
+        {
+          "package": {
+            "name": "phpunit/phpunit",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "10.0.0"
+                },
+                {
+                  "fixed": "10.5.62"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "10.0.0",
+            "10.0.1",
+            "10.0.10",
+            "10.5.7",
+            "10.5.8",
+            "10.5.9"
+          ]
+        },
+        {
+          "package": {
+            "name": "phpunit/phpunit",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "11.0.0"
+                },
+                {
+                  "fixed": "11.5.50"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "11.0.0",
+            "11.0.1",
+            "11.0.10",
+            "11.5.7",
+            "11.5.8",
+            "11.5.9"
+          ]
+        },
+        {
+          "package": {
+            "name": "phpunit/phpunit",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "12.0.0"
+                },
+                {
+                  "fixed": "12.5.8"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "12.0.0",
+            "12.0.1",
+            "12.0.10",
+            "12.5.5",
+            "12.5.6",
+            "12.5.7"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/sebastianbergmann/phpunit/security/advisories/GHSA-vvj3-c3rp-c85p"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-24765"
+        }
+      ]
+    },
+    "GHSA-jxwx-85vp-gvwm": {
+      "id": "GHSA-jxwx-85vp-gvwm",
+      "aliases": [
+        "CVE-2021-21252"
+      ],
+      "summary": "Regular Expression Denial of Service in jquery-validation",
+      "published": "2021-01-13T18:21:54Z",
+      "affected": [
+        {
+          "package": {
+            "name": "jquery-validation",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.19.3"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "jQuery.Validation",
+            "ecosystem": "NuGet"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.19.3"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.10.0",
+            "1.11.0",
+            "1.11.1",
+            "1.8.1",
+            "1.9.0",
+            "1.9.0.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jquery-validation/jquery-validation/security/advisories/GHSA-jxwx-85vp-gvwm"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-21252"
+        }
+      ]
+    },
+    "GHSA-j9m2-h2pv-wvph": {
+      "id": "GHSA-j9m2-h2pv-wvph",
+      "aliases": [
+        "CVE-2021-43306"
+      ],
+      "summary": "Regular expression denial of service in jquery-validation",
+      "published": "2022-06-03T00:00:59Z",
+      "affected": [
+        {
+          "package": {
+            "name": "jquery-validation",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.19.4"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "database_specific": {
+        "severity": "LOW"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-43306"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jquery-validation/jquery-validation/pull/2428"
+        }
+      ]
+    },
+    "GHSA-ffmh-x56j-9rc3": {
+      "id": "GHSA-ffmh-x56j-9rc3",
+      "aliases": [
+        "CVE-2022-31147"
+      ],
+      "summary": "jquery-validation Regular Expression Denial of Service due to arbitrary input to url2 method",
+      "published": "2022-07-05T22:56:58Z",
+      "affected": [
+        {
+          "package": {
+            "name": "jquery-validation",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.19.5"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/jquery-validation/jquery-validation/security/advisories/GHSA-ffmh-x56j-9rc3"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31147"
+        }
+      ]
+    },
+    "GHSA-rrj2-ph5q-jxw2": {
+      "id": "GHSA-rrj2-ph5q-jxw2",
+      "aliases": [
+        "CVE-2025-3573"
+      ],
+      "summary": "jquery-validation vulnerable to Cross-site Scripting",
+      "published": "2025-04-15T06:30:34Z",
+      "affected": [
+        {
+          "package": {
+            "name": "jquery-validation",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.20.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:L/SI:L/SA:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-3573"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/jquery-validation/jquery-validation/pull/2462"
+        }
+      ]
+    },
+    "GHSA-29mw-wpgm-hmr9": {
+      "id": "GHSA-29mw-wpgm-hmr9",
+      "aliases": [
+        "CVE-2020-28500"
+      ],
+      "summary": "Regular Expression Denial of Service (ReDoS) in lodash",
+      "published": "2022-01-06T20:30:46Z",
+      "affected": [
+        {
+          "package": {
+            "name": "lodash",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.17.21"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-es",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.17.21"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.trimend",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "last_affected": "4.5.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.trim",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "last_affected": "4.5.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-rails",
+            "ecosystem": "RubyGems"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.17.21"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "4.0.0",
+            "4.11.2",
+            "4.12.0",
+            "4.3.0",
+            "4.5.1",
+            "4.6.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-28500"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/github/advisory-database/pull/6139"
+        }
+      ]
+    },
+    "GHSA-p6mc-m468-83gw": {
+      "id": "GHSA-p6mc-m468-83gw",
+      "aliases": [
+        "CVE-2020-8203"
+      ],
+      "summary": "Prototype Pollution in lodash",
+      "published": "2020-07-15T19:15:48Z",
+      "affected": [
+        {
+          "package": {
+            "name": "lodash",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "3.7.0"
+                },
+                {
+                  "fixed": "4.17.19"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-es",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "3.7.0"
+                },
+                {
+                  "fixed": "4.17.20"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.pick",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "last_affected": "4.4.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.set",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "3.7.0"
+                },
+                {
+                  "last_affected": "4.3.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.setwith",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "4.3.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.update",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "4.10.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.updatewith",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "4.10.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-rails",
+            "ecosystem": "RubyGems"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "3.7.0"
+                },
+                {
+                  "fixed": "4.17.19"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "3.10.0",
+            "3.10.1",
+            "3.7.0",
+            "4.3.0",
+            "4.5.1",
+            "4.6.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2020-8203"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lodash/lodash/issues/4744"
+        }
+      ]
+    },
+    "GHSA-35jh-r3h4-6jhm": {
+      "id": "GHSA-35jh-r3h4-6jhm",
+      "aliases": [
+        "CVE-2021-23337"
+      ],
+      "summary": "Command Injection in lodash",
+      "published": "2021-05-06T16:05:51Z",
+      "affected": [
+        {
+          "package": {
+            "name": "lodash",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.17.21"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-es",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.17.21"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.template",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "4.5.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-template",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "last_affected": "1.0.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-rails",
+            "ecosystem": "RubyGems"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.17.21"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "0.10.0",
+            "0.7.0",
+            "0.8.1",
+            "4.3.0",
+            "4.5.1",
+            "4.6.1"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-23337"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lodash/lodash/commit/3469357cff396a26c363f8c1b5a91dde28ba4b1c"
+        }
+      ]
+    },
+    "GHSA-xxjr-mmjv-4gpg": {
+      "id": "GHSA-xxjr-mmjv-4gpg",
+      "aliases": [
+        "CVE-2025-13465"
+      ],
+      "summary": "Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions",
+      "published": "2026-01-21T23:01:22Z",
+      "affected": [
+        {
+          "package": {
+            "name": "lodash",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.17.23"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.unset",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "last_affected": "4.5.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-es",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.17.23"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-amd",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.17.23"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:H/SI:H/SA:H/E:P"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/lodash/lodash/security/advisories/GHSA-xxjr-mmjv-4gpg"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-13465"
+        }
+      ]
+    },
+    "GHSA-f23m-r3pf-42rh": {
+      "id": "GHSA-f23m-r3pf-42rh",
+      "aliases": [
+        "CVE-2026-2950"
+      ],
+      "summary": "lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit`",
+      "published": "2026-04-01T23:50:27Z",
+      "affected": [
+        {
+          "package": {
+            "name": "lodash",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-es",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-amd",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.unset",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/lodash/lodash/security/advisories/GHSA-f23m-r3pf-42rh"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/lodash/lodash/security/advisories/GHSA-xxjr-mmjv-4gpg"
+        }
+      ]
+    },
+    "GHSA-r5fr-rjxr-66jc": {
+      "id": "GHSA-r5fr-rjxr-66jc",
+      "aliases": [
+        "CVE-2026-4800"
+      ],
+      "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+      "published": "2026-04-01T23:51:12Z",
+      "affected": [
+        {
+          "package": {
+            "name": "lodash",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-es",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash-amd",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "lodash.template",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "4.0.0"
+                },
+                {
+                  "fixed": "4.18.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/lodash/lodash/security/advisories/GHSA-r5fr-rjxr-66jc"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-4800"
+        }
+      ]
+    },
+    "GHSA-8hfj-j24r-96c4": {
+      "id": "GHSA-8hfj-j24r-96c4",
+      "aliases": [
+        "CVE-2022-24785"
+      ],
+      "summary": "Path Traversal: 'dir/../../filename' in moment.locale",
+      "published": "2022-04-04T21:25:48Z",
+      "affected": [
+        {
+          "package": {
+            "name": "moment",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.29.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "Moment.js",
+            "ecosystem": "NuGet"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.29.2"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "1.2.0",
+            "1.3.0",
+            "1.4.0",
+            "2.8.3",
+            "2.8.4",
+            "2.9.0"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/moment/moment/security/advisories/GHSA-8hfj-j24r-96c4"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-24785"
+        }
+      ]
+    },
+    "GHSA-wc69-rhjr-hc9g": {
+      "id": "GHSA-wc69-rhjr-hc9g",
+      "aliases": [
+        "CVE-2022-31129"
+      ],
+      "summary": "Moment.js vulnerable to Inefficient Regular Expression Complexity",
+      "published": "2022-07-06T18:38:49Z",
+      "affected": [
+        {
+          "package": {
+            "name": "moment",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "2.18.0"
+                },
+                {
+                  "fixed": "2.29.4"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        },
+        {
+          "package": {
+            "name": "Moment.js",
+            "ecosystem": "NuGet"
+          },
+          "ranges": [
+            {
+              "type": "ECOSYSTEM",
+              "events": [
+                {
+                  "introduced": "2.18.0"
+                },
+                {
+                  "fixed": "2.29.4"
+                }
+              ]
+            }
+          ],
+          "database_specific": {},
+          "versions": [
+            "2.18.0",
+            "2.18.1",
+            "2.18.2",
+            "2.29.1",
+            "2.29.2",
+            "2.29.3"
+          ]
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/moment/moment/security/advisories/GHSA-wc69-rhjr-hc9g"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2022-31129"
+        }
+      ]
+    },
+    "GHSA-rf66-hmqf-q3fc": {
+      "id": "GHSA-rf66-hmqf-q3fc",
+      "aliases": [
+        "CVE-2016-10744"
+      ],
+      "summary": "Improper Neutralization of Input During Web Page Generation in Select2",
+      "published": "2022-05-14T01:14:56Z",
+      "affected": [
+        {
+          "package": {
+            "name": "select2",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.0.6"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2016-10744"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/select2/select2/issues/4587"
+        }
+      ]
+    },
+    "GHSA-hc6q-2mpp-qw7j": {
+      "id": "GHSA-hc6q-2mpp-qw7j",
+      "aliases": [
+        "CVE-2023-28154"
+      ],
+      "summary": "Cross-realm object access in Webpack 5",
+      "published": "2023-03-13T03:30:15Z",
+      "affected": [
+        {
+          "package": {
+            "name": "webpack",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "5.0.0"
+                },
+                {
+                  "fixed": "5.76.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+        }
+      ],
+      "database_specific": {
+        "severity": "CRITICAL"
+      },
+      "references": [
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-28154"
+        },
+        {
+          "type": "WEB",
+          "url": "https://github.com/webpack/webpack/pull/16500"
+        }
+      ]
+    },
+    "GHSA-4vvj-4cpr-p986": {
+      "id": "GHSA-4vvj-4cpr-p986",
+      "aliases": [
+        "CVE-2024-43788"
+      ],
+      "summary": "Webpack's AutoPublicPathRuntimeModule has a DOM Clobbering Gadget that leads to XSS",
+      "published": "2024-08-27T19:50:40Z",
+      "affected": [
+        {
+          "package": {
+            "name": "webpack",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "5.0.0-alpha.0"
+                },
+                {
+                  "fixed": "5.94.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:H"
+        },
+        {
+          "type": "CVSS_V4",
+          "score": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:H/SC:N/SI:N/SA:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/webpack/webpack/security/advisories/GHSA-4vvj-4cpr-p986"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2024-43788"
+        }
+      ]
+    },
+    "GHSA-38r7-794h-5758": {
+      "id": "GHSA-38r7-794h-5758",
+      "aliases": [
+        "CVE-2025-68157"
+      ],
+      "summary": "webpack buildHttp HttpUriPlugin allowedUris bypass via HTTP redirects \u2192 SSRF + cache persistence",
+      "published": "2026-02-05T18:35:28Z",
+      "affected": [
+        {
+          "package": {
+            "name": "webpack",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "5.49.0"
+                },
+                {
+                  "fixed": "5.104.0"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "LOW"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/webpack/webpack/security/advisories/GHSA-38r7-794h-5758"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-68157"
+        }
+      ]
+    },
+    "GHSA-8fgc-7cc6-rx7x": {
+      "id": "GHSA-8fgc-7cc6-rx7x",
+      "aliases": [
+        "CVE-2025-68458"
+      ],
+      "summary": "webpack buildHttp: allowedUris allow-list bypass via URL userinfo (@) leading to build-time SSRF behavior",
+      "published": "2026-02-05T18:38:10Z",
+      "affected": [
+        {
+          "package": {
+            "name": "webpack",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "5.49.0"
+                },
+                {
+                  "fixed": "5.104.1"
+                }
+              ]
+            }
+          ],
+          "database_specific": {}
+        }
+      ],
+      "severity": [
+        {
+          "type": "CVSS_V3",
+          "score": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N"
+        }
+      ],
+      "database_specific": {
+        "severity": "LOW"
+      },
+      "references": [
+        {
+          "type": "WEB",
+          "url": "https://github.com/webpack/webpack/security/advisories/GHSA-8fgc-7cc6-rx7x"
+        },
+        {
+          "type": "ADVISORY",
+          "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-68458"
+        }
+      ]
+    }
+  }
+}

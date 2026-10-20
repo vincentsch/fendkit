@@ -142,7 +142,7 @@ func TestBuiltScan(t *testing.T) {
 	if saved.ScanID == "" || saved.ScannedAt.IsZero() || saved.Complete || !saved.Offline || len(saved.Components) != 10 || len(saved.InventoryDigest) != 64 || saved.Release != nil {
 		t.Fatalf("bad provenance: %+v", saved)
 	}
-	out, errout = run(t, root, 11, "scan", "--json")
+	out, errout = run(t, root, 11, "scan", "--offline", "--json")
 	var result Report
 	decoder := json.NewDecoder(strings.NewReader(out))
 	if e = decoder.Decode(&result); e != nil {
@@ -159,24 +159,24 @@ func TestBuiltScan(t *testing.T) {
 		t.Fatal("scan created profile")
 	}
 	put(t, root, "cra.yml", "version: 1\nproduct:\n  version: 3.0.0\ncomponents: [{name: manual, version: '5', ecosystem: npm, shipped: true}]\n")
-	out, _ = run(t, root, 11, "scan", "--json")
+	out, _ = run(t, root, 11, "scan", "--offline", "--json")
 	if json.Unmarshal([]byte(out), &result) != nil || *result.ProductVersion != "3.0.0" || *result.Product.DetectedVersion != "2.3.1" || len(result.Components) != 11 {
 		t.Fatalf("wrong override: %s", out)
 	}
 	digestBeforeTriage := result.InventoryDigest
 	put(t, root, "cra.yml", "version: 1\nproduct: {version: 3.0.0}\ncomponents: [{name: manual, version: '5', ecosystem: npm, shipped: true}]\nmanufacturer: {name: Example Maker}\ntriage: [{advisory: GHSA-example, component: 'pkg:npm/lodash@4.17.15', status: under_investigation, reason: Reviewing use, decided_on: 2026-10-20}]\n")
-	out, _ = run(t, root, 11, "scan", "--json")
+	out, _ = run(t, root, 11, "scan", "--offline", "--json")
 	if json.Unmarshal([]byte(out), &result) != nil || result.InventoryDigest != digestBeforeTriage {
 		t.Fatal("triage or manufacturer changed inventory digest")
 	}
 	put(t, root, "cra.yml", "version: 1\nproduct: {version: 5.3}\n")
-	out, errout = run(t, root, 11, "scan", "--json")
+	out, errout = run(t, root, 11, "scan", "--offline", "--json")
 	if json.Unmarshal([]byte(out), &result) != nil || result.ProductVersion == nil || *result.ProductVersion != "5.3" || result.Product.DetectedVersion == nil || *result.Product.DetectedVersion != "2.3.1" || errout != "" {
 		t.Fatalf("wrong numeric version override: %s %s", out, errout)
 	}
 	before, _ := os.ReadFile(filepath.Join(root, "cra/reports/inventory.json"))
 	put(t, root, "cra.yml", "version: 1\nsupport: {end: tomorrow}\n")
-	out, errout = run(t, root, 1, "scan", "--json")
+	out, errout = run(t, root, 1, "scan", "--offline", "--json")
 	if out != "" || !json.Valid([]byte(errout)) || !strings.Contains(errout, "support.end") || !strings.Contains(errout, "YYYY-MM-DD") {
 		t.Fatalf("bad profile error: %s %s", out, errout)
 	}
@@ -207,7 +207,7 @@ func TestBuiltScan(t *testing.T) {
 			if !strings.Contains(out, want) || (eco == "npm" && strings.Contains(out, "or Composer installed metadata")) {
 				t.Fatalf("wrong dependency repair guidance: %s", out)
 			}
-			out, _ = run(t, project, 11, "scan", "--json")
+			out, _ = run(t, project, 11, "scan", "--offline", "--json")
 			var r Report
 			if json.Unmarshal([]byte(out), &r) != nil || r.ProductVersion != nil || len(r.Components) != 0 || len(r.CoverageGaps) != 1 || strings.Contains(out, "^2.0") {
 				t.Fatalf("guessed version or missing gap: %s", out)

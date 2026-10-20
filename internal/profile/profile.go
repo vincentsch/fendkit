@@ -66,12 +66,12 @@ type Component struct {
 	Note      *string `yaml:"note"`
 }
 type Triage struct {
-	Advisory      *string `yaml:"advisory"`
-	Component     *string `yaml:"component"`
-	Status        *string `yaml:"status"`
-	Justification *string `yaml:"justification"`
-	Reason        *string `yaml:"reason"`
-	DecidedOn     *string `yaml:"decided_on"`
+	Advisory      *string `json:"advisory" yaml:"advisory"`
+	Component     *string `json:"component" yaml:"component"`
+	Status        *string `json:"status" yaml:"status"`
+	Justification *string `json:"justification" yaml:"justification"`
+	Reason        *string `json:"reason" yaml:"reason"`
+	DecidedOn     *string `json:"decided_on" yaml:"decided_on"`
 }
 type Profile struct {
 	Version         int            `yaml:"version"`
@@ -117,6 +117,11 @@ func Parse(b []byte) (*Profile, error) {
 	}
 	if p.Version != 1 {
 		return nil, fmt.Errorf("version: unsupported schema; set version: 1")
+	}
+	for _, t := range p.Triage {
+		if err := ValidateTriage(t); err != nil {
+			return nil, err
+		}
 	}
 	if p.Role.Answer == "" {
 		p.Role.Answer = "unknown"
@@ -198,6 +203,11 @@ func validate(n *yaml.Node, path string) error {
 }
 
 func (p *Profile) Save(path string) error {
+	for _, t := range p.Triage {
+		if err := ValidateTriage(t); err != nil {
+			return err
+		}
+	}
 	if p.Role.Answer == "" {
 		p.Role.Answer = "unknown"
 	}
@@ -335,6 +345,34 @@ func validateTypes(n *yaml.Node, t reflect.Type, path string) error {
 		if n.Kind != yaml.ScalarNode || (n.Tag != "!!str" && n.Tag != "!!timestamp" && n.Tag != "!!int" && n.Tag != "!!float") {
 			return bad("text")
 		}
+	}
+	return nil
+}
+
+// ValidateTriage keeps hand-edited decisions from producing incomplete VEX statements.
+func ValidateTriage(t Triage) error {
+	for _, field := range []struct {
+		name  string
+		value *string
+	}{{"advisory", t.Advisory}, {"component", t.Component}, {"status", t.Status}, {"reason", t.Reason}, {"decided_on", t.DecidedOn}} {
+		if field.value == nil || strings.TrimSpace(*field.value) == "" {
+			return fmt.Errorf("triage.%s: required; set it before running conformline scan or triage", field.name)
+		}
+	}
+	if !slices.Contains(strings.Fields(enums["triage[].status"]), *t.Status) {
+		return fmt.Errorf("triage.status: choose %s", enums["triage[].status"])
+	}
+	if !strings.HasPrefix(*t.Component, "pkg:") || !strings.Contains((*t.Component)[4:], "@") {
+		return fmt.Errorf("triage.component: use the exact purl with version printed in vulnerabilities.md")
+	}
+	if _, err := time.Parse("2006-01-02", *t.DecidedOn); err != nil {
+		return fmt.Errorf("triage.decided_on: use YYYY-MM-DD")
+	}
+	if t.Justification != nil && strings.TrimSpace(*t.Justification) != "" && !slices.Contains(strings.Fields(enums["triage[].justification"]), *t.Justification) {
+		return fmt.Errorf("triage.justification: invalid value; choose %s", enums["triage[].justification"])
+	}
+	if *t.Status == "not_affected" && (t.Justification == nil || !slices.Contains(strings.Fields(enums["triage[].justification"]), *t.Justification)) {
+		return fmt.Errorf("triage.justification: not_affected requires one of %s", enums["triage[].justification"])
 	}
 	return nil
 }
