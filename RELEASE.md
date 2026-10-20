@@ -13,6 +13,7 @@ make clean
 make build test race lint docs docs-check conformance
 make build-all VERSION=v0.1.0
 bash scripts/test-install.sh
+bash scripts/test-action.sh
 GOOS=windows go vet ./...
 GOOS=darwin go vet ./...
 actionlint
@@ -33,7 +34,8 @@ tag. Publishing a tag starts release automation; do not move a public tag.
 
 The tag job calls the same CI definition as pushes and pull requests.
 Ubuntu, macOS and Windows build and run the Go tests natively. Ubuntu also
-runs formatting, vet, race tests, docs checks, conformance and installer tests.
+runs formatting, vet, race tests, docs checks, conformance, installer tests
+and consumer Action tests.
 Only after all CI jobs succeed does the release job build six assets with the
 explicit tag version. It writes SHA-256 checksums, attests each binary, and
 publishes the assets with the matching changelog section.
@@ -55,3 +57,14 @@ After the first authorized tag, verify the six uploaded binaries, their hashes,
 build attestations and the exact release notes. Test latest and pinned installs
 against public GitHub, and a versioned `go install` against the public module.
 No tag, hosted run, attestation or release has been created during local setup.
+
+## Consumer Action checks still needed on GitHub
+
+Validate a published Action reference on Ubuntu with pull-request read permissions
+and a release-only job granting `contents: write`. Confirm hosted artifact storage,
+job summaries, named exit-code outputs and report availability after a policy failure.
+Test both failure policies, incomplete lookups, operational failures and failed uploads.
+Confirm release attachments use the event repository and tag, including SBOM-only
+runs and VEX reruns with replacement. A missing local VEX must leave an older remote
+asset alone; remove it manually when outdated. These hosted checks are unrun locally.
+See [the Action guide](docs/github-action.md) and [consumer example](examples/github-workflow.yml).

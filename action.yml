@@ -1,0 +1,63 @@
+name: Conformline
+description: Check your product release and keep its CRA evidence reports.
+inputs:
+  version:
+    description: Conformline release tag, or latest.
+    default: latest
+  working-directory:
+    description: Initialized project root, relative to GITHUB_WORKSPACE or absolute.
+    default: .
+  release:
+    description: Product ZIP or folder, or a glob matching one file, relative to the project root.
+    required: false
+  fail-on:
+    description: Fail on policy or incomplete evidence (policy), or keep reports without that verdict (never).
+    default: policy
+  attach-to-release:
+    description: Attach the current SBOM and optional VEX on release events.
+    default: 'false'
+outputs:
+  scan-exit-code:
+    description: Scan exit code, empty if scan did not run.
+    value: ${{ steps.scan.outputs.scan-exit-code }}
+  check-exit-code:
+    description: Check exit code, empty if check did not run.
+    value: ${{ steps.scan.outputs.check-exit-code }}
+runs:
+  using: composite
+  steps:
+    - name: Install Conformline
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/action.sh" install
+    - name: Scan and collect reports
+      id: scan
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        INPUT_RELEASE: ${{ inputs.release }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_ATTACH_TO_RELEASE: ${{ inputs.attach-to-release }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/action.sh" run
+    - name: Upload reports
+      if: ${{ steps.scan.outputs.reports-ready == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: conformline-reports-${{ github.job }}-${{ steps.scan.outputs.artifact-suffix }}
+        path: ${{ steps.scan.outputs.artifact-dir }}/
+        if-no-files-found: error
+    - name: Attach release evidence
+      if: ${{ !cancelled() && steps.scan.outputs.reports-ready == 'true' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        STATE_DIR: ${{ steps.scan.outputs.state-dir }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/action.sh" attach "$STATE_DIR"
+    - name: Apply verdict
+      if: ${{ !cancelled() && steps.scan.outputs.state-dir != '' }}
+      shell: bash
+      env:
+        STATE_DIR: ${{ steps.scan.outputs.state-dir }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/action.sh" verdict "$STATE_DIR"

@@ -1,0 +1,43 @@
+# Copy to .github/workflows/conformline.yml after the Action is published.
+# Intended reference vincentsch/conformline@v0.1.0 is pending publication.
+# Guide: https://github.com/vincentsch/conformline/blob/main/docs/github-action.md
+name: Check product evidence
+on:
+  pull_request:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      # Run conformline init locally and commit cra.yml before enabling this job.
+      # Replace this build command with your product's release build.
+      - name: Build product ZIP
+        run: make release
+      - uses: vincentsch/conformline@v0.1.0 # Pending publication
+        with:
+          version: v0.1.0
+          release: dist/*.zip
+  attach:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      # cra.yml must already be committed. Download the maker's published ZIP.
+      - name: Download product release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release download "$RELEASE_TAG" --pattern '*.zip' --dir dist
+      - uses: vincentsch/conformline@v0.1.0 # Pending publication
+        with:
+          version: v0.1.0
+          release: dist/*.zip
+          attach-to-release: 'true'

@@ -9,3 +9,4 @@
 - Track incident reporting deadlines and prepare filing drafts.
 - Try an embedded example offline and check setup with `doctor`.
 - Build binaries for Linux, macOS and Windows, with checked downloads and build provenance.
+- Check product releases in GitHub Actions, keep reports and optionally attach SBOM/VEX evidence.
