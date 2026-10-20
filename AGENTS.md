@@ -122,8 +122,8 @@ Name `cra/reports/status.html`, `status.md`, `vulnerabilities.md` and
 `sbom.cdx.json`, and `cra/README.md` for the document index. Explain the next
 actions, unknown decisions and drafts that need the maker's review.
 Scan 0 means complete; scan 11 means incomplete. Check 0 means no configured
-failure, 10 means a policy failure, and 11 means incomplete evidence without
-a higher-priority policy failure. Operational errors need repair. See
+failure, 10 means a policy failure, and 11 means missing, incomplete or stale
+evidence without a higher-priority policy failure. Operational errors need repair. See
 [status rules](docs/status-items.md). Incomplete lookups, unsupported components
 and scans older than seven days cannot be presented as clean evidence.
 

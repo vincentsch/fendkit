@@ -11,8 +11,7 @@ the interview. Check out your project and build or download its product
 release before calling the Action.
 
 See the [consumer example](../examples/github-workflow.yml) for pull requests
-and release events. The intended `vincentsch/conformline@v0.1.0` reference is
-pending publication. After publication, use that reference or pin its commit.
+and release events. Use `vincentsch/conformline@v0.1.0` or pin its commit.
 The example's `make release` is a placeholder for your own product build.
 
 ## Inputs and outputs

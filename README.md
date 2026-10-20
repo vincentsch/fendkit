@@ -22,13 +22,9 @@ about your role, contact, support period and product categories. You can leave
 answers unknown. With an existing `cra.yml`, it uses your saved answers and
 runs the release check directly.
 
-The first public release is being prepared. The public prompt and downloads
-need the repository and release to be public. Source contributors can build
-locally using [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Install and try the example
 
-After publication, install the checked release with Bash on Linux or macOS:
+Install the checked release with Bash on Linux or macOS:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vincentsch/conformline/main/install.sh -o install.sh
@@ -43,18 +39,23 @@ and native Windows downloads. If no release is available, the installer says
 so. Doctor checks setup and provider connections; a missing profile is normal
 before init. The demo uses a bundled fictional plugin in a new directory.
 
+Live lookups from the demo, captured on 21 October 2026 (Europe/Berlin).
+The scan time shown is in UTC. Both themes show the same complete scan;
+drafts still need review.
+
+![Acme Booking live demo in light theme, showing complete scan evidence, Guzzle, jQuery Validation and moment.js updates, and the full thirteen-item checklist](docs/media/status-light.png)
+
+![The same complete live demo in dark theme, with all five next steps and the full checklist including draft review actions](docs/media/status-dark.png)
+
 To try without vulnerability lookups:
 
 ```bash
 conformline demo --offline --out ./example
 ```
 
-Offline runs exit 11 and keep incomplete evidence visible. Open the printed
+Offline runs exit 11 with `incomplete (lookups did not run)` in the header.
+The first next step explains how to get complete evidence. Open the printed
 `status.html` path in your browser and `cra/README.md` for drafts and reports.
-
-![Acme Booking demo status in light theme, showing incomplete evidence, next steps and the evidence checklist](docs/media/status-light.png)
-
-![The same Acme Booking status in dark theme with next actions and draft review states](docs/media/status-dark.png)
 
 ## Start on your plugin
 
@@ -73,7 +74,8 @@ Without a release, some shipping decisions remain unknown.
 Init writes `cra.yml`, draft documents in `cra/`, a root `SECURITY.md`, and
 reports in `cra/reports/`. Complete and review the drafts yourself.
 It refuses to replace an existing profile. On later releases, run each command
-even when scan returns the expected incomplete-evidence code 11:
+in order. Continue after scan exit 0 or 11. For any other scan exit, stop
+and repair the error before running docs or check:
 
 ```bash
 conformline scan --release ../dist/plugin.zip
@@ -84,43 +86,43 @@ conformline check
 A saved `product.release` is used when you omit `--release`. Keep it current.
 Docs preserves existing maker documents and refreshes the index. Check writes
 Markdown and HTML status pages. Exit 10 means a policy failure; 11 means
-incomplete evidence without a policy failure. Exit 0 does not mean every draft
-has been reviewed. See [all status rules](docs/status-items.md).
+missing, incomplete or stale evidence without a higher-priority policy failure.
+Exit 0 does not mean every draft has been reviewed.
+See [all status rules](docs/status-items.md).
 
-A full captured offline demo check (20 October 2026 UTC):
+A full captured live demo check (21 October 2026 Europe/Berlin,
+20 October 2026 UTC), from the same run as the images:
 
 ```text
-Conformline  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-20 22:13 UTC, incomplete or stale
+Conformline  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-20 23:35 UTC, complete
 
 Next
-  1. Review cra/disclosure-policy.md and set status: reviewed, reviewed_by and reviewed_on.
-  2. Review cra/eu-declaration-of-conformity.md and set status: reviewed, reviewed_by and reviewed_on.
-  3. Review cra/incident-checklist.md and set status: reviewed, reviewed_by and reviewed_on.
+  1. Update guzzlehttp/guzzle from 7.4.0 to 7.15.2 in vendor/guzzlehttp/guzzle (13 advisories).
+  2. Update jQuery Validation from 1.19.1 to 1.20.0 in assets/js/vendor/jquery.validate.min.js (4 advisories).
+  3. Update moment.js from 2.24.0 to 2.29.4 in assets/js/vendor/moment.min.js (2 advisories).
 
 Status
-  evidenced      Role, Classification
-  needs review   Security contact, Disclosure policy, SBOM, Known
-                 vulnerabilities, Support period, User information, Risk
-                 assessment, Technical documentation, EU declaration of
-                 conformity, Incident readiness
+  evidenced      Role, Classification, SBOM
+  needs review   Security contact, Disclosure policy, Known vulnerabilities,
+                 Support period, User information, Risk assessment, Technical
+                 documentation, EU declaration of conformity, Incident readiness
   not applicable Open incidents (none)
-
-Review the SBOM: scan evidence or product version is incomplete or stale. Run conformline scan.
-The last scan is incomplete. Offline scan: vulnerability lookups have not run. Run conformline scan.
 
 Full status: cra/reports/status.html
 Not legal advice. Conformline helps you prepare; the decisions and the signature are yours.
 ```
 
-The demo supplies fictional decisions. On your product, unknown decisions
-stay visible until you make them.
+The demo product and maker decisions are fictional. Its findings come from
+actual advisory lookups. On your product, unknown decisions stay visible
+until you make them.
 
 ## Keep it in your release routine
 
 Commit your decisions and reviewed documents with your product. Build the
-release first, scan it, review [findings](docs/vulnerabilities.md), then run
-check. The [GitHub Action](docs/github-action.md) runs the saved-profile checks
-on Ubuntu and keeps reports even when the evidence needs attention.
+release first, scan it, refresh the document index with `conformline docs`,
+review [findings](docs/vulnerabilities.md), then run check.
+The [GitHub Action](docs/github-action.md) runs the saved-profile checks on
+Ubuntu and keeps reports even when the evidence needs attention.
 
 For an actively exploited vulnerability or severe incident, use the
 [incident commands](docs/incidents.md). They record your awareness time,
@@ -158,9 +160,10 @@ Reports credit [OSV](https://osv.dev/), the
 The status HTML is self-contained, with no external fonts or trackers.
 
 Findings cover third-party components, not your own code. Zero findings cannot
-prove the absence of vulnerabilities. Failed lookups and stale reports stay
-incomplete. pnpm and Yarn lockfiles are detected but not parsed. Unrecognised
-bundles, unknown versions and modified copies need your investigation.
+prove the absence of vulnerabilities. Offline or failed lookups leave evidence
+incomplete. Expired or changed saved evidence is stale. pnpm and Yarn lockfiles
+are detected but not parsed. Unrecognised bundles, unknown versions and modified
+copies need your investigation.
 There is no Go/Python dependency scan, container scan or notified-body procedure.
 For open-source stewards, v0.1 runs the same checks but does not assess the
 lighter Article 24 obligations.

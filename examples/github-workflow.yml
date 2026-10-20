@@ -1,5 +1,4 @@
-# Copy to .github/workflows/conformline.yml after the Action is published.
-# Intended reference vincentsch/conformline@v0.1.0 is pending publication.
+# Copy to .github/workflows/conformline.yml and set your product build below.
 # Guide: https://github.com/vincentsch/conformline/blob/main/docs/github-action.md
 name: Check product evidence
 on:
@@ -18,7 +17,7 @@ jobs:
       # Replace this build command with your product's release build.
       - name: Build product ZIP
         run: make release
-      - uses: vincentsch/conformline@v0.1.0 # Pending publication
+      - uses: vincentsch/conformline@v0.1.0
         with:
           version: v0.1.0
           release: dist/*.zip
@@ -36,7 +35,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: gh release download "$RELEASE_TAG" --pattern '*.zip' --dir dist
-      - uses: vincentsch/conformline@v0.1.0 # Pending publication
+      - uses: vincentsch/conformline@v0.1.0
         with:
           version: v0.1.0
           release: dist/*.zip

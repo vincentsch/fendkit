@@ -1,7 +1,6 @@
 # Install Conformline
 
-Release binaries need no Go runtime. The first release is still being prepared.
-After it is published, install the latest release with Bash:
+Release binaries need no Go runtime. Install the latest release with Bash:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vincentsch/conformline/main/install.sh -o install.sh

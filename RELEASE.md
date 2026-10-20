@@ -53,6 +53,9 @@ cover that behavior. The read-only Git shell-stub test runs on Linux and macOS;
 Windows skips that single test because an extensionless stub cannot replace Git.
 
 Before publishing, confirm repository visibility and Actions permissions.
+The repository, copied-prompt URL, binary downloads and
+`vincentsch/conformline@v0.1.0` Action reference need public access.
+Release creation and these hosted checks remain open until actually run.
 After the first authorized tag, verify the six uploaded binaries, their hashes,
 build attestations and the exact release notes. Test latest and pinned installs
 against public GitHub, and a versioned `go install` against the public module.
