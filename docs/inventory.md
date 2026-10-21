@@ -24,6 +24,8 @@ conformline scan --release ../dist/plugin.zip
 ```
 
 Paths are relative to the project root (`--dir`), including sibling paths.
+Windows releases on another drive are kept as absolute paths that work only
+on that machine and may expose personal directory names when reports are shared.
 A release folder works too. A ZIP may be flat or have one enclosing folder.
 A specified missing/unreadable release is an error, with no guessed fallback.
 A release product version different from source stops the scan with both

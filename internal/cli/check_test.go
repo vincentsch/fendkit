@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
 	"github.com/vincentsch/conformline/internal/status"
 	"github.com/vincentsch/conformline/internal/vulns"
@@ -317,43 +316,89 @@ func TestFrozenLookupStatusReports(t *testing.T) {
 
 func TestPreparationIndexAcrossCommands(t *testing.T) {
 	client := checkClient(t)
-	t.Run("docs evaluates removed recorded release", func(t *testing.T) {
-		base := t.TempDir()
-		root := filepath.Join(base, "acme-booking")
-		copyTree(t, "../../testdata/wp-plugin/acme-booking", root)
-		copyTree(t, "../../testdata/wp-plugin/dist", filepath.Join(base, "artifacts"))
-		release := "../artifacts/acme-booking-2.3.1.zip"
-		put(t, root, "cra.yml", "version: 1\nrole: {answer: manufacturer}\n")
-		runCheckCLI(t, client, root, 0, "scan", "--release", release)
-		var complete status.Result
-		json.Unmarshal(runCheckCLI(t, client, root, 0, "check"), &complete)
-		oldStatus := readFile(t, root, "cra/reports/status.md")
-		releasePath := filepath.Join(root, release)
-		if err := os.Rename(releasePath, releasePath+".parked"); err != nil {
-			t.Fatal(err)
+
+	for _, absolute := range []bool{false, true} {
+		name := "relative recorded release"
+		if absolute {
+			name = "absolute recorded release"
 		}
-		runCheckCLI(t, client, root, 0, "docs")
-		index := html.UnescapeString(readFile(t, root, "cra/README.md"))
-		for _, text := range []string{"stale (release unavailable)", "Restore the recorded release " + release, "--release '" + release + "'", complete.ScannedAt.Format(time.RFC3339), "Recorded scan: " + complete.ScannedAt.Format("2006-01-02 15:04 UTC")} {
-			if !strings.Contains(index, text) {
-				t.Fatalf("missing %q in %s", text, index)
+		t.Run(name, func(t *testing.T) {
+			if absolute {
+				forceAbsolutePaths(t)
 			}
-		}
-		if strings.Contains(index, ", complete") || oldStatus != readFile(t, root, "cra/reports/status.md") {
-			t.Fatal("docs reused or rewrote old status", index)
-		}
-		if err := os.Rename(releasePath+".parked", releasePath); err != nil {
-			t.Fatal(err)
-		}
-		runCheckCLI(t, client, root, 0, "scan", "--release", release)
-		var inv inventory.Inventory
-		if err := json.Unmarshal([]byte(readFile(t, root, "cra/reports/inventory.json")), &inv); err != nil {
-			t.Fatal(err)
-		}
-		if inv.Release == nil || *inv.Release != release {
-			t.Fatal("lost release boundary", inv)
-		}
-	})
+			base := t.TempDir()
+			root := filepath.Join(base, "acme-booking")
+			copyTree(t, "../../testdata/wp-plugin/acme-booking", root)
+			copyTree(t, "../../testdata/wp-plugin/dist", filepath.Join(base, "artifacts"))
+			release := "../artifacts/acme-booking-2.3.1.zip"
+			releasePath := filepath.Join(base, "artifacts/acme-booking-2.3.1.zip")
+			put(t, root, "cra.yml", "version: 1\nrole: {answer: manufacturer}\n")
+			runCheckCLI(t, client, root, 0, "scan", "--release", release)
+			if absolute {
+				release = filepath.ToSlash(releasePath)
+			}
+			savedInventory := readFile(t, root, "cra/reports/inventory.json")
+			var inv Report
+			if err := json.Unmarshal([]byte(savedInventory), &inv); err != nil {
+				t.Fatal(err)
+			}
+			if inv.Release == nil || *inv.Release != release {
+				t.Fatal("lost release boundary", inv)
+			}
+			assertComplete := func() status.Result {
+				t.Helper()
+				runCheckCLI(t, client, root, 0, "docs")
+				var current status.Result
+				if err := json.Unmarshal(runCheckCLI(t, client, root, 0, "check"), &current); err != nil {
+					t.Fatal(err)
+				}
+				if current.ScanState != "complete" || !current.ScanComplete || len(current.ScanIssues) != 0 {
+					t.Fatalf("unexpected scan state: %+v", current)
+				}
+				index := readFile(t, root, "cra/README.md")
+				if !strings.Contains(index, "Scan: "+current.ScannedAt.Format("2006-01-02 15:04 UTC")+", complete") {
+					t.Fatal(index)
+				}
+				p, err := profile.Load(filepath.Join(root, "cra.yml"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if p.Product.Release != nil {
+					t.Fatal("flag-only release leaked into profile")
+				}
+				return current
+			}
+			complete := assertComplete()
+			oldStatus := readFile(t, root, "cra/reports/status.md")
+			if err := os.Rename(releasePath, releasePath+".parked"); err != nil {
+				t.Fatal(err)
+			}
+			runCheckCLI(t, client, root, 0, "docs")
+			index := html.UnescapeString(readFile(t, root, "cra/README.md"))
+			for _, text := range []string{"stale (release unavailable)", "Restore the recorded release " + release, "--release '" + release + "'", complete.ScannedAt.Format(time.RFC3339), "Recorded scan: " + complete.ScannedAt.Format("2006-01-02 15:04 UTC")} {
+				if !strings.Contains(index, text) {
+					t.Fatalf("missing %q in %s", text, index)
+				}
+			}
+			if strings.Contains(index, ", complete") || oldStatus != readFile(t, root, "cra/reports/status.md") {
+				t.Fatal("docs reused or rewrote old status", index)
+			}
+			var stale status.Result
+			if err := json.Unmarshal(runCheckCLI(t, client, root, 11, "check"), &stale); err != nil {
+				t.Fatal(err)
+			}
+			if stale.ScanState != "stale" || stale.ScanComplete || !strings.Contains(strings.Join(stale.Next, "\n"), "--release '"+release+"'") {
+				t.Fatalf("unexpected missing-release state: %+v", stale)
+			}
+			if err := os.Rename(releasePath+".parked", releasePath); err != nil {
+				t.Fatal(err)
+			}
+			assertComplete()
+			if got := readFile(t, root, "cra/reports/inventory.json"); got != savedInventory {
+				t.Fatal("replay changed saved digest")
+			}
+		})
+	}
 
 	for _, role := range []string{"manufacturer", "not-in-scope", "unknown", "open-source-steward"} {
 		t.Run(role, func(t *testing.T) {

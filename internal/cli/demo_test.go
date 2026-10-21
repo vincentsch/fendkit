@@ -29,8 +29,13 @@ func TestDemoCompletesWithOfflineAndFailedLookups(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", fake+string(os.PathListSeparator)+os.Getenv("PATH"))
-	for _, mode := range []string{"offline", "failed", "preview"} {
+	for _, mode := range []string{"offline", "failed", "preview", "absolute offline", "absolute failed", "absolute preview"} {
 		t.Run(mode, func(t *testing.T) {
+			absolute := strings.HasPrefix(mode, "absolute ")
+			if absolute {
+				forceAbsolutePaths(t)
+				mode = strings.TrimPrefix(mode, "absolute ")
+			}
 			out := filepath.Join(t.TempDir(), "demo with spaces")
 			args := []string{"demo", "--out", out, "--json"}
 			if mode == "offline" {
@@ -52,6 +57,19 @@ func TestDemoCompletesWithOfflineAndFailedLookups(t *testing.T) {
 			if err := json.Unmarshal([]byte(result.Stdout), &r); err != nil {
 				t.Fatal(err)
 			}
+
+			root := filepath.Join(out, "acme-booking")
+			wantDirectory := filepath.ToSlash(root)
+			if !absolute {
+				cwd, err := os.Getwd()
+				if err != nil {
+					t.Fatal(err)
+				}
+				wantDirectory = expectedReleasePath(t, cwd, root)
+			}
+			if r.Directory != wantDirectory || r.StatusPath != wantDirectory+"/cra/reports/status.html" || r.DocumentsPath != wantDirectory+"/cra" || r.SBOMPath != wantDirectory+"/cra/reports/sbom.cdx.json" {
+				t.Fatalf("incorrect output paths: %+v", r)
+			}
 			if mode == "failed" && !strings.Contains(r.LookupHint, "--offline") {
 				t.Fatal("missing offline recovery hint")
 			}
@@ -64,7 +82,11 @@ func TestDemoCompletesWithOfflineAndFailedLookups(t *testing.T) {
 				}
 				return
 			}
-			root := filepath.Join(out, "acme-booking")
+			for _, path := range []string{r.StatusPath, r.DocumentsPath, r.SBOMPath} {
+				if _, err := os.Stat(filepath.FromSlash(path)); err != nil {
+					t.Fatal(path, err)
+				}
+			}
 			p, err := profile.Load(filepath.Join(root, "cra.yml"))
 			if err != nil {
 				t.Fatal(err)
@@ -187,19 +209,47 @@ func ioJSON(w http.ResponseWriter, s string) {
 }
 
 func TestDemoHumanOutputAndLegalWording(t *testing.T) {
-	result := testutil.RunWith(New(), testutil.Options{}, "demo", "--offline", "--out", filepath.Join(t.TempDir(), "demo"))
-	if result.Exit != 11 {
-		t.Fatalf("%+v", result)
-	}
-	combined := result.Stdout + result.Stderr
-	for _, want := range []string{"Found", "moment.js 2.24.0", "Select2 4.0.5", "jQuery Validation 1.19.1", "Scan incomplete:", "Open status:", "Draft documents:", "SBOM:", "Try next:"} {
-		if !strings.Contains(combined, want) {
-			t.Errorf("missing %s: %s", want, combined)
-		}
-	}
-	for _, bad := range []string{"compliant product", "cra compliant", "certified", "guarantee", "ensures compliance", "cra-ready"} {
-		if bytes.Contains(bytes.ToLower([]byte(combined)), []byte(bad)) {
-			t.Fatal(bad)
-		}
+
+	for _, absolute := range []bool{false, true} {
+		t.Run(map[bool]string{false: "native paths", true: "absolute paths"}[absolute], func(t *testing.T) {
+			if absolute {
+				forceAbsolutePaths(t)
+			}
+			out := filepath.Join(t.TempDir(), "demo with spaces")
+			result := testutil.RunWith(New(), testutil.Options{}, "demo", "--offline", "--out", out)
+			if result.Exit != 11 {
+				t.Fatalf("%+v", result)
+			}
+
+			root := filepath.Join(out, "acme-booking")
+			cwd, err := os.Getwd()
+			if err != nil {
+				t.Fatal(err)
+			}
+			display := expectedReleasePath(t, cwd, root)
+			if absolute {
+				display = filepath.ToSlash(root)
+			}
+			for _, text := range []string{"Open status: " + display + "/cra/reports/status.html", "Draft documents: " + display + "/cra/", "SBOM: " + display + "/cra/reports/sbom.cdx.json"} {
+				if !strings.Contains(result.Stdout, text) {
+					t.Fatal("missing path", text, result.Stdout)
+				}
+			}
+			if strings.Count(result.Stdout, "--dir '"+display+"'") != 3 {
+				t.Fatal("next commands lost quoted directory", result.Stdout)
+			}
+			combined := result.Stdout + result.Stderr
+			for _, want := range []string{"Found", "moment.js 2.24.0", "Select2 4.0.5", "jQuery Validation 1.19.1", "Scan incomplete:", "Open status:", "Draft documents:", "SBOM:", "Try next:"} {
+				if !strings.Contains(combined, want) {
+					t.Errorf("missing %s: %s", want, combined)
+				}
+			}
+			for _, bad := range []string{"compliant product", "cra compliant", "certified", "guarantee", "ensures compliance", "cra-ready"} {
+				if bytes.Contains(bytes.ToLower([]byte(combined)), []byte(bad)) {
+					t.Fatal(bad)
+				}
+			}
+
+		})
 	}
 }

@@ -60,15 +60,24 @@ func TestInitScanAndDocumentFlow(t *testing.T) {
 		}
 		return out.Bytes()
 	}
-	for _, role := range []string{"manufacturer", "unknown", "not-in-scope", "open-source-steward"} {
+	for _, role := range []string{"manufacturer", "unknown", "not-in-scope", "open-source-steward", "absolute release"} {
 		t.Run(role, func(t *testing.T) {
+			absolute := role == "absolute release"
+			if absolute {
+				forceAbsolutePaths(t)
+				role = "manufacturer"
+			}
 			base := t.TempDir()
 			root := filepath.Join(base, "acme-booking")
 			copyTree(t, "../../testdata/wp-plugin/acme-booking", root)
 			copyTree(t, "../../testdata/wp-plugin/dist", filepath.Join(base, "dist"))
 			answer := filepath.Join(base, "answers.yml")
 			put(t, base, "answers.yml", "version: 1\nmanufacturer: {name: Example Maker}\nsecurity_contact: {email: null}\nrole: {answer: "+role+", decided_by: Maker}\nclassification: {categories: [i-3, ii-1, iv-3], decided_by: Reviewer}\n")
-			b := run(root, 0, "init", "--answers", answer, "--release", "../dist/acme-booking-2.3.1.zip")
+			release := "../dist/acme-booking-2.3.1.zip"
+			if absolute {
+				release = filepath.Join(base, "dist/acme-booking-2.3.1.zip")
+			}
+			b := run(root, 0, "init", "--answers", answer, "--release", release)
 			var result initResult
 			if err := json.Unmarshal(b, &result); err != nil {
 				t.Fatal(err)
@@ -86,7 +95,16 @@ func TestInitScanAndDocumentFlow(t *testing.T) {
 			if p.Product.Name == nil || *p.Product.Name != "Acme Booking" || result.Scan.Product.Version == nil || *result.Scan.Product.Version != "2.3.1" {
 				t.Fatal("lost detection")
 			}
-			if p.Product.Release == nil || *p.Product.Release != "../dist/acme-booking-{version}.zip" {
+			wantRelease := "../dist/acme-booking-2.3.1.zip"
+			wantPattern := "../dist/acme-booking-{version}.zip"
+			if absolute {
+				wantRelease = filepath.ToSlash(filepath.Join(base, "dist/acme-booking-2.3.1.zip"))
+				wantPattern = filepath.ToSlash(filepath.Join(base, "dist/acme-booking-{version}.zip"))
+			}
+			if result.Scan.Release == nil || *result.Scan.Release != wantRelease {
+				t.Fatal("wrong initial inventory release", string(b))
+			}
+			if p.Product.Release == nil || *p.Product.Release != wantPattern {
 				t.Fatalf("%+v", p.Product)
 			}
 			if p.Classification.Answer != "critical" || *p.Role.DecidedBy != "Maker" || *p.Classification.DecidedBy != "Reviewer" || *p.Role.DecidedOn != time.Now().Format("2006-01-02") {
@@ -95,8 +113,15 @@ func TestInitScanAndDocumentFlow(t *testing.T) {
 			b = run(root, 0, "scan")
 			var scan Report
 			json.Unmarshal(b, &scan)
-			if scan.Release == nil || *scan.Release != "../dist/acme-booking-2.3.1.zip" {
+			if scan.Release == nil || *scan.Release != wantRelease {
 				t.Fatal(string(b))
+			}
+			var savedScan Report
+			if err := json.Unmarshal([]byte(readFile(t, root, "cra/reports/inventory.json")), &savedScan); err != nil {
+				t.Fatal(err)
+			}
+			if savedScan.Release == nil || *savedScan.Release != wantRelease {
+				t.Fatal("wrong saved inventory release", savedScan.Release)
 			}
 			b = run(root, 0, "docs")
 			var r docs.Result

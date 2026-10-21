@@ -46,6 +46,8 @@ Release paths and patterns resolve relative to the project root, including
 sibling paths. `--release` is an explicit scan override; keep the profile's
 saved path right for later runs. Unknown product versions need a real version
 before evidence can be current. See [inventory](inventory.md).
+Windows releases on another drive are kept as absolute paths that work only
+on that machine and may expose personal directory names when reports are shared.
 
 ## Manual components
 

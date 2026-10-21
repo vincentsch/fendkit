@@ -459,11 +459,7 @@ func BuildWithOptions(root string, p detect.Product, opts Options) (Inventory, e
 		if e != nil {
 			return inv, e
 		}
-		rel, e := filepath.Rel(base, absolute)
-		if e != nil {
-			return inv, e
-		}
-		rel = filepath.ToSlash(rel)
+		rel := filepath.ToSlash(RelativeOrAbsolute(base, absolute))
 		inv.Release = &rel
 		for i := range all {
 			c := &all[i]

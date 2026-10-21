@@ -215,12 +215,11 @@ func conductInterview(f *rungrad.Factory, p *profile.Profile, root string, produ
 	if p.Product.Release != nil {
 		path := *p.Product.Release
 		if filepath.IsAbs(path) {
-			abs, _ := filepath.Abs(root)
-			rel, err := filepath.Rel(abs, path)
+			abs, err := filepath.Abs(root)
 			if err != nil {
-				return rungrad.NewError(1, "product.release: use a path relative to --dir")
+				return err
 			}
-			path = rel
+			path = inventory.RelativeOrAbsolute(abs, path)
 		}
 		dir, base := filepath.Split(path)
 		if product.Version != nil {

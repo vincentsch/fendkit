@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/vincentsch/conformline/internal/demo"
+	"github.com/vincentsch/conformline/internal/inventory"
 	"github.com/vincentsch/conformline/internal/profile"
 	"github.com/vincentsch/conformline/internal/status"
 	"github.com/vincentsch/conformline/internal/vulns"
@@ -48,10 +49,7 @@ func demoCommand(client *vulns.Client) *rungrad.Command {
 			if err != nil {
 				return rungrad.NewError(2, "Cannot resolve --out; run from a readable working directory")
 			}
-			displayRoot, err = filepath.Rel(cwd, root)
-			if err != nil {
-				return rungrad.NewError(1, "Choose --out on the current volume for copyable relative commands")
-			}
+			displayRoot = inventory.RelativeOrAbsolute(cwd, root)
 		}
 		r := demoResult{Directory: filepath.ToSlash(displayRoot), StatusPath: filepath.ToSlash(filepath.Join(displayRoot, "cra/reports/status.html")), DocumentsPath: filepath.ToSlash(filepath.Join(displayRoot, "cra")), SBOMPath: filepath.ToSlash(filepath.Join(displayRoot, "cra/reports/sbom.cdx.json")), DryRun: f.DryRun()}
 		if f.DryRun() {

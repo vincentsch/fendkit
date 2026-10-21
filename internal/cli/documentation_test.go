@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
@@ -70,7 +71,8 @@ func TestPublicDocumentation(t *testing.T) {
 	if err := os.WriteFile(answers, []byte(example), 0600); err != nil {
 		t.Fatal(err)
 	}
-	result := testutil.RunWith(New(), testutil.Options{}, "init", "--dir", maker, "--offline", "--no-prompt", "--answers", answers, "--release", filepath.Join(rootPath(t), "testdata/wp-plugin/dist/acme-booking-2.3.1.zip"))
+	release := filepath.Join(rootPath(t), "testdata/wp-plugin/dist/acme-booking-2.3.1.zip")
+	result := testutil.RunWith(New(), testutil.Options{}, "init", "--dir", maker, "--offline", "--no-prompt", "--answers", answers, "--release", release)
 	if result.Exit != 11 {
 		t.Fatalf("init: %+v", result)
 	}
@@ -80,6 +82,19 @@ func TestPublicDocumentation(t *testing.T) {
 	}
 	if saved.Classification.Answer != "unknown" || saved.Classification.Categories != nil {
 		t.Fatal("init changed unknown classification")
+	}
+
+	wantRelease := expectedReleasePath(t, maker, release)
+	wantPattern := strings.Replace(wantRelease, "2.3.1.zip", "{version}.zip", 1)
+	if saved.Product.Release == nil || *saved.Product.Release != wantPattern {
+		t.Fatalf("saved release: %+v; want %s", saved.Product, wantPattern)
+	}
+	var inv Report
+	if err := json.Unmarshal([]byte(readFile(t, maker, "cra/reports/inventory.json")), &inv); err != nil {
+		t.Fatal(err)
+	}
+	if inv.Release == nil || *inv.Release != wantRelease {
+		t.Fatalf("recorded release: %+v; want %s", inv.Release, wantRelease)
 	}
 	checked := testutil.RunWith(New(), testutil.Options{}, "check", "--dir", maker)
 	if checked.Exit != 11 || !strings.Contains(checked.Stdout+checked.Stderr, "Decide classification.answer") {

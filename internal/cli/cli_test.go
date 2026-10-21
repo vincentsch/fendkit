@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -227,7 +228,7 @@ func TestBuiltScan(t *testing.T) {
 		t.Fatal(e)
 	}
 	out, _ = run(t, root, 11, "scan", "--offline", "--release", release, "--json")
-	if e = json.Unmarshal([]byte(out), &result); e != nil || result.Release == nil {
+	if e = json.Unmarshal([]byte(out), &result); e != nil || result.Release == nil || *result.Release != expectedReleasePath(t, root, release) {
 		t.Fatalf("missing release provenance: %s", out)
 	}
 	data, e := os.ReadFile(filepath.Join(root, "cra/reports/sbom.cdx.json"))
@@ -249,7 +250,7 @@ func TestBuiltScan(t *testing.T) {
 	for _, p := range bom.Metadata.Properties {
 		props[p.Name] = p.Value
 	}
-	if props["conformline:scan_id"] != result.ScanID || props["conformline:inventory_digest"] != result.InventoryDigest || props["conformline:complete"] != "false" {
+	if props["conformline:scan_id"] != result.ScanID || props["conformline:inventory_digest"] != result.InventoryDigest || props["conformline:complete"] != "false" || props["conformline:release"] != *result.Release {
 		t.Fatal("SBOM provenance differs")
 	}
 	before, _ = os.ReadFile(filepath.Join(root, "cra/reports/inventory.json"))
@@ -325,3 +326,23 @@ func TestBundledSummaryDistinguishesListedLibraries(t *testing.T) {
 	}
 }
 func boolPointer(v bool) *bool { return &v }
+
+// Overrides are scoped to sequential tests because the conversion is shared.
+func forceAbsolutePaths(t *testing.T) {
+	t.Helper()
+	previous := inventory.RelativePath
+	inventory.RelativePath = func(string, string) (string, error) { return "", errors.New("paths are on different volumes") }
+	t.Cleanup(func() { inventory.RelativePath = previous })
+}
+
+func expectedReleasePath(t *testing.T, base, target string) string {
+	t.Helper()
+	if filepath.VolumeName(base) != filepath.VolumeName(target) {
+		return filepath.ToSlash(filepath.Clean(target))
+	}
+	relative, err := filepath.Rel(base, target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return filepath.ToSlash(relative)
+}
