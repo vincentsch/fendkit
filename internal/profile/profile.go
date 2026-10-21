@@ -40,11 +40,13 @@ type Role struct {
 	DecidedOn *string `yaml:"decided_on"`
 }
 type Classification struct {
-	Answer     string   `yaml:"answer"`
-	Categories []string `yaml:"categories"`
-	DecidedBy  *string  `yaml:"decided_by"`
-	DecidedOn  *string  `yaml:"decided_on"`
-	Note       *string  `yaml:"note"`
+	answerOmitted bool
+	answerNull    bool
+	Answer        string   `yaml:"answer"`
+	Categories    []string `yaml:"categories"`
+	DecidedBy     *string  `yaml:"decided_by"`
+	DecidedOn     *string  `yaml:"decided_on"`
+	Note          *string  `yaml:"note"`
 }
 type Contact struct {
 	Email     *string `yaml:"email"`
@@ -57,13 +59,14 @@ type Support struct {
 	Updates  *string `yaml:"updates"`
 }
 type Component struct {
-	Name      *string `yaml:"name"`
-	Version   *string `yaml:"version"`
-	Ecosystem *string `yaml:"ecosystem"`
-	PURL      *string `yaml:"purl"`
-	Path      *string `yaml:"path"`
-	Shipped   *bool   `yaml:"shipped"`
-	Note      *string `yaml:"note"`
+	ShippedSet bool    `yaml:"-"`
+	Name       *string `yaml:"name"`
+	Version    *string `yaml:"version"`
+	Ecosystem  *string `yaml:"ecosystem"`
+	PURL       *string `yaml:"purl"`
+	Path       *string `yaml:"path"`
+	Shipped    *bool   `yaml:"shipped"`
+	Note       *string `yaml:"note"`
 }
 type Triage struct {
 	Advisory      *string `json:"advisory" yaml:"advisory"`
@@ -115,10 +118,14 @@ func Parse(b []byte) (*Profile, error) {
 	if e := p.node.Decode(p); e != nil {
 		return nil, fmt.Errorf("cra.yml: invalid field type; use the documented profile field types")
 	}
+	// An absent section never calls Classification.UnmarshalYAML.
+	if !p.HasAnswer("classification.answer") {
+		p.Classification.answerOmitted = true
+	}
 	if p.Version != 1 {
 		return nil, fmt.Errorf("version: unsupported schema; set version: 1")
 	}
-	if _, err := Classify(p.Classification.Categories); err != nil {
+	if err := p.validateClassification(); err != nil {
 		return nil, err
 	}
 	for _, t := range p.Triage {
@@ -217,7 +224,7 @@ func (p *Profile) Save(path string) error {
 	if p.Classification.Answer == "" {
 		p.Classification.Answer = "unknown"
 	}
-	if _, err := Classify(p.Classification.Categories); err != nil {
+	if err := p.validateClassification(); err != nil {
 		return err
 	}
 	var fresh yaml.Node

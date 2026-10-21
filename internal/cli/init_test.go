@@ -107,8 +107,15 @@ func TestInitScanAndDocumentFlow(t *testing.T) {
 			if p.Product.Release == nil || *p.Product.Release != wantPattern {
 				t.Fatalf("%+v", p.Product)
 			}
-			if p.Classification.Answer != "critical" || *p.Role.DecidedBy != "Maker" || *p.Classification.DecidedBy != "Reviewer" || *p.Role.DecidedOn != time.Now().Format("2006-01-02") {
+			if p.Classification.Answer != "critical" || *p.Role.DecidedBy != "Maker" || *p.Classification.DecidedBy != "Reviewer" {
 				t.Fatalf("%+v %+v", p.Role, p.Classification)
+			}
+			if role == "unknown" {
+				if p.Role.DecidedOn != nil {
+					t.Fatal("unknown role acquired a decision date")
+				}
+			} else if p.Role.DecidedOn == nil || *p.Role.DecidedOn != time.Now().Format("2006-01-02") {
+				t.Fatal("decided role needs a date")
 			}
 			b = run(root, 0, "scan")
 			var scan Report

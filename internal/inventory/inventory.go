@@ -41,11 +41,16 @@ type Gap struct {
 	Package string `json:"package,omitempty"`
 	Message string `json:"message"`
 }
+type ReleaseConfiguration struct {
+	Setting *string `json:"setting"`
+}
+
 type Inventory struct {
-	Product      detect.Product `json:"product"`
-	Release      *string        `json:"release"`
-	Components   []Component    `json:"components"`
-	CoverageGaps []Gap          `json:"coverage_gaps"`
+	ReleaseConfiguration *ReleaseConfiguration `json:"release_configuration,omitempty"`
+	Product              detect.Product        `json:"product"`
+	Release              *string               `json:"release"`
+	Components           []Component           `json:"components"`
+	CoverageGaps         []Gap                 `json:"coverage_gaps"`
 }
 
 func boolPtr(v bool) *bool { return &v }
@@ -317,6 +322,8 @@ func buildMetadata(root string, product detect.Product) (Inventory, error) {
 func (inv Inventory) Digest() (string, error) {
 	// Discovery hints do not change the component evidence. Release replay may skip those hints.
 	inv.Product.Notes = nil
+	// Configuration provenance is evaluated separately from component content.
+	inv.ReleaseConfiguration = nil
 	b, e := json.Marshal(inv)
 	if e != nil {
 		return "", e

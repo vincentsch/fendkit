@@ -52,6 +52,8 @@ Labels keep the saved scan time; a missing scan has no invented time.
 | Other incomplete scan | `incomplete (lookups failed)` |
 | Missing/unreadable vulnerability report or SBOM, mixed provenance, or changed saved inventory digest | `incomplete (reports do not match)` |
 | Local components or product version changed | `stale (components changed)` |
+| Saved `product.release` changed | `stale (release configuration changed)` |
+| Older scan lacks saved release configuration provenance | `stale (release provenance unavailable)` |
 | Scan older than seven days | `stale (older than seven days)` |
 | Recorded release missing, unreadable or different from the product | `stale (release unavailable)` |
 | Source files or permissions prevent a local inventory rebuild | `stale (inventory unavailable)` |
@@ -72,8 +74,18 @@ missing items keep their remaining priorities.
 
 Recovery explains the scan problem and names local repairs before one rescan
 command. It keeps network-access or doctor advice for incomplete lookups.
-When the saved scan used a release, the command includes its quoted path as
-`fendkit scan --release '<path>'`, even if cra.yml does not record it.
+Scans record both the selected artifact and the saved `product.release` setting,
+including an unset setting. While that setting is unchanged, recovery retains
+the selected artifact as `fendkit scan --release '<path>'`, even when it came
+only from a scan flag or is on another Windows drive. This preserves an
+intentional override. Changing `product.release` makes the earlier scan stale;
+recovery uses plain `fendkit scan` so the newly saved setting selects the release.
+It must not repeat the old override.
+
+Older reports without this provenance require a rescan. Recovery uses the
+current saved release setting when present; otherwise it explicitly retains
+the recorded release path, or uses plain scan if neither exists. Check, docs
+and every status format evaluate these conditions without changing the profile.
 Restore an unavailable release first, or pass a replacement explicitly with
 `--release`. A source-file failure names the actual diagnostic rather than
 blaming an otherwise readable release. Recovery stays available with exit 10.

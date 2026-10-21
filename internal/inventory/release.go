@@ -131,7 +131,8 @@ func ValidateRelease(root string, product detect.Product, path string) error {
 		return err
 	}
 	defer close()
-	return releaseProduct(tree, product)
+	_, err = releaseProduct(tree, product)
+	return err
 }
 
 func openRelease(root, selected string) (fs.FS, func(), error) {
@@ -183,61 +184,70 @@ func readLimited(tree fs.FS, file string, limit int64) ([]byte, error) {
 	return b, nil
 }
 
-func releaseProduct(tree fs.FS, p detect.Product) error {
+func releaseProduct(tree fs.FS, p detect.Product) (bool, error) {
+	matched := false
 	entries, e := fs.ReadDir(tree, ".")
 	if e != nil {
-		return e
+		return false, e
 	}
 	versions := []string{}
 	for _, entry := range entries {
 		file := entry.Name()
 		check := false
 		key := ""
-		switch p.Type {
-		case "wordpress-plugin":
-			check = strings.HasSuffix(file, ".php")
-			key = "Plugin Name"
-		case "wordpress-theme":
-			check = file == "style.css"
-			key = "Theme Name"
-		case "composer-package":
-			check = file == "composer.json"
-		case "npm-package":
-			check = file == "package.json"
+		identityKey := ""
+		switch {
+		case strings.HasSuffix(file, ".php"):
+			check, key, identityKey = true, "Plugin Name", "wordpress-plugin"
+		case file == "style.css":
+			check, key, identityKey = true, "Theme Name", "wordpress-theme"
+		case file == "composer.json" || file == "package.json":
+			check, identityKey = true, file
 		}
+
 		if !check || entry.IsDir() {
 			continue
 		}
 		b, e := readLimited(tree, file, 2<<20)
 		if e != nil {
-			return e
+			return false, e
 		}
-		version := ""
+		version, identity := "", ""
 		if key != "" {
 			if !regexp.MustCompile(`(?mi)^[\s/*#]*` + key + `:`).Match(b) {
 				continue
+			}
+			name := regexp.MustCompile(`(?mi)^[\s/*#]*` + key + `:\s*([^\r\n]*)`).FindSubmatch(b)
+			if name != nil {
+				identity = strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(name[1])), "*/"))
 			}
 			m := regexp.MustCompile(`(?mi)^[\s/*#]*Version:\s*([^\r\n*]+)`).FindSubmatch(b)
 			if m != nil {
 				version = strings.TrimSpace(string(m[1]))
 			}
 		} else {
-			var m struct{ Version string }
+			var m struct{ Name, Version string }
 			if json.Unmarshal(b, &m) != nil {
-				return fmt.Errorf("release %s: invalid manifest JSON; rebuild the release", file)
+				return false, fmt.Errorf("release %s: invalid manifest JSON; rebuild the release", file)
 			}
-			version = m.Version
+			version, identity = m.Version, m.Name
 		}
-		if version != "" {
+		if expected := p.Identities[identityKey]; expected != "" && identity != "" {
+			if expected != identity {
+				return false, fmt.Errorf("release identity %q (%s) conflicts with repository identity %q; select the intended product artifact with --release or product.release", identity, identityKey, expected)
+			}
+			matched = true
+		}
+		if version != "" && (identityKey == p.Type || p.Type == "composer-package" && identityKey == "composer.json" || p.Type == "npm-package" && identityKey == "package.json") {
 			versions = append(versions, version)
 		}
 	}
 	for _, v := range versions {
 		if p.Version != nil && v != *p.Version {
-			return fmt.Errorf("release version %s differs from project version %s; rebuild the release or correct product.version and --release", v, *p.Version)
+			return false, fmt.Errorf("release version %s differs from project version %s; rebuild the release or correct product.version and --release", v, *p.Version)
 		}
 	}
-	return nil
+	return matched, nil
 }
 
 // npmRoot finds the nearest package directory, including scoped and nested installs.
@@ -419,6 +429,10 @@ func BuildWithOptions(root string, p detect.Product, opts Options) (Inventory, e
 	if e != nil {
 		return inv, e
 	}
+	inv.ReleaseConfiguration = &ReleaseConfiguration{}
+	if opts.Profile != nil {
+		inv.ReleaseConfiguration.Setting = opts.Profile.Product.Release
+	}
 	repo, e := scanTree(os.DirFS(root), false, inv.Components)
 	if e != nil {
 		return inv, e
@@ -440,10 +454,18 @@ func BuildWithOptions(root string, p detect.Product, opts Options) (Inventory, e
 			return inv, &ReleaseError{Err: e}
 		}
 		defer close()
-		if e = releaseProduct(tree, p); e != nil {
+		identityVerified, e := releaseProduct(tree, p)
+		if e != nil {
 			return inv, &ReleaseError{Err: e}
 		}
+		if !identityVerified {
+			inv.Product.Notes = append(inv.Product.Notes, "Release identity unverified: comparable repository and release metadata is unavailable; confirm the intended artifact.")
+		}
 		cs, e := scanTree(tree, true, nil)
+		if e != nil {
+			return inv, &ReleaseError{Err: e}
+		}
+		cs, e = remainingComposer(tree, all, cs)
 		if e != nil {
 			return inv, &ReleaseError{Err: e}
 		}
@@ -542,7 +564,7 @@ func applyManual(all []Component, manual []profile.Component) ([]Component, erro
 			if m.PURL != nil {
 				c.PURL = *m.PURL
 			}
-			if m.Shipped != nil {
+			if m.ShippedSet || m.Shipped != nil {
 				c.Shipped = m.Shipped
 			}
 			if c.Shipped != nil && *c.Shipped {
@@ -602,4 +624,50 @@ func mergeComponents(all []Component) []Component {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].PURL < out[j].PURL })
 	return out
+}
+
+// remainingComposer checks known install paths without borrowing a locked version.
+func remainingComposer(tree fs.FS, repository, installed []Component) ([]Component, error) {
+	seen := map[string]bool{}
+	for _, c := range installed {
+		if c.Ecosystem == "composer" {
+			seen[c.Name+"\x00"+c.Source.Path] = true
+		}
+	}
+	for _, c := range repository {
+		if c.Ecosystem != "composer" {
+			continue
+		}
+		dir := c.Source.Path
+		key := c.Name + "\x00" + dir
+		if seen[key] || dir == "" || !fs.ValidPath(dir) {
+			continue
+		}
+		present := false
+		err := fs.WalkDir(tree, dir, func(_ string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if !d.IsDir() && d.Type()&fs.ModeSymlink == 0 {
+				present = true
+			}
+			return nil
+		})
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return nil, fmt.Errorf("%s: cannot check release package files; check permissions", dir)
+		}
+		if !present {
+			continue
+		}
+		seen[key] = true
+		unknown := component("composer", c.Name, "", false, Evidence{File: dir, Path: dir, Method: "package files without installed metadata"})
+		unknown.Shipped = nil
+		unknown.Source.Shipped = nil
+		unknown.Evidence[0].Shipped = nil
+		installed = append(installed, unknown)
+	}
+	return installed, nil
 }

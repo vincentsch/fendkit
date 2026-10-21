@@ -63,7 +63,7 @@ func newApp(client *vulns.Client) *rungrad.App {
 	app.Root().SetVersionTemplate(fmt.Sprintf("fendkit {{.Version}} (commit %s, %s)\n", version.Commit, runtime.Version()))
 	dir := "."
 	app.Root().PersistentFlags().StringVar(&dir, "dir", ".", "Project root")
-	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find dependencies and look up known vulnerabilities", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite inventory.json, sbom.cdx.json, vulnerabilities.json and vulnerabilities.md under cra/reports/.\nExport vex.openvex.json when saved triage matches findings.\nLookups send package names, versions and advisory ids to OSV.dev, and download CISA KEV.\nPackage names and versions can reveal product information.\nExit 0 for complete lookups, 11 for offline or failed lookups.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"fendkit scan", "fendkit scan --offline", "fendkit scan --offline --dir ./my-plugin --json", "fendkit scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
+	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find dependencies and look up known vulnerabilities", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite inventory.json, sbom.cdx.json, vulnerabilities.json and vulnerabilities.md under cra/reports/.\nExport vex.openvex.json when saved triage matches findings.\nLookups send package names, versions and advisory ids to OSV.dev, and download CISA KEV.\nPackage names and versions can reveal product information.\nExit 0 for complete lookups, 11 for offline or failed lookups.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nReject conflicting detected product identities or versions before replacing reports.\nMissing comparable identity metadata is reported as unverified.\nChanging the saved release setting makes earlier evidence stale.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"fendkit scan", "fendkit scan --offline", "fendkit scan --offline --dir ./my-plugin --json", "fendkit scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
 		cmd.Flags().String("release", "", "Release ZIP or folder, relative to --dir (overrides product.release)")
 		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups and mark the scan incomplete")
 	}, Run: func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
@@ -194,7 +194,11 @@ func renderFound(w io.Writer, r Report) {
 			fmt.Fprintf(w, ", %d absent from release (not shipped)", excluded)
 		}
 		if unknown > 0 {
-			fmt.Fprintf(w, ", %d shipped: unknown (may be compiled into your bundles)", unknown)
+			if eco == "npm" {
+				fmt.Fprintf(w, ", %d shipped: unknown (may be compiled into your bundles)", unknown)
+			} else {
+				fmt.Fprintf(w, ", %d possibly shipped (package evidence needs review)", unknown)
+			}
 		}
 		fmt.Fprintln(w)
 	}

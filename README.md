@@ -84,6 +84,12 @@ fendkit check
 ```
 
 A saved `product.release` is used when you omit `--release`. Keep it current.
+Changing that setting makes earlier evidence stale, even if the old artifact
+still exists. Follow the recovery command in check to scan the new boundary.
+Scans reject conflicting detected product identities or versions before
+replacing reports. Missing comparable identity metadata is shown as unverified.
+Composer package files without installed metadata stay possibly shipped with
+an unknown release version; the repository lockfile cannot establish it.
 Docs preserves existing maker documents and refreshes the index. Check writes
 Markdown and HTML status pages. Exit 10 means a policy failure; 11 means
 missing, incomplete or stale evidence without a higher-priority policy failure.

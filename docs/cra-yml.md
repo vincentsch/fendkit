@@ -22,6 +22,16 @@ that none of the Annex III/IV categories apply. Never substitute `[]` for an
 unknown decision. Init derives the highest class from explicitly selected
 categories. Keep an unknown `classification.answer` as `unknown` with null
 categories. An explicit none decision becomes `default` with `[]`.
+Explicit decided answers must match the highest selected class (or `default`
+for `[]`). Explicit `unknown` or null answers require null or omitted categories;
+they cannot coexist with a selected list, even `[]`. Loading and saving reject
+conflicts with a field diagnostic. Categories-only partial answers preserve the
+omitted answer through saves; init then records the derived class. Existing
+answer-only profiles need no category backfill.
+
+Init preserves supplied decision dates, explicit null dates and reviewer names.
+Only an omitted date for a decided answer is filled with today’s date. Unknown
+or unanswered decisions remain undated.
 Later scan/docs/check preserve unknown decisions without repeating the interview.
 
 ## Supported fields
@@ -53,7 +63,11 @@ on that machine and may expose personal directory names when reports are shared.
 
 Each component supports `name`, `version`, `ecosystem`, `purl`, `path`, `shipped`
 and `note`. Use `npm` or `composer` for supported vulnerability lookups.
-Use `shipped: null` when the boundary is unknown. Known versions and purls
+Omit `shipped` to keep detected behavior; `true` and `false` are explicit
+decisions, and `shipped: null` explicitly makes that occurrence unknown.
+These four states and maker comments survive init and unrelated triage saves.
+Corrections apply before grouping: an occurrence still shipped wins over unknown
+and excluded occurrences; unknown wins when no occurrence remains shipped. Known versions and purls
 must come from evidence. For example, after verifying a bundle:
 
 ```yaml

@@ -178,7 +178,7 @@ func conductInterview(f *rungrad.Factory, p *profile.Profile, root string, produ
 		if err != nil {
 			return rungrad.NewError(1, err.Error())
 		}
-		if p.HasAnswer("classification.answer") && p.Classification.Answer != "unknown" && p.Classification.Answer != class {
+		if p.HasAnswer("classification.answer") && p.Classification.Answer != class {
 			return rungrad.NewError(1, "classification.answer conflicts with categories; use the highest selected class")
 		}
 		p.Classification.Answer = class
@@ -228,7 +228,12 @@ func conductInterview(f *rungrad.Factory, p *profile.Profile, root string, produ
 		p.Product.Release = detect.String(filepath.ToSlash(filepath.Join(dir, base)))
 	}
 	date := time.Now().Format("2006-01-02")
-	p.Role.DecidedOn, p.Classification.DecidedOn = &date, &date
+	if !p.HasAnswer("role.decided_on") && p.Role.DecidedOn == nil && p.Role.Answer != "" && p.Role.Answer != "unknown" {
+		p.Role.DecidedOn = &date
+	}
+	if !p.HasAnswer("classification.decided_on") && p.Classification.DecidedOn == nil && p.Classification.Answer != "" && p.Classification.Answer != "unknown" {
+		p.Classification.DecidedOn = &date
+	}
 	return nil
 }
 

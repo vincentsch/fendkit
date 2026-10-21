@@ -32,6 +32,15 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 	vulnOK := readJSON(root, "vulnerabilities.json", &vr)
 	issue := func(s string) { r.ScanIssues = append(r.ScanIssues, sentence(scanReason(s))) }
 	reportsMismatch, changed, old := false, false, false
+	configurationChanged := false
+	provenanceUnavailable := usable && saved.ReleaseConfiguration == nil
+	if provenanceUnavailable {
+		issue("Saved release configuration provenance is unavailable; rescan to establish the current release boundary.")
+	}
+	if usable && !provenanceUnavailable && !same(saved.ReleaseConfiguration.Setting, p.Product.Release) {
+		configurationChanged = true
+		issue("Saved release configuration changed (product.release); scan the newly configured release.")
+	}
 	releaseRepair, sourceRepair := "", ""
 	if !usable {
 		switch {
@@ -72,7 +81,12 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 				issue("Local inventory cannot be rebuilt: " + err.Error())
 			}
 		} else {
-			d, _ := current.Digest()
+			comparison := current
+			if provenanceUnavailable && saved.Product.Identities == nil {
+				// Legacy scans cannot compare identities they never recorded.
+				comparison.Product.Identities = nil
+			}
+			d, _ := comparison.Digest()
 			r.Product = current.Product
 			if d != saved.InventoryDigest {
 				changed = true
@@ -148,6 +162,7 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 	}
 	r.ScanState, r.ScanDetail = "complete", "complete"
 	reason := ""
+	configurationHeadline, provenanceHeadline := false, false
 	advice := "."
 	switch {
 	case !usable:
@@ -167,6 +182,14 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 	case changed:
 		r.ScanState, r.ScanDetail = "stale", "stale (components changed)"
 		reason = "Your components or product version changed since the last scan."
+	case configurationChanged:
+		configurationHeadline = true
+		r.ScanState, r.ScanDetail = "stale", "stale (release configuration changed)"
+		reason = "Your saved release configuration changed since the last scan."
+	case provenanceUnavailable:
+		provenanceHeadline = true
+		r.ScanState, r.ScanDetail = "stale", "stale (release provenance unavailable)"
+		reason = "Saved release configuration provenance is unavailable."
 	case old:
 		r.ScanState, r.ScanDetail = "stale", "stale (older than seven days)"
 		reason = "The last scan is older than seven days."
@@ -177,26 +200,33 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 	}
 	r.ScanComplete = r.ScanState == "complete"
 	if !r.ScanComplete {
+		useCurrentSetting := configurationChanged || provenanceUnavailable && p.Product.Release != nil
 		parts := []string{}
 		if reason != "" {
 			parts = append(parts, reason)
 		}
+		if configurationChanged && !configurationHeadline {
+			parts = append(parts, "Your saved release configuration changed since the last scan.")
+		}
+		if provenanceUnavailable && !provenanceHeadline {
+			parts = append(parts, "Saved release configuration provenance is unavailable.")
+		}
 		if sourceRepair != "" {
 			parts = append(parts, "Repair "+sentence(sourceRepair))
 		}
-		if releaseRepair != "" {
+		if releaseRepair != "" && !useCurrentSetting {
 			parts = append(parts, "Restore the recorded release "+Value(saved.Release)+".")
 		}
 		command := "fendkit scan"
-		if saved.Release != nil {
+		if saved.Release != nil && !useCurrentSetting {
 			command += " --release " + shellQuote(*saved.Release)
 		}
 		instruction := "Run " + command + advice
-		if sourceRepair != "" || releaseRepair != "" {
+		if sourceRepair != "" || releaseRepair != "" && !useCurrentSetting {
 			instruction = "Then run " + command + advice
 		}
 		parts = append(parts, instruction)
-		if releaseRepair != "" {
+		if releaseRepair != "" && !useCurrentSetting {
 			parts = append(parts, "To scan a replacement release, pass its path with --release.")
 		}
 		r.ScanRecovery = strings.Join(parts, " ")

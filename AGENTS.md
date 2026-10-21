@@ -24,8 +24,11 @@ A missing profile is expected on first use; explain connection failures.
 
 ## If cra.yml exists
 
-Preserve saved answers, comments and maker documents. Use the saved release
-configuration, unless the maker explicitly overrides it. Go directly to:
+Preserve saved answers, comments and maker documents.
+An omitted component `shipped` field keeps detection; explicit null means
+unknown. Preserve supplied decision dates and nulls; unknown decisions stay
+undated. Classification answers must agree with non-null category lists.
+Use the saved release configuration, unless the maker explicitly overrides it. Go directly to:
 
 ```bash
 fendkit scan --dir /path/to/product
@@ -42,6 +45,10 @@ errors instead of presenting an older report as the new result.
 Pass `--release` to scan only for an explicit override. Do not run a preliminary
 offline inventory, repeat the interview, or call init. An intentionally unknown
 answer is a next action, not a reason to demand another interview.
+A changed saved `product.release` makes earlier evidence stale. Follow check’s
+recovery command; it selects the new saved setting instead of replaying an old
+override. Conflicting detected product identities or versions stop scan before
+replacing reports. Missing comparable identity metadata is visibly unverified.
 Then give the final explanation below.
 
 ## If cra.yml does not exist

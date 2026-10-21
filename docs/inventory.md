@@ -30,6 +30,12 @@ A release folder works too. A ZIP may be flat or have one enclosing folder.
 A specified missing/unreadable release is an error, with no guessed fallback.
 A release product version different from source stops the scan with both
 versions. Build the intended release or correct the source facts first.
+Detected WordPress plugin/theme names and Composer/npm manifest package names
+are also compared with corresponding release metadata. Conflicting identities
+stop the scan before reports are replaced. A profile display-name override
+does not change the detected identity. Wrapper names and generated PURLs do
+not establish identity. When no comparable metadata exists, scan proceeds
+with a visible **Release identity unverified** note; confirm the artifact yourself.
 
 **Shipped** means evidence places the component in the distributed product.
 **Development** means it is outside that boundary or only a development tool.
@@ -40,7 +46,15 @@ Without a release, Composer runtime and recognised bundled JS count as shipped;
 Composer development dependencies do not. npm dependencies can remain unknown:
 a build dependency might be bundled or stay outside the release. A release
 lets the scanner distinguish those cases using files and package evidence.
-Do not label a dependency absent merely because its manifest is missing.
+For Composer, known package install paths are checked before declaring absence.
+If files remain without installed metadata establishing their version, a
+separate possibly shipped occurrence has null version and lookup version, an
+unversioned PURL, path evidence and a coverage gap. Its SBOM scope is required.
+The lockfile occurrence stays visible separately; its version cannot establish
+the release version. Only known versions are queried. Supported installed
+metadata remains authoritative, including nested vendor trees. A genuinely
+absent package stays excluded. Coverage gaps require vulnerability review
+even when all provider requests succeed and scan exits 0.
 
 ## Bundled libraries and gaps
 

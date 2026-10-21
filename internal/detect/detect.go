@@ -10,15 +10,16 @@ import (
 )
 
 type Product struct {
-	PURL            string   `json:"purl"`
-	PackageName     string   `json:"-"`
-	Type            string   `json:"type"`
-	Name            *string  `json:"name"`
-	Version         *string  `json:"version"`
-	DetectedVersion *string  `json:"detected_version"`
-	Description     *string  `json:"description"`
-	Evidence        []string `json:"evidence"`
-	Notes           []string `json:"notes"`
+	Identities      map[string]string `json:"detected_identities,omitempty"`
+	PURL            string            `json:"purl"`
+	PackageName     string            `json:"-"`
+	Type            string            `json:"type"`
+	Name            *string           `json:"name"`
+	Version         *string           `json:"version"`
+	DetectedVersion *string           `json:"detected_version"`
+	Description     *string           `json:"description"`
+	Evidence        []string          `json:"evidence"`
+	Notes           []string          `json:"notes"`
 }
 
 func String(s string) *string {
@@ -36,7 +37,7 @@ func header(b []byte, key string) string {
 	return strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "*/"))
 }
 func Detect(root string) (Product, error) {
-	p := Product{Type: "other", Evidence: []string{}, Notes: []string{}}
+	p := Product{Identities: map[string]string{}, Type: "other", Evidence: []string{}, Notes: []string{}}
 	entries, e := os.ReadDir(root)
 	if e != nil {
 		return p, fmt.Errorf("cannot read project root; check --dir and its permissions")
@@ -55,6 +56,7 @@ func Detect(root string) (Product, error) {
 			}
 			p.Type = "wordpress-plugin"
 			p.Name = String(name)
+			p.Identities[p.Type] = name
 			p.Version = String(header(b, "Version"))
 			p.Description = String(header(b, "Description"))
 			p.Evidence = []string{entry.Name()}
@@ -66,6 +68,7 @@ func Detect(root string) (Product, error) {
 			if name := header(b, "Theme Name"); name != "" {
 				p.Type = "wordpress-theme"
 				p.Name = String(name)
+				p.Identities[p.Type] = name
 				p.Version = String(header(b, "Version"))
 				p.Description = String(header(b, "Description"))
 				p.Evidence = []string{"style.css"}
@@ -98,6 +101,9 @@ func Detect(root string) (Product, error) {
 		var m struct{ Name, Version, Description string }
 		if json.Unmarshal(b, &m) != nil {
 			return p, fmt.Errorf("%s: invalid JSON; fix the manifest", file)
+		}
+		if m.Name != "" {
+			p.Identities[file] = m.Name
 		}
 		if p.Name == nil {
 			p.Type = "composer-package"
