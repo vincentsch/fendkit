@@ -43,9 +43,9 @@ Live lookups from the demo, captured on 21 October 2026 (Europe/Berlin).
 The scan time shown is in UTC. Both themes show the same complete scan;
 drafts still need review.
 
-![Acme Booking live demo in light theme, showing complete scan evidence, Guzzle, jQuery Validation and moment.js updates, and the full thirteen-item checklist](docs/media/status-light.png)
+![Fendkit live demo in light theme, with five update steps for Guzzle, jQuery Validation, moment.js, PSR-7 and Select2, and all 13 checklist rows](docs/media/status-light.png)
 
-![The same complete live demo in dark theme, with all five next steps and the full checklist including draft review actions](docs/media/status-dark.png)
+![The same complete Fendkit demo in dark theme, showing all five update steps, 26 open advisory groups in shipped or possibly shipped components and 13 checklist rows including draft review actions](docs/media/status-dark.png)
 
 To try without vulnerability lookups:
 
@@ -91,10 +91,10 @@ Exit 0 does not mean every draft has been reviewed.
 See [all status rules](docs/status-items.md).
 
 A full captured live demo check (21 October 2026 Europe/Berlin,
-20 October 2026 UTC), from the same run as the images:
+21 October 2026 UTC), from the same run as the images:
 
 ```text
-Fendkit  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-20 23:35 UTC, complete
+Fendkit  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-21 12:03 UTC, complete
 
 Next
   1. Update guzzlehttp/guzzle from 7.4.0 to 7.15.2 in vendor/guzzlehttp/guzzle (13 advisories).

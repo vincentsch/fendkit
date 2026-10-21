@@ -1,6 +1,7 @@
 package demo
 
 import (
+	"archive/zip"
 	"bytes"
 	"io/fs"
 	"os"
@@ -8,6 +9,26 @@ import (
 	"testing"
 	"time"
 )
+
+func TestReleasePluginHeaderMatchesSource(t *testing.T) {
+	release, err := zip.OpenReader("../../testdata/wp-plugin/dist/acme-booking-2.3.1.zip")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release.Close()
+	header := "acme-booking.php"
+	want, err := os.ReadFile(filepath.Join("../../testdata/wp-plugin/acme-booking", header))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := fs.ReadFile(release, header)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatal("release plugin header is stale; update it from the source fixture and run go generate ./internal/demo")
+	}
+}
 
 func TestEmbeddedFixtureIsCurrent(t *testing.T) {
 	source := os.DirFS("../../testdata/wp-plugin")
