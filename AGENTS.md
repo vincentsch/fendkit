@@ -64,8 +64,11 @@ Then give the final explanation below.
    the product on the market under their name; an open-source steward supports
    open-source development under a different, lighter regime. Explain the
    distinction using [the CRA guide](docs/cra-for-plugin-makers.md).
-   Ask manufacturer name, postal address and website; security email and
-   contact/policy URLs; support end date, version line and update method.
+   For an explicit `not-in-scope` role, skip manufacturer contact, support
+   and classification questions. Keep supplied answers and release questions.
+   For manufacturer, steward or unknown roles, ask manufacturer name, postal
+   address and website; security email and contact/policy URLs; support end
+   date, version line and update method.
    Explain that classification concerns the product's core function under
    Annex III/IV, not the libraries it uses. Show the lists from
    [the regulation](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng).

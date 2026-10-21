@@ -68,7 +68,24 @@ decisions, and `shipped: null` explicitly makes that occurrence unknown.
 These four states and maker comments survive init and unrelated triage saves.
 Corrections apply before grouping: an occurrence still shipped wins over unknown
 and excluded occurrences; unknown wins when no occurrence remains shipped. Known versions and purls
-must come from evidence. For example, after verifying a bundle:
+must come from evidence.
+
+To add an unrecognized library, omit `path`. That field only matches an
+already detected occurrence. Record the file location and shipping evidence
+in `note`. This example leaves the version unknown until you verify it:
+
+```yaml
+components:
+  - name: widget
+    version: null
+    ecosystem: npm
+    purl: pkg:npm/widget
+    shipped: true
+    note: "assets/js/widget.min.js is present in the shipped ZIP; version not yet verified"
+```
+
+To correct an already detected occurrence, use its exact path from
+`cra/reports/inventory.json`. For example, after verifying the shipped banner:
 
 ```yaml
 components:

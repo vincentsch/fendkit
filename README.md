@@ -6,6 +6,8 @@ Fendkit checks the third-party components in your software release,
 writes draft evidence documents, and shows what still needs your review.
 It starts with WordPress plugins and themes, Composer packages and npm packages.
 
+[Website](https://www.fendkit.com) · [Guides](#read-the-guides) · [AGENTS.md](AGENTS.md)
+
 ## Start with your coding agent
 
 Copy this into Claude Code, Codex or another coding agent in your product:
@@ -43,9 +45,10 @@ Live lookups from the demo, captured on 21 October 2026 (Europe/Berlin).
 The scan time shown is in UTC. Both themes show the same complete scan;
 drafts still need review.
 
-![Fendkit live demo in light theme, with five update steps for Guzzle, jQuery Validation, moment.js, PSR-7 and Select2, and all 13 checklist rows](docs/media/status-light.png)
-
-![The same complete Fendkit demo in dark theme, showing all five update steps, 26 open advisory groups in shipped or possibly shipped components and 13 checklist rows including draft review actions](docs/media/status-dark.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/status-dark.png">
+  <img src="docs/media/status-light.png" alt="Fendkit live demo report with five update steps, 26 open advisory groups in shipped or possibly shipped components, and all 13 checklist rows. Drafts need review.">
+</picture>
 
 To try without vulnerability lookups:
 

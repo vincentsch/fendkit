@@ -98,8 +98,11 @@ SBOM's scan-only action is omitted from the ranked list when recovery is
 present; independent product-version repairs stay. The generated cra/README.md
 shows the current evaluation while keeping saved report dates and links.
 
-Each checklist row names the files to review once. Markdown documents use
-front matter; security.txt uses comment metadata. File-specific problems,
+Full HTML and Markdown reports explain the common draft review procedure
+once above the checklist. Rows name the files and specific problems. Ranked
+next actions include the reviewer and date metadata so they work on their own.
+JSON retains full actions and the common review procedure. Markdown documents
+use front matter; security.txt uses comment metadata. File-specific problems,
 security.txt expiry and publication instructions remain visible. Open the full
 report for scope notes and detailed item explanations.
 

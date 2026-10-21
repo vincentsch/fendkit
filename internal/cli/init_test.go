@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -394,5 +395,51 @@ func TestRoleHintDistinguishesCompleteAnswers(t *testing.T) {
 				t.Fatal(p, err)
 			}
 		})
+	}
+}
+
+func TestInterviewRoleBranchesRetainRelease(t *testing.T) {
+	for _, role := range []string{"not-in-scope", "manufacturer", "open-source-steward", "unknown"} {
+		for _, supplied := range []bool{true, false} {
+			t.Run(fmt.Sprintf("%s/answers=%t", role, supplied), func(t *testing.T) {
+				base := t.TempDir()
+				root := filepath.Join(base, "product")
+				copyTree(t, "../../testdata/wp-plugin/acme-booking", root)
+				copyTree(t, "../../testdata/wp-plugin/dist", filepath.Join(base, "dist"))
+				answers := "version: 1\nrole:\n  answers: {sold: null, paid_edition: null, paid_support: null, donations_only: null, hosted_only: null}\nmanufacturer: {name: Saved Maker}\nsupport: {versions: Saved version line}\n"
+				input := ""
+				if supplied {
+					answers = strings.Replace(answers, "role:\n", "role:\n  answer: "+role+"\n", 1)
+				} else {
+					input = map[string]string{"unknown": "1", "manufacturer": "2", "open-source-steward": "3", "not-in-scope": "4"}[role] + "\n"
+				}
+				// All manufacturer-only answers must be skipped for the explicit outside-scope role.
+				if role != "not-in-scope" {
+					input += "unknown\nunknown\nunknown\nunknown\nunknown\nunknown\nunknown\n\n"
+				}
+				input += "../dist/acme-booking-2.3.1.zip\n"
+				put(t, base, "answers.yml", answers)
+				result := testutil.RunWith(New(), testutil.Options{Stdin: strings.NewReader(input), TerminalSet: true, Terminal: true}, "init", "--offline", "--dir", root, "--answers", filepath.Join(base, "answers.yml"))
+				if result.Exit != 11 {
+					t.Fatalf("%+v", result)
+				}
+				p, err := profile.Load(filepath.Join(root, "cra.yml"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if p.Role.Answer != role || p.Manufacturer.Name == nil || *p.Manufacturer.Name != "Saved Maker" || p.Support.Versions == nil || *p.Support.Versions != "Saved version line" || p.Product.Release == nil || *p.Product.Release != "../dist/acme-booking-{version}.zip" {
+					t.Fatalf("lost saved answers: %+v", p)
+				}
+				prompts := result.Stdout + result.Stderr
+				if !strings.Contains(prompts, "Release ZIP or folder, relative to --dir") {
+					t.Fatal("release prompt skipped", prompts)
+				}
+				for _, prompt := range []string{"Manufacturer postal address", "Email for vulnerability reports", "Security support end date", "Core function categories"} {
+					if strings.Contains(prompts, prompt) != (role != "not-in-scope") {
+						t.Fatalf("unexpected prompt %q: %s", prompt, prompts)
+					}
+				}
+			})
+		}
 	}
 }

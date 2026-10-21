@@ -43,6 +43,16 @@ last day where needed. Vulnerability final reporting stays pending until fix
 availability is recorded. Article 14(8) also requires informing affected users
 without undue delay, and where appropriate all users.
 
+A fix or mitigation may already exist when you learn about exploitation.
+Record its actual availability time with `fix-available --at`, even if it
+precedes awareness. Fendkit preserves both times and calculates the final
+report deadline from availability plus fourteen elapsed days, including when
+that deadline is already past. Early warning and notification still use
+awareness. This calculation follows Article 14(2)(c), checked on
+21 October 2026 against the [official regulation, page 38](https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32024R2847).
+Check the current reporting guidance for your circumstances; Fendkit gives
+no legal advice.
+
 ## Review, file, then record what happened
 
 `cra/incidents/<id>/` contains `incident.yml`, `early-warning.md`,

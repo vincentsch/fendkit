@@ -7,6 +7,8 @@ import (
 	"html"
 	"os"
 	"path/filepath"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -496,7 +498,7 @@ func TestRankingAndReports(t *testing.T) {
 	}
 }
 func TestComponentNameTieAndUnknownRoleOrder(t *testing.T) {
-	r := Result{Findings: []vulns.Finding{finding("zebra", "high", true), finding("alpha", "high", true)}, Items: []Item{{Name: "Role", State: Review, Action: "Decide role"}, {Name: "Classification", State: Review, Action: "Decide class"}}}
+	r := Result{Findings: []vulns.Finding{finding("zebra", "high", true), finding("alpha", "high", true)}, Items: []Item{{ID: roleItem, Name: "Role", State: Review, Action: "Decide role"}, {ID: classificationItem, Name: "Classification", State: Review, Action: "Decide class"}}}
 	actions := rankActions(r)
 	if !strings.Contains(actions[0].text, "alpha") || !strings.Contains(actions[1].text, "zebra") || actions[2].text != "Decide role" {
 		t.Fatal(actions)
@@ -683,7 +685,7 @@ func TestCompactTerminalStatus(t *testing.T) {
 			var terminal bytes.Buffer
 			Terminal(&terminal, r, width)
 			text := terminal.String()
-			for _, detail := range []string{Scope, Assessment, "sign before placing", "fill remaining placeholders", "Art. 24", "Coverage gap:"} {
+			for _, detail := range []string{Scope, Assessment, "sign before placing", "Art. 24", "Coverage gap:"} {
 				if strings.Contains(text, detail) {
 					t.Fatalf("report detail %q in terminal: %s", detail, text)
 				}
@@ -807,8 +809,8 @@ func TestSecurityContactReviewExplanations(t *testing.T) {
 		state                                  State
 	}{
 		{"different review dates", "reviewed", "reviewed", "SECURITY.md: Review recorded by Ana on 2026-10-20. cra/security.txt: Review recorded by Ana on 2026-10-21. Publication cannot be checked locally.", Evidenced},
-		{"security policy reviewed", "reviewed", "draft", "Review cra/security.txt, fill remaining placeholders and record the reviewer and review date. SECURITY.md: Review recorded by Ana on 2026-10-20. Publication cannot be checked locally.", Review},
-		{"security text reviewed", "draft", "reviewed", "Review SECURITY.md, fill remaining placeholders and record the reviewer and review date. cra/security.txt: Review recorded by Ana on 2026-10-21. Publication cannot be checked locally.", Review},
+		{"security policy reviewed", "reviewed", "draft", "SECURITY.md: Review recorded by Ana on 2026-10-20. cra/security.txt: Draft review is incomplete. Publication cannot be checked locally.", Review},
+		{"security text reviewed", "draft", "reviewed", "SECURITY.md: Draft review is incomplete. cra/security.txt: Review recorded by Ana on 2026-10-21. Publication cannot be checked locally.", Review},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			root, p, _, _ := fixture(t)
@@ -833,5 +835,126 @@ func TestSecurityContactReviewExplanations(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestChecklistDecisionsSurviveCopyAndOrderChanges(t *testing.T) {
+	root, p, _, _ := fixture(t)
+	for _, file := range docs.Files {
+		put(t, root, file, "Draft: [[review]]")
+	}
+	if err := os.Remove(filepath.Join(root, "cra/support-period.md")); err != nil {
+		t.Fatal(err)
+	}
+	r := evaluate(t, root, p, false)
+	expected := rankActions(r)
+	if len(expected) == 0 || !strings.Contains(expected[0].text, "cra/support-period.md") || expected[0].rank != 5 {
+		t.Fatal("missing support document lost decision priority", expected)
+	}
+	reordered := r
+	reordered.Items = slices.Clone(r.Items)
+	slices.Reverse(reordered.Items)
+	for i := range reordered.Items {
+		reordered.Items[i].Name = "Reworded heading"
+		reordered.Items[i].Explanation = "Reworded explanation"
+	}
+	if got := rankActions(reordered); !reflect.DeepEqual(got, expected) {
+		t.Fatalf("copy or order changed ranking: %+v want %+v", got, expected)
+	}
+	applyRole(&r, "not-in-scope")
+	applyRole(&reordered, "not-in-scope")
+	states := map[itemID]State{}
+	for _, it := range r.Items {
+		states[it.ID] = it.State
+	}
+	for _, it := range reordered.Items {
+		if states[it.ID] != it.State {
+			t.Fatal("order changed applicability", it)
+		}
+	}
+}
+
+func TestScanAdviceUsesReason(t *testing.T) {
+	for _, repair := range []bool{false, true} {
+		t.Run(fmt.Sprint(repair), func(t *testing.T) {
+			root, p, _, _ := fixture(t)
+			os.Remove(filepath.Join(root, "cra/reports/inventory.json"))
+			if repair {
+				p.Product.Version = detect.String("2.0.0")
+			}
+			r := evaluate(t, root, p, false)
+			for i := range r.Items {
+				if r.Items[i].ID == sbomItem {
+					r.Items[i].Action = "Refresh the scan after repairing the version if needed."
+				}
+			}
+			var output bytes.Buffer
+			Terminal(&output, r, 80)
+			count := strings.Count(output.String(), "Refresh the scan")
+			ranked := false
+			for _, a := range rankActions(r) {
+				ranked = ranked || strings.Contains(a.text, "Refresh the scan")
+			}
+			if repair && (count == 0 || !ranked) || !repair && (count != 0 || ranked) {
+				t.Fatal(output.String(), rankActions(r))
+			}
+		})
+	}
+}
+
+func TestDocumentReviewInstructionsAcrossReports(t *testing.T) {
+	root, p, _, _ := fixture(t)
+	for _, file := range docs.Files {
+		put(t, root, file, "Draft: [[review]]")
+	}
+	r := evaluate(t, root, p, false)
+	var markdown, page, terminal bytes.Buffer
+	Markdown(&markdown, r)
+	if err := HTML(&page, r); err != nil {
+		t.Fatal(err)
+	}
+	Terminal(&terminal, r, 80)
+	for _, output := range []string{html.UnescapeString(markdown.String()), html.UnescapeString(page.String())} {
+		if strings.Count(output, ReviewProcedure) != 1 {
+			t.Fatal("missing or repeated review procedure", output)
+		}
+		for _, want := range []string{"security.txt needs a valid contact", "SECURITY.md needs a vulnerability reporting contact", "/.well-known/security.txt", "not signed", "cra/disclosure-policy.md"} {
+			if !strings.Contains(output, want) {
+				t.Fatalf("missing %q", want)
+			}
+		}
+	}
+	if err := docs.WriteIndex(root, p, frozenTime, r.Next, ScanLabel(r), false); err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(encoded), `"review_procedure"`) || !strings.Contains(string(encoded), "security.txt comment metadata") {
+		t.Fatal(string(encoded))
+	}
+	for _, d := range r.Documents {
+		if !d.ReviewRequired {
+			t.Fatal("review need inaccessible", d)
+		}
+	}
+	for i, next := range r.Next {
+		if !strings.Contains(next, "Review cra/") {
+			continue
+		}
+		for _, output := range []string{html.UnescapeString(markdown.String()), html.UnescapeString(page.String()), string(encoded), html.UnescapeString(readText(t, root, "cra/README.md"))} {
+			if !strings.Contains(output, next) {
+				t.Fatal("action differs", next)
+			}
+		}
+		if i < 3 && !strings.Contains(terminal.String(), next) {
+			t.Fatal("terminal action differs")
+		}
+		for _, field := range []string{"status: reviewed", "reviewed_by", "reviewed_on"} {
+			if !strings.Contains(next, field) {
+				t.Fatal("action missing review metadata", next)
+			}
+		}
 	}
 }

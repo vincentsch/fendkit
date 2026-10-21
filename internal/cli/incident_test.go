@@ -217,3 +217,56 @@ func TestChecklistIncidentCommandsAndPreservation(t *testing.T) {
 		t.Fatal("existing checklist changed")
 	}
 }
+
+func TestFixAvailableBeforeAwareness(t *testing.T) {
+	root := t.TempDir()
+	put(t, root, "package.json", `{"name":"sample","version":"1.0.0"}`)
+	put(t, root, "cra.yml", "version: 1\nrole: {answer: manufacturer}\n")
+	aware := time.Date(2026, 10, 20, 10, 0, 0, 0, time.UTC)
+	available := aware.Add(-20 * 24 * time.Hour)
+	clock := aware.Add(time.Hour)
+	run := func(args ...string) testutil.Result {
+		t.Helper()
+		app := rungrad.New(rungrad.AppConfig{Name: "fendkit"})
+		app.AddCommand(incidentCommand(&root, func() time.Time { return clock }))
+		result := testutil.Run(app, append([]string{"incident"}, args...)...)
+		if result.Exit != 0 {
+			t.Fatalf("%v: %+v", args, result)
+		}
+		return result
+	}
+	run("new", "--type", incident.Exploited, "--title", "Reported exploitation after patch", "--aware", aware.Format(time.RFC3339))
+	drafts := map[string]string{}
+	for _, file := range []string{"early-warning.md", "notification.md", "final-report.md", "user-notice.md"} {
+		path := "cra/incidents/inc-1/" + file
+		drafts[path] = readFile(t, root, path) + "\nMaker's edited text.\n"
+		put(t, root, path, drafts[path])
+	}
+	run("fix-available", "inc-1", "--at", available.Format(time.RFC3339))
+	record, err := incident.Load(root, "inc-1")
+	if err != nil || record.FixAvailableAt == nil || !record.FixAvailableAt.Equal(available) || !record.AwareAt.Equal(aware) {
+		t.Fatal(record, err)
+	}
+	view := incident.Describe(record, clock)
+	final := view.Stages[2]
+	if final.DueAt == nil || !final.DueAt.Equal(available.Add(14*24*time.Hour)) || !final.Overdue {
+		t.Fatal(final)
+	}
+	p, err := profile.Load(filepath.Join(root, "cra.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := status.Evaluate(root, p, clock, false)
+	if err != nil || result.ExitCode != 10 || !strings.Contains(result.Next[0], "final") {
+		t.Fatal(result, err)
+	}
+	shown := run("show", "inc-1", "--json")
+	if !strings.Contains(shown.Stdout, final.DueAt.Format(time.RFC3339)) {
+		t.Fatal(shown)
+	}
+	for path, want := range drafts {
+		if got := readFile(t, root, path); got != want {
+			t.Fatalf("draft changed: %s", path)
+		}
+	}
+}

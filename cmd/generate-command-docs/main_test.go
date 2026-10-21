@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/vincentsch/fendkit/internal/version"
@@ -23,6 +24,24 @@ func TestReferenceDriftAndPruning(t *testing.T) {
 	}
 	if err := generate(true); err != nil {
 		t.Fatal(err)
+	}
+	first := reference()
+	for _, want := range []string{"Apply product settings and manual components from cra.yml.", "--release string", "--dir string", `Project root (default ".")`, "OSV.dev", "Exit 0"} {
+		if !strings.Contains(first["fendkit_scan.md"], want) {
+			t.Fatalf("missing help detail %q", want)
+		}
+	}
+	if !strings.Contains(first["fendkit_triage.md"], "fendkit triage <advisory-id>") {
+		t.Fatal("missing positional argument syntax")
+	}
+	if err := generate(false); err != nil {
+		t.Fatal(err)
+	}
+	for path, want := range first {
+		got, err := os.ReadFile(filepath.Join("docs/reference", path))
+		if err != nil || string(got) != want {
+			t.Fatalf("nondeterministic page %s: %v", path, err)
+		}
 	}
 	page := filepath.Join("docs", "reference", "fendkit_scan.md")
 	if err := os.WriteFile(page, []byte("drift"), 0644); err != nil {

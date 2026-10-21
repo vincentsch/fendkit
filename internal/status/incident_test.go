@@ -5,6 +5,7 @@ import (
 	"github.com/vincentsch/fendkit/internal/detect"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -177,6 +178,16 @@ func TestRecoveryBetweenPolicyAndUpcomingActions(t *testing.T) {
 		t.Fatal(r)
 	}
 	actions := rankActions(r)
+	reordered := r
+	reordered.Items = slices.Clone(r.Items)
+	slices.Reverse(reordered.Items)
+	for i := range reordered.Items {
+		reordered.Items[i].Name = "Reworded heading"
+		reordered.Items[i].Explanation = "Reworded explanation"
+	}
+	if got := rankActions(reordered); !reflect.DeepEqual(got, actions) {
+		t.Fatal("presentation changed incident, policy or recovery priority", got, actions)
+	}
 	for i, text := range []string{"inc-1 early-warning:", "Known exploited:", "Review cra/user-information.md", r.ScanRecovery, "inc-1 notification:", "Update ordinary-library"} {
 		if !strings.Contains(actions[i].text, text) {
 			t.Fatal(actions)

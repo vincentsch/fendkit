@@ -288,7 +288,7 @@ func TestFrozenLookupStatusReports(t *testing.T) {
 		t.Fatal(security)
 	}
 	for _, it := range result.Items {
-		if it.Name == "Disclosure policy" && it.Action != "Review cra/disclosure-policy.md, then set status: reviewed, reviewed_by and reviewed_on in its front matter." {
+		if it.Name == "Disclosure policy" && it.Action != "Review cra/disclosure-policy.md, fill remaining placeholders, then set status: reviewed, reviewed_by and reviewed_on (YYYY-MM-DD) in its front matter." {
 			t.Fatal(it)
 		}
 		for _, sentence := range strings.Split(it.Explanation, ". ") {
@@ -471,5 +471,53 @@ func TestPreparationIndexAcrossCommands(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestReviewActionsReachSummaryAndIndex(t *testing.T) {
+	root := t.TempDir()
+	put(t, root, "package.json", `{"name":"sample","version":"1.0.0"}`)
+	put(t, root, "cra.yml", "version: 1\nrole: {answer: manufacturer}\nclassification: {answer: default, categories: []}\nsupport: {end: '2031-10-21'}\n")
+	client := checkClient(t)
+	runCheckCLI(t, client, root, 0, "scan")
+	runCheckCLI(t, client, root, 0, "docs")
+	summary := filepath.Join(t.TempDir(), "summary.md")
+	t.Setenv("GITHUB_STEP_SUMMARY", summary)
+	raw := runCheckCLI(t, client, root, 0, "check", "--ci")
+	var result status.Result
+	if err := json.Unmarshal(raw, &result); err != nil {
+		t.Fatal(err)
+	}
+	var terminal, stderr bytes.Buffer
+	if code := newApp(client).RunIO([]string{"check", "--dir", root, "--no-prompt"}, strings.NewReader(""), &terminal, &stderr); code != 0 {
+		t.Fatal(code, stderr.String())
+	}
+	summaryText, err := os.ReadFile(summary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	outputs := []string{string(raw), html.UnescapeString(string(summaryText)), html.UnescapeString(readFile(t, root, "cra/README.md")), html.UnescapeString(readFile(t, root, "cra/reports/status.md")), html.UnescapeString(readFile(t, root, "cra/reports/status.html"))}
+	if len(result.Next) != 5 {
+		t.Fatal(result.Next)
+	}
+	for i, action := range result.Next {
+		for _, field := range []string{"Review", "status: reviewed", "reviewed_by", "reviewed_on"} {
+			if !strings.Contains(action, field) {
+				t.Fatal("incomplete review action", action)
+			}
+		}
+		for _, output := range outputs {
+			if !strings.Contains(output, action) {
+				t.Fatal("consumer lost action", action)
+			}
+		}
+		if i < 3 && !strings.Contains(terminal.String(), action) {
+			t.Fatal("terminal lost action", action)
+		}
+	}
+	for _, output := range outputs {
+		if !strings.Contains(output, "security.txt comment metadata") {
+			t.Fatal("security metadata missing")
+		}
 	}
 }

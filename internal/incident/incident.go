@@ -186,8 +186,8 @@ func Validate(r Record) error {
 	if _, e := time.LoadLocation(r.TimeZone); e != nil || r.TimeZone == "" {
 		return fmt.Errorf("incident time_zone must be an IANA name")
 	}
-	if r.FixAvailableAt != nil && (r.Type != Exploited || r.FixAvailableAt.Before(r.AwareAt)) {
-		return fmt.Errorf("fix availability must be on or after awareness for an exploited vulnerability")
+	if r.FixAvailableAt != nil && (r.Type != Exploited || r.FixAvailableAt.IsZero()) {
+		return fmt.Errorf("fix availability needs a valid time for an exploited vulnerability")
 	}
 	for stage, sub := range r.Submissions {
 		if !slices.Contains(Stages, stage) || sub.SubmittedAt.IsZero() || sub.SubmittedAt.Before(r.AwareAt) {

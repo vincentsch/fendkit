@@ -25,6 +25,41 @@ It needs `curl` and either `sha256sum` or `shasum`. It never runs `sudo`.
 Latest downloads use `<url>/latest/download/<asset>`. A selected tag uses
 `<url>/download/<tag>/<asset>`, including for `checksums.txt`.
 
+## Run it on your product
+
+From your product's root, use the ZIP or folder you ship. Replace
+`../dist/plugin.zip` with your release path:
+
+```bash
+fendkit doctor
+fendkit init --release ../dist/plugin.zip
+```
+
+A missing profile is normal before init. Init shows the inventory, asks for
+your decisions, then writes `cra.yml`, draft documents and reports. Unknown
+answers stay visible for later review. Read `cra/README.md` for the document
+index and open `cra/reports/status.html` for next actions.
+
+From another directory, add `--dir /path/to/product` to each command.
+Relative release paths resolve from that product directory, not your current
+shell directory; absolute release paths also work.
+
+For later checks, keep `product.release` in `cra.yml` current and run:
+
+```bash
+fendkit scan
+fendkit docs
+fendkit check
+```
+
+Run docs and check after scan exits 0 (complete) or 11 (incomplete).
+For any other scan exit, stop and repair the operational error first.
+Use `scan --release ../dist/plugin.zip` only to override the saved release.
+Check exit 10 means a policy failure; 11 means missing, incomplete or stale
+evidence without a higher-priority policy failure. Exit 0 does not mean the
+drafts are reviewed. Review the drafts yourself; outputs give no legal advice.
+See [status rules](status-items.md) and [network requests and limits](../README.md#privacy-and-limits).
+
 ## Native Windows
 
 Download `fendkit-windows-amd64.exe` or `fendkit-windows-arm64.exe`

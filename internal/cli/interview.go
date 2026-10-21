@@ -125,6 +125,9 @@ func conductInterview(f *rungrad.Factory, p *profile.Profile, root string, produ
 		{"support.versions", "Version line covered by this support period", &p.Support.Versions, nil},
 		{"support.updates", "How users receive security updates", &p.Support.Updates, nil},
 	}
+	if p.Role.Answer == "not-in-scope" {
+		fields = nil
+	}
 	for _, item := range fields {
 		for {
 			if err := q.text(item.path, item.prompt, item.value, item.fallback); err != nil {
@@ -143,7 +146,7 @@ func conductInterview(f *rungrad.Factory, p *profile.Profile, root string, produ
 			*item.value = nil
 		}
 	}
-	if !p.HasAnswer("classification.categories") && !p.HasAnswer("classification.answer") && f.CanPrompt() {
+	if p.Role.Answer != "not-in-scope" && !p.HasAnswer("classification.categories") && !p.HasAnswer("classification.answer") && f.CanPrompt() {
 		fmt.Fprintln(f.Stderr, "Is the core function of your product one of these? Implementing Regulation (EU) 2025/2392 describes the categories in detail. A feature inside a product does not make the whole product important.")
 		last := ""
 		for i, c := range profile.Categories() {

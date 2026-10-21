@@ -33,19 +33,49 @@ const AssessmentURL = "https://digital-strategy.ec.europa.eu/en/policies/cra-con
 const Legal = "Not legal advice. Fendkit helps you prepare; the decisions and the signature are yours."
 const Scope = "Fendkit only checks third-party components. It does not check the maker's own code for vulnerabilities. A scan without findings does not prove the absence of vulnerabilities."
 
+const ReviewProcedure = "Review each draft and fill remaining placeholders. Set status: reviewed, reviewed_by and reviewed_on (YYYY-MM-DD) in Markdown front matter, or in # comment metadata for cra/security.txt. Publish the policy and /.well-known/security.txt over HTTPS; local review cannot verify deployment."
+
+type itemID string
+type reason string
+
+const (
+	roleItem            itemID = "role"
+	classificationItem  itemID = "classification"
+	securityItem        itemID = "security-contact"
+	disclosureItem      itemID = "disclosure-policy"
+	sbomItem            itemID = "sbom"
+	vulnerabilitiesItem itemID = "known-vulnerabilities"
+	supportItem         itemID = "support-period"
+	userInformationItem itemID = "user-information"
+	riskItem            itemID = "risk-assessment"
+	technicalItem       itemID = "technical-documentation"
+	declarationItem     itemID = "eu-declaration-of-conformity"
+	readinessItem       itemID = "incident-readiness"
+	incidentsItem       itemID = "open-incidents"
+	scanRefresh         reason = "scan-refresh"
+	versionRepair       reason = "version-repair"
+	supportDecision     reason = "support-decision"
+	documentReview      reason = "document-review"
+	noIncidents         reason = "no-incidents"
+)
+
 type Item struct {
+	ID          itemID `json:"id"`
+	Reason      reason `json:"reason,omitempty"`
+	RowAction   string `json:"-"`
 	Name        string `json:"name"`
 	State       State  `json:"state"`
 	Explanation string `json:"explanation"`
 	Action      string `json:"action"`
 }
 type Document struct {
-	Path        string `json:"path"`
-	Status      string `json:"status"`
-	ReviewedBy  string `json:"reviewed_by"`
-	ReviewedOn  string `json:"reviewed_on"`
-	State       State  `json:"state"`
-	Explanation string `json:"explanation"`
+	ReviewRequired bool   `json:"review_required"`
+	Path           string `json:"path"`
+	Status         string `json:"status"`
+	ReviewedBy     string `json:"reviewed_by"`
+	ReviewedOn     string `json:"reviewed_on"`
+	State          State  `json:"state"`
+	Explanation    string `json:"explanation"`
 }
 type Scan struct {
 	ScanID            string    `json:"scan_id"`
@@ -58,25 +88,26 @@ type Scan struct {
 	inventory.Inventory
 }
 type Result struct {
-	Incidents    []incident.View       `json:"incidents"`
-	LegalNotice  string                `json:"legal_notice"`
-	Strict       bool                  `json:"strict"`
-	Product      detect.Product        `json:"product"`
-	ScannedAt    time.Time             `json:"scanned_at"`
-	ScanComplete bool                  `json:"scan_complete"`
-	ScanState    string                `json:"scan_state"`
-	ScanDetail   string                `json:"-"`
-	ScanRecovery string                `json:"-"`
-	ScanIssues   []string              `json:"scan_issues"`
-	Items        []Item                `json:"items"`
-	Next         []string              `json:"next_actions"`
-	Components   []inventory.Component `json:"components"`
-	Findings     []vulns.Finding       `json:"findings"`
-	CoverageGaps []inventory.Gap       `json:"coverage_gaps"`
-	Documents    []Document            `json:"documents"`
-	Notes        []string              `json:"notes"`
-	ExitCode     int                   `json:"exit_code"`
-	DryRun       bool                  `json:"dry_run"`
+	ReviewProcedure string                `json:"review_procedure"`
+	Incidents       []incident.View       `json:"incidents"`
+	LegalNotice     string                `json:"legal_notice"`
+	Strict          bool                  `json:"strict"`
+	Product         detect.Product        `json:"product"`
+	ScannedAt       time.Time             `json:"scanned_at"`
+	ScanComplete    bool                  `json:"scan_complete"`
+	ScanState       string                `json:"scan_state"`
+	ScanDetail      string                `json:"-"`
+	ScanRecovery    string                `json:"-"`
+	ScanIssues      []string              `json:"scan_issues"`
+	Items           []Item                `json:"items"`
+	Next            []string              `json:"next_actions"`
+	Components      []inventory.Component `json:"components"`
+	Findings        []vulns.Finding       `json:"findings"`
+	CoverageGaps    []inventory.Gap       `json:"coverage_gaps"`
+	Documents       []Document            `json:"documents"`
+	Notes           []string              `json:"notes"`
+	ExitCode        int                   `json:"exit_code"`
+	DryRun          bool                  `json:"dry_run"`
 }
 
 func Value(p *string) string {
@@ -92,7 +123,7 @@ func readJSON(root, file string, out any) bool {
 func same(a, b *string) bool     { return Value(a) == Value(b) }
 func reviewedDate(s string) bool { _, e := time.Parse("2006-01-02", s); return e == nil }
 func InspectDocument(root, file string, now time.Time) Document {
-	d := Document{Path: file, Status: "missing", State: Missing, Explanation: "The file is missing."}
+	d := Document{ReviewRequired: true, Path: file, Status: "missing", State: Missing, Explanation: "The file is missing."}
 	b, e := os.ReadFile(filepath.Join(root, file))
 	if e != nil {
 		if !os.IsNotExist(e) {
@@ -128,7 +159,7 @@ func InspectDocument(root, file string, now time.Time) Document {
 	d.ReviewedBy = meta.By
 	d.ReviewedOn = meta.On
 	d.State = Review
-	d.Explanation = "Review the draft, fill remaining placeholders and record the reviewer and review date."
+	d.Explanation = "Draft review is incomplete."
 	if meta.Status == "reviewed" && strings.TrimSpace(meta.By) != "" && reviewedDate(meta.On) && !strings.Contains(text, "[[") {
 		d.State = Evidenced
 		d.Explanation = "Review recorded by " + meta.By + " on " + meta.On + "."
@@ -162,6 +193,7 @@ func InspectDocument(root, file string, now time.Time) Document {
 		d.State = Review
 		d.Explanation = "SECURITY.md needs a vulnerability reporting contact."
 	}
+	d.ReviewRequired = d.State == Review || d.State == Missing
 	return d
 }
 
@@ -182,32 +214,33 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if p.Product.Type != nil {
 		product.Type = *p.Product.Type
 	}
-	r := Result{Incidents: []incident.View{}, LegalNotice: Legal, Strict: strict, Product: product, Next: []string{}, ScanIssues: []string{}, Notes: []string{Scope}, Items: []Item{}, Documents: []Document{}}
+	r := Result{ReviewProcedure: ReviewProcedure, Incidents: []incident.View{}, LegalNotice: Legal, Strict: strict, Product: product, Next: []string{}, ScanIssues: []string{}, Notes: []string{Scope}, Items: []Item{}, Documents: []Document{}}
 	bomOK, bomVersion := evaluateScan(root, p, now, &r)
-	add := func(name string, state State, explanation, action string) {
-		r.Items = append(r.Items, Item{name, state, explanation, action})
+	add := func(id itemID, name string, state State, explanation, action string) *Item {
+		r.Items = append(r.Items, Item{ID: id, Name: name, State: state, Explanation: explanation, Action: action})
+		return &r.Items[len(r.Items)-1]
 	}
-	decision := func(name, answer, field string) {
+	decision := func(id itemID, name, answer, field string) *Item {
 		if answer == "unknown" || answer == "" {
-			add(name, Review, "This needs your decision.", "Decide "+field+" in cra.yml.")
-		} else {
-			add(name, Evidenced, "Your recorded decision: "+answer+".", "Review this decision when the product changes.")
+			return add(id, name, Review, "This needs your decision.", "Decide "+field+" in cra.yml.")
 		}
+		return add(id, name, Evidenced, "Your recorded decision: "+answer+".", "Review this decision when the product changes.")
 	}
-	decision("Role", p.Role.Answer, "role.answer")
+	decision(roleItem, "Role", p.Role.Answer, "role.answer")
 	if p.Role.Answer == "open-source-steward" {
 		r.Notes = append(r.Notes, "Fendkit v0.1 follows manufacturer preparation steps. It does not assess steward obligations under Art. 24.")
 	}
-	decision("Classification", p.Classification.Answer, "classification.answer")
+	classification := decision(classificationItem, "Classification", p.Classification.Answer, "classification.answer")
 	assessment := p.Classification.Answer == "important-class-i" || p.Classification.Answer == "important-class-ii" || p.Classification.Answer == "critical"
 	if assessment {
-		r.Items[1].Explanation += " " + Assessment + " " + AssessmentURL
+		classification.Explanation += " " + Assessment + " " + AssessmentURL
 	}
 	documentMap := map[string]Document{}
 	for _, file := range docs.Files {
 		d := InspectDocument(root, file, now)
 		if p.Role.Answer == "not-in-scope" {
 			d.State = NA
+			d.ReviewRequired = false
 			d.Status = string(NA)
 			d.Explanation = "Manufacturer documents are skipped for your recorded not-in-scope role."
 		}
@@ -222,12 +255,17 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if sec.State == Missing || txt.State == Missing {
 		securityState = Missing
 	}
-	add("Security contact", securityState, securityExplanation(sec, txt), "Review SECURITY.md and cra/security.txt, then set status: reviewed, reviewed_by and reviewed_on in SECURITY.md front matter and security.txt comment metadata; publish the policy and /.well-known/security.txt over HTTPS.")
-	docItem := func(name, file string) {
+	security := add(securityItem, "Security contact", securityState, securityExplanation(sec, txt), "Review SECURITY.md and cra/security.txt, fill remaining placeholders, then set status: reviewed, reviewed_by and reviewed_on (YYYY-MM-DD) in SECURITY.md front matter and security.txt comment metadata; publish the policy and /.well-known/security.txt over HTTPS.")
+	security.Reason = documentReview
+	security.RowAction = "Review SECURITY.md and cra/security.txt; publish the policy and /.well-known/security.txt over HTTPS."
+	docItem := func(id itemID, name, file string) *Item {
 		d := documentMap[file]
-		add(name, d.State, d.Explanation, "Review "+file+", then set status: reviewed, reviewed_by and reviewed_on in its front matter.")
+		it := add(id, name, d.State, d.Explanation, "Review "+file+", fill remaining placeholders, then set status: reviewed, reviewed_by and reviewed_on (YYYY-MM-DD) in its front matter.")
+		it.Reason = documentReview
+		it.RowAction = "Review " + file + "."
+		return it
 	}
-	docItem("Disclosure policy", "cra/disclosure-policy.md")
+	docItem(disclosureItem, "Disclosure policy", "cra/disclosure-policy.md")
 	sbomState := Evidenced
 	sbomWhy := "The SBOM belongs to the current scan and product version."
 	if !bomOK {
@@ -241,6 +279,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 		}
 	}
 	productAction := "Run fendkit scan."
+	productReason := scanRefresh
 	if sbomState == Evidenced {
 		productAction = "Scan again when the product or its components change, or after seven days."
 	}
@@ -250,21 +289,24 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 			sbomState = Missing
 		}
 		sbomWhy += " The product version is unknown."
+		productReason = versionRepair
 		productAction = "Set product.version in cra.yml, then run fendkit scan."
 	}
 	if p.Product.Version != nil && product.DetectedVersion != nil && !same(p.Product.Version, product.DetectedVersion) {
 		sbomState = Review
 		sbomWhy += fmt.Sprintf(" Configured product.version %s differs from detected version %s.", *p.Product.Version, *product.DetectedVersion)
+		productReason = versionRepair
 		productAction = "Review product.version in cra.yml and the detected version, then run fendkit scan."
 	}
 	for _, note := range r.Product.Notes {
 		if strings.Contains(note, "Stable tag") {
 			sbomState = Review
 			sbomWhy += " " + note
+			productReason = versionRepair
 			productAction = "Review and align readme.txt Stable tag and the WordPress header, then run fendkit scan."
 		}
 	}
-	add("SBOM", sbomState, sbomWhy, productAction)
+	add(sbomItem, "SBOM", sbomState, sbomWhy, productAction).Reason = productReason
 	for _, c := range r.Components {
 		if c.Modified {
 			r.CoverageGaps = append(r.CoverageGaps, inventory.Gap{Code: "modified_component", File: c.Source.File, Package: c.Name, Message: c.Name + ": modified copy; upstream advisories do not cover changes in this copy. Review its code and upstream fixes."})
@@ -288,23 +330,25 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if !r.ScanComplete {
 		vulnExplanation = "Scan evidence is " + r.ScanDetail + "; saved finding counts do not show current coverage. " + strings.Join(r.ScanIssues, " ") + " " + vulnExplanation
 	}
-	add("Known vulnerabilities", vulnState, vulnExplanation, "Review cra/reports/vulnerabilities.md and record decisions with fendkit triage.")
+	add(vulnerabilitiesItem, "Known vulnerabilities", vulnState, vulnExplanation, "Review cra/reports/vulnerabilities.md and record decisions with fendkit triage.")
 	r.CoverageGaps = uniqueGaps(r.CoverageGaps)
-	docItem("Support period", "cra/support-period.md")
+	support := docItem(supportItem, "Support period", "cra/support-period.md")
 	if p.Support.End == nil {
-		r.Items[len(r.Items)-1].State = Missing
-		r.Items[len(r.Items)-1].Explanation = "The support end date is unknown."
-		r.Items[len(r.Items)-1].Action = "Decide support.end in cra.yml and review cra/support-period.md."
+		support.State = Missing
+		support.Reason = supportDecision
+		support.Explanation = "The support end date is unknown."
+		support.Action = "Decide support.end in cra.yml. Review cra/support-period.md, fill placeholders and set status: reviewed, reviewed_by and reviewed_on (YYYY-MM-DD) in its front matter."
+		support.RowAction = "Decide support.end in cra.yml and review cra/support-period.md."
 	}
-	docItem("User information", "cra/user-information.md")
-	docItem("Risk assessment", "cra/risk-assessment.md")
-	docItem("Technical documentation", "cra/technical-documentation.md")
-	docItem("EU declaration of conformity", "cra/eu-declaration-of-conformity.md")
-	r.Items[len(r.Items)-1].Explanation += " Draft, not signed; sign before placing on the market from December 11, 2027."
+	docItem(userInformationItem, "User information", "cra/user-information.md")
+	docItem(riskItem, "Risk assessment", "cra/risk-assessment.md")
+	docItem(technicalItem, "Technical documentation", "cra/technical-documentation.md")
+	declaration := docItem(declarationItem, "EU declaration of conformity", "cra/eu-declaration-of-conformity.md")
+	declaration.Explanation += " Draft, not signed; sign before placing on the market from December 11, 2027."
 	if assessment {
-		r.Items[len(r.Items)-1].Explanation += " " + Assessment + " " + AssessmentURL
+		declaration.Explanation += " " + Assessment + " " + AssessmentURL
 	}
-	docItem("Incident readiness", "cra/incident-checklist.md")
+	docItem(readinessItem, "Incident readiness", "cra/incident-checklist.md")
 	records, err := incident.List(root)
 	if err != nil {
 		return r, fmt.Errorf("cannot read incidents: %w", err)
@@ -332,16 +376,11 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if incidentState == Review {
 		incidentAction = "Review current deadlines and filing drafts with fendkit incident show <id>; a person submits in ENISA's platform."
 	}
-	add("Open incidents", incidentState, incidentWhy, incidentAction)
-	if p.Role.Answer == "not-in-scope" {
-		for i := range r.Items {
-			if i != 0 && i != 4 && i != 5 {
-				r.Items[i].State = NA
-				r.Items[i].Explanation = "Not applicable to your recorded not-in-scope role."
-				r.Items[i].Action = "No action needed."
-			}
-		}
+	incidents := add(incidentsItem, "Open incidents", incidentState, incidentWhy, incidentAction)
+	if len(records) == 0 {
+		incidents.Reason = noIncidents
 	}
+	applyRole(&r, p.Role.Answer)
 	actions := rankActions(r)
 	for _, a := range actions {
 		if len(r.Next) == 5 {
@@ -397,7 +436,7 @@ func rankActions(r Result) []action {
 	if r.ScanRecovery != "" {
 		actions = append(actions, action{text: r.ScanRecovery, rank: 2})
 	}
-	if len(r.Items) > 12 && r.Items[12].State != NA {
+	if itemApplicable(r, incidentsItem) {
 		for _, v := range r.Incidents {
 			for _, s := range v.Stages {
 				if s.SubmittedAt != nil {
@@ -471,22 +510,22 @@ func rankActions(r Result) []action {
 		}
 		actions = append(actions, action{text: text, rank: rank, severity: sev, count: len(findings), name: c.Name + " " + c.PURL})
 	}
-	for i, it := range r.Items {
-		if i == 12 || it.State == Evidenced || it.State == NA || (i == 4 && r.ScanRecovery != "" && it.Action == "Run fendkit scan.") {
+	for _, it := range r.Items {
+		if it.ID == incidentsItem || it.State == Evidenced || it.State == NA || (it.Reason == scanRefresh && r.ScanRecovery != "") {
 			continue
 		}
 		rank := 6
 		if it.State == Missing {
 			rank = 7
 		}
-		if i == 0 {
+		if it.ID == roleItem {
 			rank = 5
 		}
-		if i == 1 || (i == 4 && r.Product.Version == nil) || (i == 6 && it.State == Missing) {
+		if it.ID == classificationItem || (it.ID == sbomItem && r.Product.Version == nil) || (it.ID == supportItem && it.State == Missing) {
 			rank = 5
 		}
-		name := it.Name
-		if i == 0 {
+		name := string(it.ID)
+		if it.ID == roleItem {
 			name = ""
 		}
 		if r.Strict && it.State == Missing {
@@ -524,24 +563,42 @@ func sentence(text string) string {
 }
 
 func securityExplanation(sec, txt Document) string {
-	if sec.Explanation == txt.Explanation {
-		return "SECURITY.md and cra/security.txt: " + sec.Explanation + " Publication cannot be checked locally."
-	}
-	drafts := []string{}
-	for _, d := range []Document{sec, txt} {
-		if d.Explanation == "Review the draft, fill remaining placeholders and record the reviewer and review date." {
-			drafts = append(drafts, d.Path)
-		}
-	}
 	parts := []string{}
-	if len(drafts) > 0 {
-		parts = append(parts, "Review "+strings.Join(drafts, " and ")+", fill remaining placeholders and record the reviewer and review date.")
-	}
 	for _, d := range []Document{sec, txt} {
-		if d.Explanation == "Review the draft, fill remaining placeholders and record the reviewer and review date." {
-			continue
-		}
 		parts = append(parts, d.Path+": "+d.Explanation)
 	}
 	return strings.Join(parts, " ") + " Publication cannot be checked locally."
+}
+
+func applyRole(r *Result, role string) {
+	if role != "not-in-scope" {
+		return
+	}
+	for i := range r.Items {
+		it := &r.Items[i]
+		switch it.ID {
+		case roleItem, sbomItem, vulnerabilitiesItem:
+			continue
+		}
+		it.State = NA
+		it.Explanation = "Not applicable to your recorded not-in-scope role."
+		it.Action = "No action needed."
+		it.RowAction = ""
+	}
+}
+
+func itemApplicable(r Result, id itemID) bool {
+	for _, it := range r.Items {
+		if it.ID == id {
+			return it.State != NA
+		}
+	}
+	return false
+}
+
+func rowAction(it Item) string {
+	if it.RowAction != "" {
+		return it.RowAction
+	}
+	return it.Action
 }

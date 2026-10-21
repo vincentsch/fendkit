@@ -14,7 +14,9 @@ bash scripts/test-install.sh
 builds receive `VERSION` explicitly. `COMMIT` can override the source revision.
 
 Change command definitions first, then run `make docs` and commit the generated
-reference. Generation and pruning stay inside `docs/reference/`.
+reference. Generation and pruning stay inside `docs/reference/`. The local renderer enriches
+rungrad pages with long help and Cobra flag signatures. Write and check compare
+the same generated content.
 `make docs-check` reports drift without changing files. Keep handwritten pages
 and images outside that directory. Conformance uses rungrad at the pinned
 version and a fresh offline demo; it needs no advisory service.

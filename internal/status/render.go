@@ -55,7 +55,7 @@ func Terminal(w io.Writer, r Result, width int) {
 		for _, it := range r.Items {
 			if it.State == state {
 				name := it.Name
-				if it.Name == "Open incidents" && it.Explanation == "none" {
+				if it.ID == incidentsItem && it.Reason == noIncidents {
 					name += " (none)"
 				}
 				names = append(names, name)
@@ -66,9 +66,9 @@ func Terminal(w io.Writer, r Result, width int) {
 		}
 	}
 	for _, it := range r.Items {
-		if it.Name == "SBOM" && it.State != Evidenced || it.Name == "Open incidents" && it.State != NA {
+		if it.ID == sbomItem && it.State != Evidenced || it.ID == incidentsItem && it.State != NA {
 			action := it.Action
-			if it.Name == "SBOM" && r.ScanRecovery != "" && action == "Run fendkit scan." {
+			if it.ID == sbomItem && r.ScanRecovery != "" && it.Reason == scanRefresh {
 				action = ""
 			}
 			fmt.Fprintln(w, "\n"+strings.TrimSpace(it.Explanation+" "+action))
@@ -109,9 +109,10 @@ func Markdown(w io.Writer, r Result) {
 	for i, a := range r.Next {
 		fmt.Fprintf(w, "%d. %s\n", i+1, md(a))
 	}
+	fmt.Fprintln(w, "\n"+md(r.ReviewProcedure))
 	fmt.Fprint(w, "\n## Checklist\n\n| State | Item | Explanation | Next action |\n| --- | --- | --- | --- |"+"\n")
 	for _, it := range OrderedItems(r) {
-		fmt.Fprintf(w, "| %s | %s | %s | %s |\n", it.State, md(it.Name), md(it.Explanation), md(it.Action))
+		fmt.Fprintf(w, "| %s | %s | %s | %s |\n", it.State, md(it.Name), md(it.Explanation), md(rowAction(it)))
 	}
 	fmt.Fprint(w, "\n## Scan evidence\n"+"\n")
 	for _, s := range r.ScanIssues {
@@ -202,7 +203,7 @@ func OrderedItems(r Result) []Item {
 	return out
 }
 func HTML(w io.Writer, r Result) error {
-	t, e := template.New("report.html").Funcs(template.FuncMap{"toolVersion": func() string { return version.Version }, "productType": ProductType, "slice": func(values ...string) []string { return values }, "value": Value, "scan": ScanLabel, "items": OrderedItems, "paths": Paths, "shipped": Shipped, "count": func(c inventory.Component) int { return Count(r, c) }, "findings": func(c inventory.Component) []vulns.Finding {
+	t, e := template.New("report.html").Funcs(template.FuncMap{"reviewProcedure": func() string { return ReviewProcedure }, "rowAction": rowAction, "toolVersion": func() string { return version.Version }, "productType": ProductType, "slice": func(values ...string) []string { return values }, "value": Value, "scan": ScanLabel, "items": OrderedItems, "paths": Paths, "shipped": Shipped, "count": func(c inventory.Component) int { return Count(r, c) }, "findings": func(c inventory.Component) []vulns.Finding {
 		out := []vulns.Finding{}
 		for _, f := range r.Findings {
 			if f.Component.PURL == c.PURL {

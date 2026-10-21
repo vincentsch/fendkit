@@ -205,7 +205,7 @@ func incidentCommand(dir *string, now func() time.Time) *rungrad.Command {
 					return rungrad.NewError(1, "Invalid --at: "+e.Error())
 				}
 			}
-			if at.Before(r.AwareAt) {
+			if op == "submitted" && at.Before(r.AwareAt) {
 				return rungrad.NewError(1, "--at must be on or after the recorded awareness time")
 			}
 			message := "Recorded fix or mitigation availability at " + incident.FormatTime(at, r.TimeZone) + "."

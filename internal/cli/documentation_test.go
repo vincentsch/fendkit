@@ -184,3 +184,37 @@ func documentationAnchors(text string) map[string]bool {
 	}
 	return anchors
 }
+
+func TestManualAdditionGuide(t *testing.T) {
+	text, err := os.ReadFile("../../docs/cra-yml.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, example, ok := strings.Cut(string(text), "```yaml\ncomponents:\n")
+	if !ok {
+		t.Fatal("manual addition example missing")
+	}
+	example, _, ok = strings.Cut(example, "```")
+	if !ok {
+		t.Fatal("manual addition example not closed")
+	}
+	root := t.TempDir()
+	put(t, root, "package.json", `{"name":"sample","version":"1.0.0"}`)
+	if err := os.MkdirAll(filepath.Join(root, "assets/js"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	put(t, root, "assets/js/widget.min.js", "/* Unrecognized library with no version evidence. */")
+	put(t, root, "cra.yml", "version: 1\nrole: {answer: not-in-scope}\ncomponents:\n"+example)
+	runCheckCLI(t, nil, root, 11, "scan", "--offline", "--release", ".")
+	var result Report
+	if err := json.Unmarshal([]byte(readFile(t, root, "cra/reports/inventory.json")), &result); err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Components) != 1 {
+		t.Fatal(result.Components)
+	}
+	component := result.Components[0]
+	if component.Name != "widget" || component.Version != nil || component.Shipped == nil || !*component.Shipped || component.PURL != "pkg:npm/widget" {
+		t.Fatal(component)
+	}
+}
