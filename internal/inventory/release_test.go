@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/profile"
 )
 
 func putTree(t *testing.T, root string, files map[string]string) {
@@ -228,9 +228,9 @@ func TestManualOccurrences(t *testing.T) {
 }
 
 func TestPinnedReleaseInventory(t *testing.T) {
-	filename := os.Getenv("CONFORMLINE_TEC_ZIP")
+	filename := os.Getenv("FENDKIT_TEC_ZIP")
 	if filename == "" {
-		t.Skip("set CONFORMLINE_TEC_ZIP to the pinned Events Calendar ZIP")
+		t.Skip("set FENDKIT_TEC_ZIP to the pinned Events Calendar ZIP")
 	}
 	f, e := os.Open(filename)
 	if e != nil {

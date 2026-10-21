@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vincentsch/conformline/internal/cli"
+	"github.com/vincentsch/fendkit/internal/cli"
 	"os"
 )
 

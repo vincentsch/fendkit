@@ -1,18 +1,18 @@
-# conformline demo
+# fendkit demo
 
-Try Conformline on the bundled example plugin
+Try Fendkit on the bundled example plugin
 
 ## Usage
 
 ```
-conformline demo
+fendkit demo
 ```
 
 ## Examples
 
 ```
-conformline demo
-conformline demo --offline --out ./example
+fendkit demo
+fendkit demo --offline --out ./example
 ```
 
 ## Flags

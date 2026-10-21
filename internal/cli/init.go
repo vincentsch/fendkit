@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vincentsch/conformline/internal/detect"
-	documents "github.com/vincentsch/conformline/internal/docs"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/status"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	documents "github.com/vincentsch/fendkit/internal/docs"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/status"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -29,7 +29,7 @@ type initResult struct {
 func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 	return &rungrad.Command{Use: "init", Short: "Record your decisions and prepare draft CRA documents",
 		Long:     "Show the detected product and dependencies, then ask for your decisions.\nWrite cra.yml, scan dependencies and create missing draft documents.\nUnknown answers stay unknown. An answers file is a partial cra.yml; null suppresses a question.\nWith --no-prompt, omitted maker decisions stay unknown. Detection still supplies product facts.\nLookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.\nFinish with the evidence status, even after incomplete lookups. Exit 10 for policy failures, 11 for incomplete or stale evidence; otherwise 0.\nRefuse to replace cra.yml; use scan, docs and check after setup.\nUse --dry-run to preview without writes, lookups or Git subprocesses.",
-		Examples: []string{"conformline init", "conformline init --answers answers.yml --no-prompt --release dist/plugin.zip", "conformline init --offline --no-prompt"},
+		Examples: []string{"fendkit init", "fendkit init --answers answers.yml --no-prompt --release dist/plugin.zip", "fendkit init --offline --no-prompt"},
 		Mutates:  true, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Args: cobra.NoArgs,
 		Configure: func(cmd *cobra.Command) {
 			cmd.Flags().String("answers", "", "Partial cra.yml with your interview answers")
@@ -64,7 +64,7 @@ func initCommand(dir *string, client *vulns.Client) *rungrad.Command {
 func initialize(f *rungrad.Factory, cmd *cobra.Command, dir string, client *vulns.Client, supplied *profile.Profile) (initResult, error) {
 	path := filepath.Join(dir, "cra.yml")
 	if _, err := os.Lstat(path); err == nil {
-		return initResult{}, rungrad.NewError(1, "cra.yml already exists; use conformline scan, conformline docs and conformline check")
+		return initResult{}, rungrad.NewError(1, "cra.yml already exists; use fendkit scan, fendkit docs and fendkit check")
 	} else if !os.IsNotExist(err) {
 		return initResult{}, rungrad.NewError(2, "Cannot inspect cra.yml; check project permissions")
 	}
@@ -153,11 +153,11 @@ func initialize(f *rungrad.Factory, cmd *cobra.Command, dir string, client *vuln
 func docsCommand(dir *string) *rungrad.Command {
 	return &rungrad.Command{Use: "docs", Short: "Create missing draft documents and refresh the index",
 		Long:     "Create missing documents from cra.yml and saved reports.\nPreserve every existing evidence document, including SECURITY.md.\nReplace the generated cra/README.md index on each run.\nFor not-in-scope, write only the index and preserve existing documents.\nUse --dry-run to list changes without writing files.",
-		Examples: []string{"conformline docs", "conformline docs --dry-run --json"}, Mutates: true, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Args: cobra.NoArgs,
+		Examples: []string{"fendkit docs", "fendkit docs --dry-run --json"}, Mutates: true, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Args: cobra.NoArgs,
 		Run: func(f *rungrad.Factory, _ *cobra.Command, _ []string) error {
 			p, err := profile.Load(filepath.Join(*dir, "cra.yml"))
 			if os.IsNotExist(err) {
-				return rungrad.NewError(1, "Run conformline init first; docs needs cra.yml")
+				return rungrad.NewError(1, "Run fendkit init first; docs needs cra.yml")
 			}
 			if err != nil {
 				return rungrad.NewError(1, "Cannot load cra.yml: "+safeError(err))

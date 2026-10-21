@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/vincentsch/conformline/internal/detect"
+	"github.com/vincentsch/fendkit/internal/detect"
 )
 
 const maxJS = 2 << 20

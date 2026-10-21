@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
 	"github.com/vincentsch/rungrad"
 	"github.com/vincentsch/rungrad/choose"
 )
@@ -60,7 +60,7 @@ func (q *interview) choice(path, prompt string, labels []string) (int, bool, err
 	}
 	n, err := chooser.Choose(prompt, options, 0)
 	if err != nil {
-		return 0, false, rungrad.NewError(1, "Interview canceled; run conformline init again with --answers or --no-prompt")
+		return 0, false, rungrad.NewError(1, "Interview canceled; run fendkit init again with --answers or --no-prompt")
 	}
 	return n, true, nil
 }

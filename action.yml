@@ -1,8 +1,8 @@
-name: Conformline
+name: Fendkit
 description: Check your product release and keep its CRA evidence reports.
 inputs:
   version:
-    description: Conformline release tag, or latest.
+    description: Fendkit release tag, or latest.
     default: latest
   working-directory:
     description: Initialized project root, relative to GITHUB_WORKSPACE or absolute.
@@ -26,7 +26,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Install Conformline
+    - name: Install Fendkit
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
@@ -45,7 +45,7 @@ runs:
       if: ${{ steps.scan.outputs.reports-ready == 'true' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
-        name: conformline-reports-${{ github.job }}-${{ steps.scan.outputs.artifact-suffix }}
+        name: fendkit-reports-${{ github.job }}-${{ steps.scan.outputs.artifact-suffix }}
         path: ${{ steps.scan.outputs.artifact-dir }}/
         if-no-files-found: error
     - name: Attach release evidence

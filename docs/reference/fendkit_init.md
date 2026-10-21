@@ -1,19 +1,19 @@
-# conformline init
+# fendkit init
 
 Record your decisions and prepare draft CRA documents
 
 ## Usage
 
 ```
-conformline init
+fendkit init
 ```
 
 ## Examples
 
 ```
-conformline init
-conformline init --answers answers.yml --no-prompt --release dist/plugin.zip
-conformline init --offline --no-prompt
+fendkit init
+fendkit init --answers answers.yml --no-prompt --release dist/plugin.zip
+fendkit init --offline --no-prompt
 ```
 
 ## Flags

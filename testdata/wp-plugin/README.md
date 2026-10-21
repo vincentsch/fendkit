@@ -1,6 +1,6 @@
 # WordPress plugin fixture
 
-`acme-booking/` is a small example WordPress plugin used by Conformline's
+`acme-booking/` is a small example WordPress plugin used by Fendkit's
 tests and demo. It has what real plugins have:
 
 - a plugin header in `acme-booking.php` (version 2.3.1) and a `readme.txt`

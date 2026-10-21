@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
 )
 
 type Package struct {

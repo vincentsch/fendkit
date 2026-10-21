@@ -1,6 +1,6 @@
 # Record an incident and its deadlines
 
-Conformline records your awareness time, calculates deadlines and writes drafts.
+Fendkit records your awareness time, calculates deadlines and writes drafts.
 It does not decide whether an event is reportable or file with ENISA.
 Legal timing was checked on **20 October 2026** against
 [Article 14 of Regulation (EU) 2024/2847](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng)
@@ -17,10 +17,10 @@ These examples use a fictional maker-supplied time. Run them only in a test
 project, or replace the title, type and time with your actual record:
 
 ```bash
-conformline incident new --type exploited-vulnerability --title 'Active exploitation of shipped component' --aware '2026-10-20T10:00:00+02:00'
-conformline incident new --type severe-incident --title 'Product security incident' --aware '2026-10-20T10:00:00+02:00'
-conformline incident list
-conformline incident show inc-1
+fendkit incident new --type exploited-vulnerability --title 'Active exploitation of shipped component' --aware '2026-10-20T10:00:00+02:00'
+fendkit incident new --type severe-incident --title 'Product security incident' --aware '2026-10-20T10:00:00+02:00'
+fendkit incident list
+fendkit incident show inc-1
 ```
 
 Use the ID printed by new rather than assuming `inc-1`. `--aware` accepts
@@ -55,16 +55,16 @@ Check each draft against the current
 A person submits there. Only after filing, record its time locally:
 
 ```bash
-conformline incident submitted inc-1 --stage early-warning --at '2026-10-20T15:00:00+02:00'
-conformline incident submitted inc-1 --stage notification --at '2026-10-21T12:00:00+02:00'
-conformline incident fix-available inc-1 --at '2026-10-21T14:00:00+02:00'
-conformline incident submitted inc-1 --stage final --at '2026-10-22T12:00:00+02:00'
-conformline incident show inc-1
+fendkit incident submitted inc-1 --stage early-warning --at '2026-10-20T15:00:00+02:00'
+fendkit incident submitted inc-1 --stage notification --at '2026-10-21T12:00:00+02:00'
+fendkit incident fix-available inc-1 --at '2026-10-21T14:00:00+02:00'
+fendkit incident submitted inc-1 --stage final --at '2026-10-22T12:00:00+02:00'
+fendkit incident show inc-1
 ```
 
 Replace the example times with recorded facts. Submitted stages no longer
 contribute overdue actions, even if filed late. Outstanding overdue stages
 fail check policy. `fix-available` starts the vulnerability final-report clock;
 it does not submit a report. Optional `--advisory` must match saved findings.
-Use [command help](reference/conformline_incident.md) for flags and
+Use [command help](reference/fendkit_incident.md) for flags and
 [status items](status-items.md) for the resulting check. Drafts give no legal advice.

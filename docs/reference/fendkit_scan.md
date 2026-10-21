@@ -1,20 +1,20 @@
-# conformline scan
+# fendkit scan
 
 Find dependencies and look up known vulnerabilities
 
 ## Usage
 
 ```
-conformline scan
+fendkit scan
 ```
 
 ## Examples
 
 ```
-conformline scan
-conformline scan --offline
-conformline scan --offline --dir ./my-plugin --json
-conformline scan --offline --dry-run
+fendkit scan
+fendkit scan --offline
+fendkit scan --offline --dir ./my-plugin --json
+fendkit scan --offline --dry-run
 ```
 
 ## Flags

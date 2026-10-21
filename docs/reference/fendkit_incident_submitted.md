@@ -1,17 +1,17 @@
-# conformline incident submitted
+# fendkit incident submitted
 
 Record a person's filing in ENISA's platform
 
 ## Usage
 
 ```
-conformline incident submitted <id>
+fendkit incident submitted <id>
 ```
 
 ## Examples
 
 ```
-conformline incident submitted inc-1 --stage early-warning
+fendkit incident submitted inc-1 --stage early-warning
 ```
 
 ## Flags

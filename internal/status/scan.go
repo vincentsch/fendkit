@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/vulns"
 )
 
-var retrySuffix = regexp.MustCompile(`; run conformline scan again[.!?]?$`)
+var retrySuffix = regexp.MustCompile(`; run fendkit scan again[.!?]?$`)
 
 func scanReason(reason string) string {
 	return strings.TrimSpace(retrySuffix.ReplaceAllString(strings.TrimSpace(reason), ""))
@@ -142,7 +142,7 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 	if !bomOK {
 		reportsMismatch = true
 		issue("SBOM scan evidence is missing or unreadable.")
-	} else if props["conformline:scan_id"] != saved.ScanID || props["conformline:inventory_digest"] != saved.InventoryDigest || props["conformline:scanned_at"] != saved.ScannedAt.Format(time.RFC3339Nano) || props["conformline:complete"] != fmt.Sprint(saved.Complete) || (saved.ProductVersion == nil && bom.Metadata.Component.Version != "" || saved.ProductVersion != nil && bom.Metadata.Component.Version != *saved.ProductVersion) {
+	} else if props["fendkit:scan_id"] != saved.ScanID || props["fendkit:inventory_digest"] != saved.InventoryDigest || props["fendkit:scanned_at"] != saved.ScannedAt.Format(time.RFC3339Nano) || props["fendkit:complete"] != fmt.Sprint(saved.Complete) || (saved.ProductVersion == nil && bom.Metadata.Component.Version != "" || saved.ProductVersion != nil && bom.Metadata.Component.Version != *saved.ProductVersion) {
 		reportsMismatch = true
 		issue("SBOM evidence does not belong to the saved scan.")
 	}
@@ -160,7 +160,7 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 	case incomplete:
 		r.ScanState, r.ScanDetail = "incomplete", "incomplete (lookups failed)"
 		reason = "Vulnerability lookups failed: " + firstReason + "."
-		advice = " again, or conformline doctor to check the connection."
+		advice = " again, or fendkit doctor to check the connection."
 	case reportsMismatch:
 		r.ScanState, r.ScanDetail = "incomplete", "incomplete (reports do not match)"
 		reason = "Saved reports are missing or do not belong to one scan."
@@ -187,7 +187,7 @@ func evaluateScan(root string, p *profile.Profile, now time.Time, r *Result) (bo
 		if releaseRepair != "" {
 			parts = append(parts, "Restore the recorded release "+Value(saved.Release)+".")
 		}
-		command := "conformline scan"
+		command := "fendkit scan"
 		if saved.Release != nil {
 			command += " --release " + shellQuote(*saved.Release)
 		}

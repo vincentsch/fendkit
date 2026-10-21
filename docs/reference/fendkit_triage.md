@@ -1,18 +1,18 @@
-# conformline triage
+# fendkit triage
 
 Record a decision and export product-specific VEX
 
 ## Usage
 
 ```
-conformline triage <advisory-id>
+fendkit triage <advisory-id>
 ```
 
 ## Examples
 
 ```
-conformline triage GHSA-f2wf-25xc-69c9 --status under_investigation --reason 'Reviewing product usage'
-conformline triage GHSA-f2wf-25xc-69c9 --status not_affected --justification vulnerable_code_not_in_execute_path --reason 'The product does not use the affected code path'
+fendkit triage GHSA-f2wf-25xc-69c9 --status under_investigation --reason 'Reviewing product usage'
+fendkit triage GHSA-f2wf-25xc-69c9 --status not_affected --justification vulnerable_code_not_in_execute_path --reason 'The product does not use the affected code path'
 ```
 
 ## Flags

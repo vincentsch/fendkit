@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/vincentsch/conformline/internal/detect"
+	"github.com/vincentsch/fendkit/internal/detect"
 )
 
 type Evidence struct {

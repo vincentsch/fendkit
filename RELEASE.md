@@ -1,4 +1,4 @@
-# Release Conformline
+# Release Fendkit
 
 Make the repository public before the first tag. GitHub build provenance
 attestations for this release must work without an Enterprise account.
@@ -21,7 +21,7 @@ actionlint
 
 Review application files for secrets and personal paths. Execute the native
 binary and inspect all six binary formats and checksums. Test an untagged
-source build and local `go install ./cmd/conformline`; both should show `dev`.
+source build and local `go install ./cmd/fendkit`; both should show `dev`.
 The version display also includes a commit and the Go runtime version.
 
 Promote `## Unreleased` in `CHANGELOG.md` to `## v0.1.0 - YYYY-MM-DD`, using
@@ -54,7 +54,7 @@ Windows skips that single test because an extensionless stub cannot replace Git.
 
 Before publishing, confirm repository visibility and Actions permissions.
 The repository, copied-prompt URL, binary downloads and
-`vincentsch/conformline@v0.1.0` Action reference need public access.
+`vincentsch/fendkit@v0.1.0` Action reference need public access.
 Release creation and these hosted checks remain open until actually run.
 After the first authorized tag, verify the six uploaded binaries, their hashes,
 build attestations and the exact release notes. Test latest and pinned installs

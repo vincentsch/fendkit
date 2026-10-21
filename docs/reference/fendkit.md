@@ -1,9 +1,9 @@
-# conformline
+# fendkit
 
 Prepare your Cyber Resilience Act evidence
 
 ## Usage
 
 ```
-conformline
+fendkit
 ```

@@ -1,30 +1,30 @@
 # Check a product release in GitHub Actions
 
-Conformline scans your product release, writes a job summary and uploads its
+Fendkit scans your product release, writes a job summary and uploads its
 reports. Use an Ubuntu runner with Bash, curl, checksum tools, jq and GitHub
 CLI available. GitHub-hosted Ubuntu runners include these tools. macOS and
 Windows runners are not supported by this Action.
 
-Run `conformline init` locally, review your answers and commit `cra.yml`.
+Run `fendkit init` locally, review your answers and commit `cra.yml`.
 The Action fails before scanning if that file is missing. CI does not run
 the interview. Check out your project and build or download its product
 release before calling the Action.
 
 See the [consumer example](../examples/github-workflow.yml) for pull requests
-and release events. Use `vincentsch/conformline@v0.1.0` or pin its commit.
+and release events. Use `vincentsch/fendkit@v0.1.0` or pin its commit.
 The example's `make release` is a placeholder for your own product build.
 
 ## Inputs and outputs
 
 | Input | Default | Meaning |
 | --- | --- | --- |
-| `version` | `latest` | Conformline release tag, such as `v0.1.0`. |
+| `version` | `latest` | Fendkit release tag, such as `v0.1.0`. |
 | `working-directory` | `.` | Project root relative to `GITHUB_WORKSPACE`, or an absolute directory. |
 | `release` | omitted | Product ZIP/folder path or glob relative to that project root. |
 | `fail-on` | `policy` | `policy` fails on policy or incomplete evidence; `never` suppresses only those verdicts. |
 | `attach-to-release` | `false` | `true` attaches scan evidence on release events; other events log why attachment was skipped. |
 
-`release` selects **your product**. `version` selects **Conformline**.
+`release` selects **your product**. `version` selects **Fendkit**.
 An omitted release lets the CLI use `cra.yml` or discover the release.
 A literal folder or ZIP may include spaces or sibling paths such as
 `../dist/product.zip`. A glob must match one file. Zero matches explain what
@@ -62,12 +62,12 @@ Other files under `cra/reports/` stay out of the upload.
 | Unexpected nonzero code, including 1, 2 or 5 | Fail | Fail |
 
 A scan exit other than 0 or 11 stops check, collection and attachment.
-The summary says `Conformline scan failed (exit N); no reports from this run`.
+The summary says `Fendkit scan failed (exit N); no reports from this run`.
 Committed reports remain untouched and are not presented as current output.
 
 An unexpected check code keeps the scan reports available for upload and
 attachment. Both status pages are omitted, including old copies. The summary
-says `Conformline check failed (exit N); status reports omitted from this run`.
+says `Fendkit check failed (exit N); status reports omitted from this run`.
 The Action fails after collection and eligible attachment under either policy.
 Invalid inputs, installation, collection, upload and attachment errors also fail
 under either policy. Incomplete lookups remain visible in the summary and reports.

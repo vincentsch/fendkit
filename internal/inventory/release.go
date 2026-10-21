@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/profile"
 )
 
 // ReleaseError identifies a failure while reading the selected release.

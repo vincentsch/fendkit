@@ -1,6 +1,6 @@
 # Know what you ship
 
-Conformline reads your source project and, when available, the ZIP or folder
+Fendkit reads your source project and, when available, the ZIP or folder
 you release. It does not run a package manager or execute your product.
 The [README](../README.md#start-on-your-plugin) shows the first run.
 
@@ -20,7 +20,7 @@ leave coverage gaps rather than guessed versions.
 ## The release boundary
 
 ```bash
-conformline scan --release ../dist/plugin.zip
+fendkit scan --release ../dist/plugin.zip
 ```
 
 Paths are relative to the project root (`--dir`), including sibling paths.
@@ -60,4 +60,4 @@ Scan writes `cra/reports/inventory.json`, `sbom.cdx.json`, and
 [vulnerability reports](vulnerabilities.md). CycloneDX 1.6 is the SBOM format;
 it records discovered components and shipping evidence, not proof of complete
 coverage. An offline scan still writes inventory but exits 11 because lookups
-are missing. Run `conformline check` after scan to see [status](status-items.md).
+are missing. Run `fendkit check` after scan to see [status](status-items.md).

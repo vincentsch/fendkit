@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/status"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/status"
+	"github.com/vincentsch/fendkit/internal/vulns"
 )
 
 func checkClient(t *testing.T) *vulns.Client {
@@ -57,7 +57,7 @@ func TestCheckRequiresProfileAndDryRun(t *testing.T) {
 	client := checkClient(t)
 	var out, stderr bytes.Buffer
 	code := newApp(client).RunIO([]string{"check", "--dir", root}, strings.NewReader(""), &out, &stderr)
-	if code != 1 || !strings.Contains(stderr.String(), "Run `conformline init` first") {
+	if code != 1 || !strings.Contains(stderr.String(), "Run `fendkit init` first") {
 		t.Fatal(code, stderr.String())
 	}
 	entries, _ := os.ReadDir(root)
@@ -279,7 +279,7 @@ func TestFrozenLookupStatusReports(t *testing.T) {
 		t.Fatal(result.ScanState)
 	}
 	for _, a := range result.Next {
-		if strings.Contains(a, "conformline scan") {
+		if strings.Contains(a, "fendkit scan") {
 			t.Fatal(result.Next)
 		}
 	}
@@ -303,11 +303,11 @@ func TestFrozenLookupStatusReports(t *testing.T) {
 	if !strings.Contains(readFile(t, root, "cra/reports/status.html"), "&lt;dependency&gt;") {
 		t.Fatal("unescaped advisory")
 	}
-	if path := os.Getenv("CONFORMLINE_ACCEPTANCE_ROOT"); path != "" {
+	if path := os.Getenv("FENDKIT_ACCEPTANCE_ROOT"); path != "" {
 		copyTree(t, root, filepath.Join(path, "acme-booking"))
 		copyTree(t, filepath.Join(base, "dist"), filepath.Join(path, "dist"))
 	}
-	if path := os.Getenv("CONFORMLINE_LOOKUP_FIXTURE"); path != "" {
+	if path := os.Getenv("FENDKIT_LOOKUP_FIXTURE"); path != "" {
 		if e := status.Write(path, result); e != nil {
 			t.Fatal(e)
 		}
@@ -415,7 +415,7 @@ func TestPreparationIndexAcrossCommands(t *testing.T) {
 				t.Helper()
 				index := readFile(t, root, "cra/README.md")
 				normalized := strings.Join(strings.Fields(index), " ")
-				for _, text := range []string{"# CRA preparation documents", "## Next steps", "reports/status.md", "reports/status.html", "Lookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.", "no presumption of conformity is available", "C(2026) 5252", "non-binding", "Conformline helps prepare evidence and does not give legal advice.", "Requirement: Art. 13, Art. 14; Annex I, II, V and VII."} {
+				for _, text := range []string{"# CRA preparation documents", "## Next steps", "reports/status.md", "reports/status.html", "Lookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.", "no presumption of conformity is available", "C(2026) 5252", "non-binding", "Fendkit helps prepare evidence and does not give legal advice.", "Requirement: Art. 13, Art. 14; Annex I, II, V and VII."} {
 					if !strings.Contains(normalized, text) {
 						t.Fatalf("index missing %q: %s", text, index)
 					}

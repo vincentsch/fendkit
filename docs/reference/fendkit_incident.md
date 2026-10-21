@@ -1,15 +1,15 @@
-# conformline incident
+# fendkit incident
 
 Record awareness, reporting deadlines and filing drafts
 
 ## Usage
 
 ```
-conformline incident
+fendkit incident
 ```
 
 ## Examples
 
 ```
-conformline incident list
+fendkit incident list
 ```

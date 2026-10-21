@@ -4,15 +4,15 @@ cd "$(dirname "$0")/.."
 source scripts/test-release-fixture.sh
 start_release_fixture
 export INSTALL_DIR="$fixture_root/install with spaces"
-unset CONFORMLINE_VERSION
+unset FENDKIT_VERSION
 bash install.sh > "$fixture_root/latest.log"
-"$INSTALL_DIR/conformline" --version
-export CONFORMLINE_VERSION=v0.1.0
+"$INSTALL_DIR/fendkit" --version
+export FENDKIT_VERSION=v0.1.0
 bash install.sh > "$fixture_root/pinned.log"
-"$INSTALL_DIR/conformline" --version
+"$INSTALL_DIR/fendkit" --version
 os=$(uname -s | tr '[:upper:]' '[:lower:]')
 case "$(uname -m)" in x86_64|amd64) arch=amd64 ;; arm64|aarch64) arch=arm64 ;; esac
-asset="conformline-$os-$arch"
+asset="fendkit-$os-$arch"
 release="$fixture_root/releases/download/v0.1.0"
 expect_failure() {
  local message=$1
@@ -21,18 +21,18 @@ expect_failure() {
  if ! grep -F "$message" "$fixture_root/failure.log" >/dev/null; then cat "$fixture_root/failure.log"; exit 1; fi
 }
 # A failed verification must leave the installed bytes unchanged.
-cp "$INSTALL_DIR/conformline" "$fixture_root/original"
+cp "$INSTALL_DIR/fendkit" "$fixture_root/original"
 printf 'corrupted download\n' > "$release/$asset"
 expect_failure 'Checksum mismatch' bash install.sh
-cmp "$fixture_root/original" "$INSTALL_DIR/conformline"
+cmp "$fixture_root/original" "$INSTALL_DIR/fendkit"
 cp "dist/$asset" "$release/$asset"
 sed "/  $asset\$/d" dist/checksums.txt > "$release/checksums.txt"
 expect_failure 'Missing checksum entry' bash install.sh
-cmp "$fixture_root/original" "$INSTALL_DIR/conformline"
+cmp "$fixture_root/original" "$INSTALL_DIR/fendkit"
 cp dist/checksums.txt "$release/checksums.txt"
 rm "$release/$asset"
 expect_failure 'Binary download failed' bash install.sh
-cmp "$fixture_root/original" "$INSTALL_DIR/conformline"
+cmp "$fixture_root/original" "$INSTALL_DIR/fendkit"
 cp "dist/$asset" "$release/$asset"
 mv "$release/checksums.txt" "$release/saved-checksums"
 expect_failure 'Checksum download failed' bash install.sh
@@ -44,7 +44,7 @@ expect_failure 'Unsupported OS' env PATH="$fixture_root/stubs:$PATH" bash instal
 printf '#!/bin/sh\ncase "$1" in -s) echo Linux ;; *) echo unsupported ;; esac\n' > "$fixture_root/stubs/uname"
 expect_failure 'Unsupported architecture' env PATH="$fixture_root/stubs:$PATH" bash install.sh
 # /proc cannot accept a child directory, even when the test runs as root.
-expect_failure 'Cannot create INSTALL_DIR' env INSTALL_DIR=/proc/conformline-install-test bash install.sh
+expect_failure 'Cannot create INSTALL_DIR' env INSTALL_DIR=/proc/fendkit-install-test bash install.sh
 mkdir "$fixture_root/readonly"
 chmod 555 "$fixture_root/readonly"
 if [ "$(id -u)" != 0 ]; then
@@ -57,5 +57,5 @@ for tool in uname tr mkdir mktemp curl awk shasum cp chmod mv rm; do
  ln -s "$(command -v "$tool")" "$fixture_root/fallback/$tool"
 done
 PATH="$fixture_root/fallback" /bin/bash install.sh > "$fixture_root/fallback.log"
-cmp "$fixture_root/original" "$INSTALL_DIR/conformline"
+cmp "$fixture_root/original" "$INSTALL_DIR/fendkit"
 echo 'Installer checks passed: latest, pinned, verification failures, downloads, platform, destination, shasum.'

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Acme Booking
  * Plugin URI:        https://example.com/acme-booking
- * Description:       Appointment booking forms for small businesses. Example plugin for Conformline tests.
+ * Description:       Appointment booking forms for small businesses. Example plugin for Fendkit tests.
  * Version:           2.3.1
  * Requires at least: 6.4
  * Requires PHP:      8.1

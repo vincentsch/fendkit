@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/vulns"
 )
 
 func TestDraftContentAndSavedAdvisory(t *testing.T) {
@@ -26,7 +26,7 @@ func TestDraftContentAndSavedAdvisory(t *testing.T) {
 			if !strings.HasPrefix(text, "Awareness time:") || !strings.Contains(text, "before filing.\n\n"+Legal+"\n\n# ") {
 				t.Fatalf("%s: opening guidance must lead directly into the filing text", name)
 			}
-			for _, required := range []string{"Awareness time: 2026-10-20", "Current deadlines: `conformline incident show inc-1`", "ENISA's Single Reporting Platform", "Maker product 2.3.1", "Maker Ltd", "Example Street", "Saved advisory summary", "HIGH", "CVE-example", "[[", Legal} {
+			for _, required := range []string{"Awareness time: 2026-10-20", "Current deadlines: `fendkit incident show inc-1`", "ENISA's Single Reporting Platform", "Maker product 2.3.1", "Maker Ltd", "Example Street", "Saved advisory summary", "HIGH", "CVE-example", "[[", Legal} {
 				if !strings.Contains(text, required) {
 					t.Fatalf("%s missing %q", name, required)
 				}

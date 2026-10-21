@@ -11,9 +11,9 @@ import (
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
 )
 
 func validate(t *testing.T, bom *cdx.BOM) {
@@ -77,7 +77,7 @@ func TestFixtureSBOM(t *testing.T) {
 			t.Fatalf("wrong product: %+v", bom.Metadata.Component)
 		}
 		props := properties(bom.Metadata.Properties)
-		if props["conformline:scan_id"] != "scan-example" || props["conformline:complete"] != "false" || props["conformline:offline"] != "true" || props["conformline:inventory_digest"] != provenance().InventoryDigest {
+		if props["fendkit:scan_id"] != "scan-example" || props["fendkit:complete"] != "false" || props["fendkit:offline"] != "true" || props["fendkit:inventory_digest"] != provenance().InventoryDigest {
 			t.Fatalf("missing provenance: %+v", props)
 		}
 		for i, c := range *bom.Components {
@@ -89,7 +89,7 @@ func TestFixtureSBOM(t *testing.T) {
 			if c.Scope != want || c.PackageURL != source.PURL || len(*c.Evidence.Occurrences) == 0 {
 				t.Fatalf("bad SBOM component: %+v", c)
 			}
-			if properties(c.Properties)["conformline:source"] == "" {
+			if properties(c.Properties)["fendkit:source"] == "" {
 				t.Fatal("source lost")
 			}
 		}
@@ -176,7 +176,7 @@ func TestReleaseScopeAndEvidence(t *testing.T) {
 	for _, c := range *bom.Components {
 		switch c.PackageURL {
 		case "pkg:npm/runtime@2.0.0":
-			if c.Scope != cdx.ScopeRequired || properties(c.Properties)["conformline:shipped"] != "unknown" {
+			if c.Scope != cdx.ScopeRequired || properties(c.Properties)["fendkit:shipped"] != "unknown" {
 				t.Fatal("unknown shipment must have required scope")
 			}
 		case "pkg:npm/lodash@4.17.15":
@@ -188,11 +188,11 @@ func TestReleaseScopeAndEvidence(t *testing.T) {
 				t.Fatal("absent library required")
 			}
 		case "pkg:npm/select2@3.5.4-tribe":
-			if c.Modified == nil || !*c.Modified || properties(c.Properties)["conformline:note"] == "" {
+			if c.Modified == nil || !*c.Modified || properties(c.Properties)["fendkit:note"] == "" {
 				t.Fatal("modified evidence lost")
 			}
 		case "pkg:npm/popper.js":
-			if c.Version != "" || c.Scope != cdx.ScopeRequired || properties(c.Properties)["conformline:banner"] == "" {
+			if c.Version != "" || c.Scope != cdx.ScopeRequired || properties(c.Properties)["fendkit:banner"] == "" {
 				t.Fatal("unknown version evidence lost")
 			}
 		default:

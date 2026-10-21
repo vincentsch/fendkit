@@ -1,17 +1,17 @@
-# conformline incident fix-available
+# fendkit incident fix-available
 
 Record when a fix or mitigation became available
 
 ## Usage
 
 ```
-conformline incident fix-available <id>
+fendkit incident fix-available <id>
 ```
 
 ## Examples
 
 ```
-conformline incident fix-available inc-1 --at '2026-10-21 12:00'
+fendkit incident fix-available inc-1 --at '2026-10-21 12:00'
 ```
 
 ## Flags

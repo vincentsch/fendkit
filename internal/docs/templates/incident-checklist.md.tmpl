@@ -2,22 +2,22 @@
 status: draft
 reviewed_by: ""
 reviewed_on: ""
-conformline: {{.ToolVersion}}
+fendkit: {{.ToolVersion}}
 ---
 
 # Incident reporting checklist
 
 This draft needs your review. Replace each [[placeholder]] with your evidence.
-Conformline helps prepare evidence and does not give legal advice.
+Fendkit helps prepare evidence and does not give legal advice.
 
 ## Record when you became aware
 
 When you learn of an actively exploited vulnerability or a severe incident,
 record the awareness time, including its time zone.
-Use `conformline incident new --type exploited-vulnerability --aware <RFC3339-time> --title "<summary>"`
+Use `fendkit incident new --type exploited-vulnerability --aware <RFC3339-time> --title "<summary>"`
 or select `--type severe-incident`.
 Without `--aware`, the proposed current time needs your confirmation.
-Use `conformline incident list` and `conformline incident show <id>` to see
+Use `fendkit incident list` and `fendkit incident show <id>` to see
 current deadlines and the paths to filing drafts.
 [[Name the responsible person and escalation contact.]]
 
@@ -41,7 +41,7 @@ For an exploited vulnerability, the deadline is 14 days after a fix or mitigatio
 Include severity, impact, any known malicious actor and details of the update or measures.
 For a severe incident, it is one month after notification.
 Include severity, impact, likely threat or root cause, applied and ongoing mitigation.
-Use `conformline incident fix-available <id> --at <RFC3339-time>` for an
+Use `fendkit incident fix-available <id> --at <RFC3339-time>` for an
 exploited vulnerability. For a severe incident, recording notification submission
 sets the final deadline from the actual filing time; until then the notification
 due time is used provisionally.
@@ -51,8 +51,8 @@ due time is used provisionally.
 
 A person submits through ENISA's Single Reporting Platform.
 Prepare an EU Login account with multi-factor authentication (MFA).
-Check the live form before submitting; Conformline only prepares filing texts.
-After filing, use `conformline incident submitted <id> --stage early-warning`
+Check the live form before submitting; Fendkit only prepares filing texts.
+After filing, use `fendkit incident submitted <id> --stage early-warning`
 (or `notification` or `final`), with `--at <RFC3339-time>` when recording a past
 filing. This records your filing and sends nothing.
 [[Record who submits, submission times and references.]]

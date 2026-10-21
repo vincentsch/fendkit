@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/docs"
-	"github.com/vincentsch/conformline/internal/incident"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/docs"
+	"github.com/vincentsch/fendkit/internal/incident"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,10 +28,10 @@ const (
 	Missing   State = "missing"
 	NA        State = "not applicable"
 )
-const Assessment = "Your classification may require a conformity assessment by a third party. Conformline does not prepare or assess that procedure."
+const Assessment = "Your classification may require a conformity assessment by a third party. Fendkit does not prepare or assess that procedure."
 const AssessmentURL = "https://digital-strategy.ec.europa.eu/en/policies/cra-conformity-assessment"
-const Legal = "Not legal advice. Conformline helps you prepare; the decisions and the signature are yours."
-const Scope = "Conformline only checks third-party components. It does not check the maker's own code for vulnerabilities. A scan without findings does not prove the absence of vulnerabilities."
+const Legal = "Not legal advice. Fendkit helps you prepare; the decisions and the signature are yours."
+const Scope = "Fendkit only checks third-party components. It does not check the maker's own code for vulnerabilities. A scan without findings does not prove the absence of vulnerabilities."
 
 type Item struct {
 	Name        string `json:"name"`
@@ -196,7 +196,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	}
 	decision("Role", p.Role.Answer, "role.answer")
 	if p.Role.Answer == "open-source-steward" {
-		r.Notes = append(r.Notes, "Conformline v0.1 follows manufacturer preparation steps. It does not assess steward obligations under Art. 24.")
+		r.Notes = append(r.Notes, "Fendkit v0.1 follows manufacturer preparation steps. It does not assess steward obligations under Art. 24.")
 	}
 	decision("Classification", p.Classification.Answer, "classification.answer")
 	assessment := p.Classification.Answer == "important-class-i" || p.Classification.Answer == "important-class-ii" || p.Classification.Answer == "critical"
@@ -240,7 +240,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 			sbomWhy += " The SBOM product version differs from the current product version."
 		}
 	}
-	productAction := "Run conformline scan."
+	productAction := "Run fendkit scan."
 	if sbomState == Evidenced {
 		productAction = "Scan again when the product or its components change, or after seven days."
 	}
@@ -250,18 +250,18 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 			sbomState = Missing
 		}
 		sbomWhy += " The product version is unknown."
-		productAction = "Set product.version in cra.yml, then run conformline scan."
+		productAction = "Set product.version in cra.yml, then run fendkit scan."
 	}
 	if p.Product.Version != nil && product.DetectedVersion != nil && !same(p.Product.Version, product.DetectedVersion) {
 		sbomState = Review
 		sbomWhy += fmt.Sprintf(" Configured product.version %s differs from detected version %s.", *p.Product.Version, *product.DetectedVersion)
-		productAction = "Review product.version in cra.yml and the detected version, then run conformline scan."
+		productAction = "Review product.version in cra.yml and the detected version, then run fendkit scan."
 	}
 	for _, note := range r.Product.Notes {
 		if strings.Contains(note, "Stable tag") {
 			sbomState = Review
 			sbomWhy += " " + note
-			productAction = "Review and align readme.txt Stable tag and the WordPress header, then run conformline scan."
+			productAction = "Review and align readme.txt Stable tag and the WordPress header, then run fendkit scan."
 		}
 	}
 	add("SBOM", sbomState, sbomWhy, productAction)
@@ -288,7 +288,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	if !r.ScanComplete {
 		vulnExplanation = "Scan evidence is " + r.ScanDetail + "; saved finding counts do not show current coverage. " + strings.Join(r.ScanIssues, " ") + " " + vulnExplanation
 	}
-	add("Known vulnerabilities", vulnState, vulnExplanation, "Review cra/reports/vulnerabilities.md and record decisions with conformline triage.")
+	add("Known vulnerabilities", vulnState, vulnExplanation, "Review cra/reports/vulnerabilities.md and record decisions with fendkit triage.")
 	r.CoverageGaps = uniqueGaps(r.CoverageGaps)
 	docItem("Support period", "cra/support-period.md")
 	if p.Support.End == nil {
@@ -330,7 +330,7 @@ func Evaluate(root string, p *profile.Profile, now time.Time, strict bool) (Resu
 	}
 	incidentAction := "No action needed."
 	if incidentState == Review {
-		incidentAction = "Review current deadlines and filing drafts with conformline incident show <id>; a person submits in ENISA's platform."
+		incidentAction = "Review current deadlines and filing drafts with fendkit incident show <id>; a person submits in ENISA's platform."
 	}
 	add("Open incidents", incidentState, incidentWhy, incidentAction)
 	if p.Role.Answer == "not-in-scope" {
@@ -413,7 +413,7 @@ func rankActions(r Result) []action {
 				if s.Overdue {
 					rank = -1
 				}
-				text := fmt.Sprintf("%s %s: %s. Review %s; conformline incident show %s.", v.Record.ID, s.Name, s.Description, s.Draft, v.Record.ID)
+				text := fmt.Sprintf("%s %s: %s. Review %s; fendkit incident show %s.", v.Record.ID, s.Name, s.Description, s.Draft, v.Record.ID)
 				actions = append(actions, action{text: text, rank: rank, name: v.Record.ID + " " + s.Name, due: due})
 			}
 		}
@@ -472,7 +472,7 @@ func rankActions(r Result) []action {
 		actions = append(actions, action{text: text, rank: rank, severity: sev, count: len(findings), name: c.Name + " " + c.PURL})
 	}
 	for i, it := range r.Items {
-		if i == 12 || it.State == Evidenced || it.State == NA || (i == 4 && r.ScanRecovery != "" && it.Action == "Run conformline scan.") {
+		if i == 12 || it.State == Evidenced || it.State == NA || (i == 4 && r.ScanRecovery != "" && it.Action == "Run fendkit scan.") {
 			continue
 		}
 		rank := 6

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-fail() { echo "Conformline: $*" >&2; exit 1; }
+fail() { echo "Fendkit: $*" >&2; exit 1; }
 output() { printf '%s=%s\n' "$1" "$2" >> "$GITHUB_OUTPUT"; }
 summary() { printf '%s\n' "$*" >> "$GITHUB_STEP_SUMMARY"; }
 
@@ -8,11 +8,11 @@ install() {
  [ "${RUNNER_OS:-}" = Linux ] || fail 'Use an Ubuntu runner (runs-on: ubuntu-latest).'
  version=${INPUT_VERSION-latest}
  [[ "$version" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || fail 'version must be latest or a release tag such as v0.1.0.'
- destination=$(mktemp -d "$RUNNER_TEMP/conformline-bin.XXXXXXXX")
+ destination=$(mktemp -d "$RUNNER_TEMP/fendkit-bin.XXXXXXXX")
  if [ "$version" = latest ]; then
-  unset CONFORMLINE_VERSION
+  unset FENDKIT_VERSION
  else
-  export CONFORMLINE_VERSION=$version
+  export FENDKIT_VERSION=$version
  fi
  INSTALL_DIR="$destination" bash "$GITHUB_ACTION_PATH/install.sh"
  printf '%s\n' "$destination" >> "$GITHUB_PATH"
@@ -30,7 +30,7 @@ run() {
  project=${INPUT_WORKING_DIRECTORY:-.}
  [[ "$project" = /* ]] || project="$GITHUB_WORKSPACE/$project"
  project=$(cd -- "$project" && pwd -P) || fail 'working-directory must name an existing project directory.'
- [ -f "$project/cra.yml" ] || fail 'Run `conformline init` locally and commit cra.yml'
+ [ -f "$project/cra.yml" ] || fail 'Run `fendkit init` locally and commit cra.yml'
  release_args=()
  if [ -n "${INPUT_RELEASE:-}" ]; then
   release=$INPUT_RELEASE
@@ -41,14 +41,14 @@ run() {
    case ${#matches[@]} in
     0) fail "release matched no files: $INPUT_RELEASE. Build or download the product release first." ;;
     1) release=${matches[0]}; [ -f "$release" ] || fail 'A release glob must match one file (use a literal path for a folder).' ;;
-    *) printf 'Conformline: release matched several paths; select one file:\n' >&2
+    *) printf 'Fendkit: release matched several paths; select one file:\n' >&2
        printf '  %s\n' "${matches[@]}" >&2; exit 1 ;;
    esac
   fi
   release=$(realpath -- "$release")
   release_args=(--release "$release")
  fi
- state=$(mktemp -d "$RUNNER_TEMP/conformline-action.XXXXXXXX")
+ state=$(mktemp -d "$RUNNER_TEMP/fendkit-action.XXXXXXXX")
  mkdir "$state/artifacts"
  output state-dir "$state"
  output artifact-dir "$state/artifacts"
@@ -56,25 +56,25 @@ run() {
  printf '%s\n' "${INPUT_FAIL_ON-policy}" > "$state/fail-on"
  printf '%s\n' "${INPUT_ATTACH_TO_RELEASE-false}" > "$state/attach"
  scan=0
- conformline scan --no-prompt --dir "$project" "${release_args[@]}" || scan=$?
- echo "Conformline scan exit code: $scan"
+ fendkit scan --no-prompt --dir "$project" "${release_args[@]}" || scan=$?
+ echo "Fendkit scan exit code: $scan"
  printf '%s\n' "$scan" > "$state/scan"
  output scan-exit-code "$scan"
  : > "$state/check"
  case "$scan" in
   0|11) ;;
-  *) summary "Conformline scan failed (exit $scan); no reports from this run"; return ;;
+  *) summary "Fendkit scan failed (exit $scan); no reports from this run"; return ;;
  esac
  check=0
- conformline check --ci --no-prompt --dir "$project" || check=$?
- echo "Conformline check exit code: $check"
+ fendkit check --ci --no-prompt --dir "$project" || check=$?
+ echo "Fendkit check exit code: $check"
  printf '%s\n' "$check" > "$state/check"
  output check-exit-code "$check"
  files=(inventory.json sbom.cdx.json vulnerabilities.json vulnerabilities.md)
  if [ -f "$project/cra/reports/vex.openvex.json" ]; then files+=(vex.openvex.json); fi
  case "$check" in
   0|10|11) files+=(status.md status.html) ;;
-  *) summary "Conformline check failed (exit $check); status reports omitted from this run" ;;
+  *) summary "Fendkit check failed (exit $check); status reports omitted from this run" ;;
  esac
  for file in "${files[@]}"; do
   [ -f "$project/cra/reports/$file" ] || fail "Missing current report $file after scan/check; report collection failed."
@@ -89,7 +89,7 @@ attach() {
  [ -f "$state/collected" ] || fail 'No collected reports available for attachment.'
  [ "$(cat "$state/attach")" = true ] || return 0
  if [ "${GITHUB_EVENT_NAME:-}" != release ]; then
-  echo 'Conformline: release attachment skipped; this is not a release event.'
+  echo 'Fendkit: release attachment skipped; this is not a release event.'
   return 0
  fi
  [ -f "$state/artifacts/sbom.cdx.json" ] || fail 'Current SBOM missing; cannot attach release evidence.'
@@ -104,7 +104,7 @@ verdict() {
  state=$1
  scan=$(cat "$state/scan")
  check=$(cat "$state/check")
- echo "Conformline verdict: scan=$scan check=${check:-not-run} fail-on=$(cat "$state/fail-on")"
+ echo "Fendkit verdict: scan=$scan check=${check:-not-run} fail-on=$(cat "$state/fail-on")"
  case "$scan" in 0|11) ;; *) fail "Scan failed (exit $scan)." ;; esac
  [ -f "$state/collected" ] || fail 'Report collection did not complete.'
  case "$check" in 0|10|11) ;; *) fail "Check failed (exit $check)." ;; esac

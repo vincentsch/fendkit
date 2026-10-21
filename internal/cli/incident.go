@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/incident"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/incident"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -66,14 +66,14 @@ func writeIncidents(f *rungrad.Factory, records []incident.Record, now time.Time
 }
 func incidentError(e error) error {
 	if os.IsNotExist(e) {
-		return rungrad.NewError(5, "Incident not found; use conformline incident list to find a recorded id")
+		return rungrad.NewError(5, "Incident not found; use fendkit incident list to find a recorded id")
 	}
 	return rungrad.NewError(2, "Cannot read or save incidents: "+safeError(e))
 }
 func incidentCommand(dir *string, now func() time.Time) *rungrad.Command {
-	root := &rungrad.Command{Use: "incident", Short: "Record awareness, reporting deadlines and filing drafts", Long: "The maker decides when they became aware. Conformline prepares drafts locally.\nA person submits in ENISA's Single Reporting Platform; submitted only records that filing.", Examples: []string{"conformline incident list"}}
+	root := &rungrad.Command{Use: "incident", Short: "Record awareness, reporting deadlines and filing drafts", Long: "The maker decides when they became aware. Fendkit prepares drafts locally.\nA person submits in ENISA's Single Reporting Platform; submitted only records that filing.", Examples: []string{"fendkit incident list"}}
 	modes := []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}
-	newCmd := &rungrad.Command{Use: "new", Short: "Record an incident and create filing drafts", Long: "Requires cra.yml. Drafts use saved findings only, without network calls.\n--aware accepts RFC 3339 or YYYY-MM-DD HH:MM in the local IANA time zone.\nWithout --aware, confirm the proposed current time with --confirm or yes at the prompt.\nIn non-interactive or JSON use, pass --aware or --confirm.\nThe recorded zone comes from TZ, the /etc/localtime link, or UTC.\nDrafts are created once; incident show always gives the current deadlines.\nUse --dry-run to preview without writing files.", Examples: []string{"conformline incident new --type exploited-vulnerability --title 'Active exploitation' --aware '2026-10-20T10:00:00+02:00'", "conformline incident new --type severe-incident --title 'Service disruption' --confirm"}, Mutates: true, OutputModes: modes, Args: cobra.NoArgs,
+	newCmd := &rungrad.Command{Use: "new", Short: "Record an incident and create filing drafts", Long: "Requires cra.yml. Drafts use saved findings only, without network calls.\n--aware accepts RFC 3339 or YYYY-MM-DD HH:MM in the local IANA time zone.\nWithout --aware, confirm the proposed current time with --confirm or yes at the prompt.\nIn non-interactive or JSON use, pass --aware or --confirm.\nThe recorded zone comes from TZ, the /etc/localtime link, or UTC.\nDrafts are created once; incident show always gives the current deadlines.\nUse --dry-run to preview without writing files.", Examples: []string{"fendkit incident new --type exploited-vulnerability --title 'Active exploitation' --aware '2026-10-20T10:00:00+02:00'", "fendkit incident new --type severe-incident --title 'Service disruption' --confirm"}, Mutates: true, OutputModes: modes, Args: cobra.NoArgs,
 		Configure: func(c *cobra.Command) {
 			c.Flags().String("type", "", "exploited-vulnerability or severe-incident (required)")
 			c.Flags().String("title", "", "Short incident description (required)")
@@ -91,7 +91,7 @@ func incidentCommand(dir *string, now func() time.Time) *rungrad.Command {
 			}
 			p, e := profile.Load(filepath.Join(*dir, "cra.yml"))
 			if os.IsNotExist(e) {
-				return rungrad.NewError(1, "Run `conformline init` first; incident new needs cra.yml")
+				return rungrad.NewError(1, "Run `fendkit init` first; incident new needs cra.yml")
 			}
 			if e != nil {
 				return rungrad.NewError(1, "Cannot load cra.yml: "+safeError(e))
@@ -138,7 +138,7 @@ func incidentCommand(dir *string, now func() time.Time) *rungrad.Command {
 			message := "Created incident record and four filing drafts."
 			if r.Advisory != nil {
 				if readErr != nil || json.Unmarshal(b, &saved) != nil {
-					return rungrad.NewError(1, "--advisory needs readable saved findings; run conformline scan first or omit --advisory")
+					return rungrad.NewError(1, "--advisory needs readable saved findings; run fendkit scan first or omit --advisory")
 				}
 				found := slices.ContainsFunc(saved.Findings, func(f vulns.Finding) bool { return slices.Contains(f.IDs, *r.Advisory) })
 				if !found {
@@ -158,14 +158,14 @@ func incidentCommand(dir *string, now func() time.Time) *rungrad.Command {
 			}
 			return writeIncidents(f, []incident.Record{r}, clock, message)
 		}}
-	list := &rungrad.Command{Use: "list", Short: "List incidents with deadlines and submission status", Long: "Read saved incident records and calculate current deadlines locally.\nNo network calls or file changes.", Examples: []string{"conformline incident list", "conformline incident list --json"}, OutputModes: modes, Args: cobra.NoArgs, Run: func(f *rungrad.Factory, _ *cobra.Command, _ []string) error {
+	list := &rungrad.Command{Use: "list", Short: "List incidents with deadlines and submission status", Long: "Read saved incident records and calculate current deadlines locally.\nNo network calls or file changes.", Examples: []string{"fendkit incident list", "fendkit incident list --json"}, OutputModes: modes, Args: cobra.NoArgs, Run: func(f *rungrad.Factory, _ *cobra.Command, _ []string) error {
 		records, e := incident.List(*dir)
 		if e != nil {
 			return incidentError(e)
 		}
 		return writeIncidents(f, records, now(), "")
 	}}
-	show := &rungrad.Command{Use: "show <id>", Short: "Show current deadlines and paths to filing texts", Long: "Show outstanding and submitted stages, remaining time and the four draft paths.\nThe final clock waits for a fix for exploited vulnerabilities. Severe incidents use\na provisional notification due time until actual submission is recorded.", Examples: []string{"conformline incident show inc-1"}, OutputModes: modes, Args: cobra.ExactArgs(1), Run: func(f *rungrad.Factory, _ *cobra.Command, args []string) error {
+	show := &rungrad.Command{Use: "show <id>", Short: "Show current deadlines and paths to filing texts", Long: "Show outstanding and submitted stages, remaining time and the four draft paths.\nThe final clock waits for a fix for exploited vulnerabilities. Severe incidents use\na provisional notification due time until actual submission is recorded.", Examples: []string{"fendkit incident show inc-1"}, OutputModes: modes, Args: cobra.ExactArgs(1), Run: func(f *rungrad.Factory, _ *cobra.Command, args []string) error {
 		r, e := incident.Load(*dir, args[0])
 		if e != nil {
 			return incidentError(e)
@@ -180,11 +180,11 @@ func incidentCommand(dir *string, now func() time.Time) *rungrad.Command {
 		op := operation
 		short := "Record when a fix or mitigation became available"
 		long := "For exploited vulnerabilities only. Starts the elapsed 14-day final-report clock."
-		example := "conformline incident fix-available inc-1 --at '2026-10-21 12:00'"
+		example := "fendkit incident fix-available inc-1 --at '2026-10-21 12:00'"
 		if op == "submitted" {
 			short = "Record a person's filing in ENISA's platform"
 			long = "Records a filing only; nothing is sent. A recorded stage stops being overdue.\nRecording notification submission recalculates the severe-incident final deadline."
-			example = "conformline incident submitted inc-1 --stage early-warning"
+			example = "fendkit incident submitted inc-1 --stage early-warning"
 		}
 		cmd := &rungrad.Command{Use: op + " <id>", Short: short, Long: long + "\n--at accepts RFC 3339 or YYYY-MM-DD HH:MM in the local zone; defaults to now.\nAll times display in the incident's recorded time zone. Existing drafts are preserved.\nUse --dry-run to preview without changing the record.", Examples: []string{example}, Mutates: true, OutputModes: modes, Args: cobra.ExactArgs(1), Configure: func(c *cobra.Command) {
 			c.Flags().String("at", "", "Recorded time; defaults to now (RFC 3339 or local YYYY-MM-DD HH:MM)")

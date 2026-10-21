@@ -1,18 +1,18 @@
-# conformline docs
+# fendkit docs
 
 Create missing draft documents and refresh the index
 
 ## Usage
 
 ```
-conformline docs
+fendkit docs
 ```
 
 ## Examples
 
 ```
-conformline docs
-conformline docs --dry-run --json
+fendkit docs
+fendkit docs --dry-run --json
 ```
 
 ## Output modes

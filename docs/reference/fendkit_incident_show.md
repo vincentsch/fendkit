@@ -1,17 +1,17 @@
-# conformline incident show
+# fendkit incident show
 
 Show current deadlines and paths to filing texts
 
 ## Usage
 
 ```
-conformline incident show <id>
+fendkit incident show <id>
 ```
 
 ## Examples
 
 ```
-conformline incident show inc-1
+fendkit incident show inc-1
 ```
 
 ## Output modes

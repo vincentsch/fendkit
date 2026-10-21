@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/vincentsch/conformline/internal/cli"
+	"github.com/vincentsch/fendkit/internal/cli"
 	"github.com/vincentsch/rungrad/docsgen"
 )
 

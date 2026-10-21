@@ -2,7 +2,7 @@ package status
 
 import (
 	"bytes"
-	"github.com/vincentsch/conformline/internal/detect"
+	"github.com/vincentsch/fendkit/internal/detect"
 	"os"
 	"path/filepath"
 	"slices"
@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/incident"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/incident"
+	"github.com/vincentsch/fendkit/internal/vulns"
 )
 
 func TestIncidentActionsAndPolicyClock(t *testing.T) {
@@ -187,7 +187,7 @@ func TestRecoveryBetweenPolicyAndUpcomingActions(t *testing.T) {
 		if a.text == r.ScanRecovery {
 			recoveryCount++
 		}
-		if a.text == "Run conformline scan." {
+		if a.text == "Run fendkit scan." {
 			t.Fatal("duplicate scan-only action")
 		}
 	}

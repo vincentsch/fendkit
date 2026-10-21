@@ -12,19 +12,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
 	"github.com/vincentsch/rungrad/testutil"
 )
 
 func TestCommandSurface(t *testing.T) { testutil.AssertConsistent(t, New) }
 
 func TestBuiltScan(t *testing.T) {
-	binary := filepath.Join(t.TempDir(), "conformline")
+	binary := filepath.Join(t.TempDir(), "fendkit")
 	if runtime.GOOS == "windows" {
 		binary += ".exe"
 	}
-	build := exec.Command("go", "build", "-o", binary, "../../cmd/conformline")
+	build := exec.Command("go", "build", "-o", binary, "../../cmd/fendkit")
 	if b, e := build.CombinedOutput(); e != nil {
 		t.Fatalf("build: %s %v", b, e)
 	}
@@ -250,7 +250,7 @@ func TestBuiltScan(t *testing.T) {
 	for _, p := range bom.Metadata.Properties {
 		props[p.Name] = p.Value
 	}
-	if props["conformline:scan_id"] != result.ScanID || props["conformline:inventory_digest"] != result.InventoryDigest || props["conformline:complete"] != "false" || props["conformline:release"] != *result.Release {
+	if props["fendkit:scan_id"] != result.ScanID || props["fendkit:inventory_digest"] != result.InventoryDigest || props["fendkit:complete"] != "false" || props["fendkit:release"] != *result.Release {
 		t.Fatal("SBOM provenance differs")
 	}
 	before, _ = os.ReadFile(filepath.Join(root, "cra/reports/inventory.json"))

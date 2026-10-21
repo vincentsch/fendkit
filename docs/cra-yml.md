@@ -13,7 +13,7 @@ stay unknown. Use a temporary file outside your product repository, then remove
 it. See the [tested partial answers example](../AGENTS.md#partial-answers-example).
 
 ```bash
-conformline init --no-prompt --answers /tmp/maker-answers.yml --release ../dist/plugin.zip
+fendkit init --no-prompt --answers /tmp/maker-answers.yml --release ../dist/plugin.zip
 ```
 
 The file must contain your own answers, not the example maker's details.
@@ -77,7 +77,7 @@ Each record has `advisory`, `component` (exact purl including version), `status`
 `justification`, `reason`, `decided_on`. Status is `affected`, `not_affected`,
 `fixed` or `under_investigation`. All need a reason and decision date;
 `not_affected` also needs a supported OpenVEX justification. See
-[the generated reference](reference/conformline_triage.md) for its values.
+[the generated reference](reference/fendkit_triage.md) for its values.
 
 Profile updates by triage preserve YAML comments. Scan and docs do not save
 new answers. Existing maker documents also remain untouched; review changed

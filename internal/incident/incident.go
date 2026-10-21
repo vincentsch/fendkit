@@ -18,7 +18,7 @@ import (
 
 const Exploited = "exploited-vulnerability"
 const Severe = "severe-incident"
-const Legal = "Conformline helps prepare evidence and does not give legal advice. A person reviews the drafts and submits reports to ENISA."
+const Legal = "Fendkit helps prepare evidence and does not give legal advice. A person reviews the drafts and submits reports to ENISA."
 
 var Stages = []string{"early-warning", "notification", "final"}
 var validID = regexp.MustCompile(`^inc-([1-9][0-9]*)$`)
@@ -127,7 +127,7 @@ func Describe(r Record, now time.Time) View {
 				if r.FixAvailableAt != nil {
 					due = r.FixAvailableAt.Add(14 * 24 * time.Hour)
 				} else {
-					s.Description = "Pending: the 14-day clock starts when a fix or mitigation becomes available; record it with conformline incident fix-available " + r.ID
+					s.Description = "Pending: the 14-day clock starts when a fix or mitigation becomes available; record it with fendkit incident fix-available " + r.ID
 				}
 			} else {
 				basis := r.AwareAt.Add(72 * time.Hour)

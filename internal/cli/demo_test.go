@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad/testutil"
 )
 
@@ -94,7 +94,7 @@ func TestDemoCompletesWithOfflineAndFailedLookups(t *testing.T) {
 			if *p.Manufacturer.Name != "Acme Plugins GmbH (demo)" || *p.Role.DecidedBy != "Demo User" || *p.Classification.DecidedBy != "Demo User" || p.Role.Answer != "manufacturer" || p.Classification.Answer != "default" || p.Manufacturer.Address != nil || *p.Support.End != time.Now().AddDate(5, 0, 0).Format("2006-01-02") {
 				t.Fatalf("%+v", p)
 			}
-			if r.Init.Scan.Complete || len(r.Init.Scan.IncompleteReasons) == 0 || len(r.Commands) != 3 || !strings.HasPrefix(r.Commands[0], "conformline scan ") || !strings.Contains(r.Commands[1], `--title "Demo vulnerability"`) || strings.Contains(r.Commands[1], "--confirm") || strings.Contains(r.Commands[1], "--aware") {
+			if r.Init.Scan.Complete || len(r.Init.Scan.IncompleteReasons) == 0 || len(r.Commands) != 3 || !strings.HasPrefix(r.Commands[0], "fendkit scan ") || !strings.Contains(r.Commands[1], `--title "Demo vulnerability"`) || strings.Contains(r.Commands[1], "--confirm") || strings.Contains(r.Commands[1], "--aware") {
 				t.Fatal(result.Stdout)
 			}
 			for _, command := range r.Commands {

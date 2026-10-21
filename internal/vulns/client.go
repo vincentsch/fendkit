@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/version"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/version"
 )
 
 const OSVURL = "https://api.osv.dev"
@@ -54,7 +54,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body any,
 			cancel()
 			return fmt.Errorf("invalid lookup URL")
 		}
-		req.Header.Set("User-Agent", "conformline/"+version.Version)
+		req.Header.Set("User-Agent", "fendkit/"+version.Version)
 		if body != nil {
 			req.Header.Set("Content-Type", "application/json")
 		}
@@ -88,7 +88,7 @@ func (c *Client) request(ctx context.Context, method, endpoint string, body any,
 			}
 		}
 	}
-	return fmt.Errorf("%s; run conformline scan again", reason)
+	return fmt.Errorf("%s; run fendkit scan again", reason)
 }
 
 type query struct {
@@ -118,7 +118,7 @@ func (c *Client) Lookup(ctx context.Context, inv inventory.Inventory, offline bo
 	if err := c.request(ctx, http.MethodGet, c.KEV, nil, &kev); err != nil {
 		reasons = append(reasons, "CISA KEV: "+err.Error())
 	} else if kev.Vulnerabilities == nil {
-		reasons = append(reasons, "CISA KEV: missing vulnerabilities list; run conformline scan again")
+		reasons = append(reasons, "CISA KEV: missing vulnerabilities list; run fendkit scan again")
 	} else {
 		for _, v := range kev.Vulnerabilities {
 			known[v.CVEID] = true
@@ -154,7 +154,7 @@ func (c *Client) Lookup(ctx context.Context, inv inventory.Inventory, offline bo
 				break
 			}
 			if len(response.Results) != len(pending) {
-				reasons = append(reasons, "OSV.dev querybatch: result count differs from query count; run conformline scan again")
+				reasons = append(reasons, "OSV.dev querybatch: result count differs from query count; run fendkit scan again")
 				break
 			}
 			next := []query{}
@@ -170,7 +170,7 @@ func (c *Client) Lookup(ctx context.Context, inv inventory.Inventory, offline bo
 				}
 				if r.Next != "" {
 					if seen[idx][r.Next] {
-						reasons = append(reasons, "OSV.dev querybatch: repeated page token; run conformline scan again")
+						reasons = append(reasons, "OSV.dev querybatch: repeated page token; run fendkit scan again")
 						continue
 					}
 					seen[idx][r.Next] = true
@@ -202,7 +202,7 @@ func (c *Client) Lookup(ctx context.Context, inv inventory.Inventory, offline bo
 				if err != nil {
 					reasons = append(reasons, "OSV.dev "+id+": "+err.Error())
 				} else if a.ID != id || a.Affected == nil {
-					reasons = append(reasons, "OSV.dev "+id+": invalid advisory details; run conformline scan again")
+					reasons = append(reasons, "OSV.dev "+id+": invalid advisory details; run fendkit scan again")
 				} else {
 					cache[id] = a
 				}

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vincentsch/conformline/internal/detect"
+	"github.com/vincentsch/fendkit/internal/detect"
 )
 
 func TestFixtureInventory(t *testing.T) {

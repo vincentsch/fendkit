@@ -1,18 +1,18 @@
-# conformline incident new
+# fendkit incident new
 
 Record an incident and create filing drafts
 
 ## Usage
 
 ```
-conformline incident new
+fendkit incident new
 ```
 
 ## Examples
 
 ```
-conformline incident new --type exploited-vulnerability --title 'Active exploitation' --aware '2026-10-20T10:00:00+02:00'
-conformline incident new --type severe-incident --title 'Service disruption' --confirm
+fendkit incident new --type exploited-vulnerability --title 'Active exploitation' --aware '2026-10-20T10:00:00+02:00'
+fendkit incident new --type severe-incident --title 'Service disruption' --confirm
 ```
 
 ## Flags

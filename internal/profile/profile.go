@@ -248,7 +248,7 @@ func (p *Profile) Save(path string) error {
 	} else {
 		merge(p.node.Content[0], &fresh)
 	}
-	if strings.HasPrefix(p.node.Content[0].HeadComment, "Conformline preparation record.") {
+	if strings.HasPrefix(p.node.Content[0].HeadComment, "Fendkit preparation record.") {
 		comments := map[string]string{
 			"product":          "Detected product facts and the release boundary",
 			"manufacturer":     "Maker details; fill unknown facts before review",
@@ -395,7 +395,7 @@ func ValidateTriage(t Triage) error {
 		value *string
 	}{{"advisory", t.Advisory}, {"component", t.Component}, {"status", t.Status}, {"reason", t.Reason}, {"decided_on", t.DecidedOn}} {
 		if field.value == nil || strings.TrimSpace(*field.value) == "" {
-			return fmt.Errorf("triage.%s: required; set it before running conformline scan or triage", field.name)
+			return fmt.Errorf("triage.%s: required; set it before running fendkit scan or triage", field.name)
 		}
 	}
 	if !slices.Contains(strings.Fields(enums["triage[].status"]), *t.Status) {

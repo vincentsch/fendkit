@@ -1,8 +1,8 @@
-# Conformline
+# Fendkit
 
 Prepare your EU Cyber Resilience Act evidence and see what still needs doing.
 
-Conformline checks the third-party components in your software release,
+Fendkit checks the third-party components in your software release,
 writes draft evidence documents, and shows what still needs your review.
 It starts with WordPress plugins and themes, Composer packages and npm packages.
 
@@ -11,8 +11,8 @@ It starts with WordPress plugins and themes, Composer packages and npm packages.
 Copy this into Claude Code, Codex or another coding agent in your product:
 
 ```text
-Get this project ready for the EU Cyber Resilience Act with Conformline.
-Use https://github.com/vincentsch/conformline: read its AGENTS.md and follow
+Get this project ready for the EU Cyber Resilience Act with Fendkit.
+Use https://github.com/vincentsch/fendkit: read its AGENTS.md and follow
 the steps. Ask me the questions only I can answer, and show me what is still
 missing at the end.
 ```
@@ -27,11 +27,11 @@ runs the release check directly.
 Install the checked release with Bash on Linux or macOS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vincentsch/conformline/main/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o install.sh
 bash install.sh
-conformline --version
-conformline doctor
-conformline demo
+fendkit --version
+fendkit doctor
+fendkit demo
 ```
 
 See [installation](docs/install.md) for PATH, pinned versions, Go installation
@@ -50,7 +50,7 @@ drafts still need review.
 To try without vulnerability lookups:
 
 ```bash
-conformline demo --offline --out ./example
+fendkit demo --offline --out ./example
 ```
 
 Offline runs exit 11 with `incomplete (lookups did not run)` in the header.
@@ -62,7 +62,7 @@ The first next step explains how to get complete evidence. Open the printed
 From your plugin root, point init at the ZIP or folder you ship:
 
 ```bash
-conformline init --release ../dist/plugin.zip
+fendkit init --release ../dist/plugin.zip
 ```
 
 Init shows what it found before the interview. Composer runtime packages,
@@ -78,9 +78,9 @@ in order. Continue after scan exit 0 or 11. For any other scan exit, stop
 and repair the error before running docs or check:
 
 ```bash
-conformline scan --release ../dist/plugin.zip
-conformline docs
-conformline check
+fendkit scan --release ../dist/plugin.zip
+fendkit docs
+fendkit check
 ```
 
 A saved `product.release` is used when you omit `--release`. Keep it current.
@@ -94,7 +94,7 @@ A full captured live demo check (21 October 2026 Europe/Berlin,
 20 October 2026 UTC), from the same run as the images:
 
 ```text
-Conformline  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-20 23:35 UTC, complete
+Fendkit  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-20 23:35 UTC, complete
 
 Next
   1. Update guzzlehttp/guzzle from 7.4.0 to 7.15.2 in vendor/guzzlehttp/guzzle (13 advisories).
@@ -109,7 +109,7 @@ Status
   not applicable Open incidents (none)
 
 Full status: cra/reports/status.html
-Not legal advice. Conformline helps you prepare; the decisions and the signature are yours.
+Not legal advice. Fendkit helps you prepare; the decisions and the signature are yours.
 ```
 
 The demo product and maker decisions are fictional. Its findings come from
@@ -119,7 +119,7 @@ until you make them.
 ## Keep it in your release routine
 
 Commit your decisions and reviewed documents with your product. Build the
-release first, scan it, refresh the document index with `conformline docs`,
+release first, scan it, refresh the document index with `fendkit docs`,
 review [findings](docs/vulnerabilities.md), then run check.
 The [GitHub Action](docs/github-action.md) runs the saved-profile checks on
 Ubuntu and keeps reports even when the evidence needs attention.
@@ -127,7 +127,7 @@ Ubuntu and keeps reports even when the evidence needs attention.
 For an actively exploited vulnerability or severe incident, use the
 [incident commands](docs/incidents.md). They record your awareness time,
 show reporting deadlines and prepare drafts. A person checks the live ENISA
-form, files the report and records the submission. Conformline does not file it.
+form, files the report and records the submission. Fendkit does not file it.
 
 ## Read the guides
 
@@ -148,7 +148,7 @@ form, files the report and records the submission. Conformline does not file it.
 Online scans send package names and exact versions to OSV.dev, then fetch
 advisory details and download CISA's Known Exploited Vulnerabilities catalog.
 Those names and versions can reveal private product dependencies. Source code
-and maker answers are not uploaded by Conformline. Doctor sends an empty OSV
+and maker answers are not uploaded by Fendkit. Doctor sends an empty OSV
 request and checks KEV headers. Offline scan/demo/init skip those lookups.
 Installation downloads the installer, binaries and checksums from GitHub;
 Go installation uses Go's configured module services. Your coding agent has
@@ -168,7 +168,7 @@ There is no Go/Python dependency scan, container scan or notified-body procedure
 For open-source stewards, v0.1 runs the same checks but does not assess the
 lighter Article 24 obligations.
 
-Outputs are drafts. Conformline gives no legal advice. You make the decisions,
+Outputs are drafts. Fendkit gives no legal advice. You make the decisions,
 review the documents and sign any final declaration yourself.
 
 As checked on **20 October 2026**, manufacturer reporting obligations under
@@ -179,4 +179,4 @@ and the [CRA guide](docs/cra-for-plugin-makers.md) for scope and sources.
 
 ## License
 
-[MIT](LICENSE). See [contributing](CONTRIBUTING.md) to work on Conformline itself.
+[MIT](LICENSE). See [contributing](CONTRIBUTING.md) to work on Fendkit itself.

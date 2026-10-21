@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/docs"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/sbom"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/docs"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/sbom"
+	"github.com/vincentsch/fendkit/internal/vulns"
 )
 
 var frozenTime = time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)
@@ -304,11 +304,11 @@ func TestScanEvidenceAndPolicyPrecedence(t *testing.T) {
 				t.Fatal(ScanLabel(r), wantLabel)
 			}
 			if wantCode == 11 {
-				if len(r.Next) == 0 || r.Next[0] != r.ScanRecovery || strings.Count(r.ScanRecovery, "conformline scan") != 1 {
+				if len(r.Next) == 0 || r.Next[0] != r.ScanRecovery || strings.Count(r.ScanRecovery, "fendkit scan") != 1 {
 					t.Fatal(r.Next, r.ScanRecovery)
 				}
 				for _, a := range rankActions(r) {
-					if a.text == "Run conformline scan." {
+					if a.text == "Run fendkit scan." {
 						t.Fatal("duplicate SBOM recovery", a)
 					}
 				}
@@ -316,7 +316,7 @@ func TestScanEvidenceAndPolicyPrecedence(t *testing.T) {
 				t.Fatal(r.ScanRecovery)
 			}
 			for _, issue := range r.ScanIssues {
-				if strings.Contains(issue, "conformline scan") {
+				if strings.Contains(issue, "fendkit scan") {
 					t.Fatal(issue)
 				}
 			}
@@ -336,15 +336,15 @@ func TestScanEvidenceAndPolicyPrecedence(t *testing.T) {
 				t.Fatal(r.ScanRecovery)
 			}
 			expected := map[string]string{
-				"missing inventory":    "No usable saved scan is available. Run conformline scan.",
-				"unreadable inventory": "No usable saved scan is available. Run conformline scan.",
-				"missing metadata":     "No usable saved scan is available. Run conformline scan.",
-				"offline":              "Vulnerability lookups did not run. Run conformline scan with network access.",
-				"incomplete":           "Vulnerability lookups failed: the saved scan did not finish. Run conformline scan again, or conformline doctor to check the connection.",
-				"missing sbom":         "Saved reports are missing or do not belong to one scan. Run conformline scan.",
-				"digest mismatch":      "Saved reports are missing or do not belong to one scan. Run conformline scan.",
-				"changed inventory":    "Your components or product version changed since the last scan. Run conformline scan.",
-				"expired":              "The last scan is older than seven days. Run conformline scan.",
+				"missing inventory":    "No usable saved scan is available. Run fendkit scan.",
+				"unreadable inventory": "No usable saved scan is available. Run fendkit scan.",
+				"missing metadata":     "No usable saved scan is available. Run fendkit scan.",
+				"offline":              "Vulnerability lookups did not run. Run fendkit scan with network access.",
+				"incomplete":           "Vulnerability lookups failed: the saved scan did not finish. Run fendkit scan again, or fendkit doctor to check the connection.",
+				"missing sbom":         "Saved reports are missing or do not belong to one scan. Run fendkit scan.",
+				"digest mismatch":      "Saved reports are missing or do not belong to one scan. Run fendkit scan.",
+				"changed inventory":    "Your components or product version changed since the last scan. Run fendkit scan.",
+				"expired":              "The last scan is older than seven days. Run fendkit scan.",
 			}
 			if want, ok := expected[scenario]; ok && r.ScanRecovery != want {
 				t.Fatal(r.ScanRecovery, want)
@@ -489,7 +489,7 @@ func TestRankingAndReports(t *testing.T) {
 	if e := Write(root, r); e != nil {
 		t.Fatal(e)
 	}
-	if path := os.Getenv("CONFORMLINE_STATUS_FIXTURE"); path != "" {
+	if path := os.Getenv("FENDKIT_STATUS_FIXTURE"); path != "" {
 		if e := Write(path, r); e != nil {
 			t.Fatal(e)
 		}
@@ -585,7 +585,7 @@ func TestSourceSeverityOrdering(t *testing.T) {
 }
 
 func TestIncompleteScanExplanation(t *testing.T) {
-	for _, failure := range []string{"Offline scan: vulnerability lookups have not run", "CISA KEV: HTTP 503; run conformline scan again", "OSV GHSA-example: HTTP 503; run conformline scan again."} {
+	for _, failure := range []string{"Offline scan: vulnerability lookups have not run", "CISA KEV: HTTP 503; run fendkit scan again", "OSV GHSA-example: HTTP 503; run fendkit scan again."} {
 		t.Run(failure, func(t *testing.T) {
 			root, p, s, v := fixture(t)
 			s.Complete, v.Complete = false, false
@@ -600,22 +600,22 @@ func TestIncompleteScanExplanation(t *testing.T) {
 				t.Fatal(r)
 			}
 			clean := scanReason(failure)
-			if !strings.Contains(r.ScanIssues[0], clean) || strings.Contains(r.ScanIssues[0], "run conformline scan") || !strings.Contains(r.Items[5].Explanation, clean) {
+			if !strings.Contains(r.ScanIssues[0], clean) || strings.Contains(r.ScanIssues[0], "run fendkit scan") || !strings.Contains(r.Items[5].Explanation, clean) {
 				t.Fatal(r.ScanIssues, r.Items[5])
 			}
-			if strings.Count(r.ScanRecovery, "conformline scan") != 1 || strings.Contains(r.ScanRecovery, "; run conformline scan again") {
+			if strings.Count(r.ScanRecovery, "fendkit scan") != 1 || strings.Contains(r.ScanRecovery, "; run fendkit scan again") {
 				t.Fatal(r.ScanRecovery)
 			}
 			if s.Offline {
 				if !strings.Contains(r.ScanRecovery, "with network access") {
 					t.Fatal(r.ScanRecovery)
 				}
-			} else if !strings.Contains(r.ScanRecovery, "Vulnerability lookups failed: "+clean+". Run conformline scan again, or conformline doctor") {
+			} else if !strings.Contains(r.ScanRecovery, "Vulnerability lookups failed: "+clean+". Run fendkit scan again, or fendkit doctor") {
 				t.Fatal(r.ScanRecovery)
 			}
 			var terminal bytes.Buffer
 			Terminal(&terminal, r, 80)
-			if strings.Contains(terminal.String(), "; run conformline scan again") {
+			if strings.Contains(terminal.String(), "; run fendkit scan again") {
 				t.Fatal(terminal.String())
 			}
 			if beforeInv != readText(t, root, "cra/reports/inventory.json") || beforeVuln != readText(t, root, "cra/reports/vulnerabilities.json") {
@@ -636,10 +636,10 @@ func TestCurrentSBOMDoesNotAskForImmediateRescan(t *testing.T) {
 	r := evaluate(t, root, p, false)
 	var terminal bytes.Buffer
 	Terminal(&terminal, r, 80)
-	if strings.Contains(terminal.String(), "The SBOM belongs") || strings.Contains(terminal.String(), "Run conformline scan.") {
+	if strings.Contains(terminal.String(), "The SBOM belongs") || strings.Contains(terminal.String(), "Run fendkit scan.") {
 		t.Fatal(terminal.String())
 	}
-	if r.Items[4].State != Evidenced || r.Items[4].Action == "Run conformline scan." {
+	if r.Items[4].State != Evidenced || r.Items[4].Action == "Run fendkit scan." {
 		t.Fatal(r.Items[4])
 	}
 }
@@ -688,7 +688,7 @@ func TestCompactTerminalStatus(t *testing.T) {
 					t.Fatalf("report detail %q in terminal: %s", detail, text)
 				}
 			}
-			for _, want := range []string{"Conformline  ", "\nNext\n", r.Next[0], r.Next[1], r.Next[2], r.Items[4].Explanation, r.ScanIssues[0], "\nFull status: cra/reports/status.html\n" + Legal + "\n"} {
+			for _, want := range []string{"Fendkit  ", "\nNext\n", r.Next[0], r.Next[1], r.Next[2], r.Items[4].Explanation, r.ScanIssues[0], "\nFull status: cra/reports/status.html\n" + Legal + "\n"} {
 				if !strings.Contains(text, want) {
 					t.Fatalf("missing %q in terminal: %s", want, text)
 				}

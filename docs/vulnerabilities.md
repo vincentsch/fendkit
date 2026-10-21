@@ -22,7 +22,7 @@ Zero findings cannot prove the absence of vulnerabilities.
 A failed batch, advisory detail or KEV lookup makes the scan incomplete.
 Reports are still written and scan returns 11. A stale scan, missing release
 or mismatched report set also prevents current evidence in check. Use
-`conformline doctor`, fix the cause and rerun `conformline scan`.
+`fendkit doctor`, fix the cause and rerun `fendkit scan`.
 Do not describe a failed lookup as a clean result.
 
 ## Decide what a finding means for this product
@@ -30,13 +30,13 @@ Do not describe a failed lookup as a clean result.
 Investigate the affected version, code path and your shipped copy. Numeric
 fixed versions can suggest an update; unusual version schemes need review
 of the linked source. Test updates in your product before replacing bundles.
-Conformline does not update libraries for you.
+Fendkit does not update libraries for you.
 
 The following is illustrative. Replace the advisory and exact component
 package URL (purl) with values from your own saved report:
 
 ```bash
-conformline triage GHSA-f2wf-25xc-69c9 --component 'pkg:npm/moment@2.24.0' --status under_investigation --reason 'Reviewing where this product uses the affected code'
+fendkit triage GHSA-f2wf-25xc-69c9 --component 'pkg:npm/moment@2.24.0' --status under_investigation --reason 'Reviewing where this product uses the affected code'
 ```
 
 Use `affected` with your intended response, `under_investigation` while checking,

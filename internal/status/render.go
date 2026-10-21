@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/version"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/version"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"golang.org/x/term"
 )
 
@@ -39,7 +39,7 @@ func OutputWidth(w io.Writer) int {
 }
 
 func Terminal(w io.Writer, r Result, width int) {
-	fmt.Fprintf(w, "Conformline  %s %s (%s)   scan: %s\n\nNext\n", Value(r.Product.Name), Value(r.Product.Version), ProductType(r.Product.Type), ScanLabel(r))
+	fmt.Fprintf(w, "Fendkit  %s %s (%s)   scan: %s\n\nNext\n", Value(r.Product.Name), Value(r.Product.Version), ProductType(r.Product.Type), ScanLabel(r))
 	for i, a := range r.Next {
 		if i == 3 {
 			break
@@ -68,7 +68,7 @@ func Terminal(w io.Writer, r Result, width int) {
 	for _, it := range r.Items {
 		if it.Name == "SBOM" && it.State != Evidenced || it.Name == "Open incidents" && it.State != NA {
 			action := it.Action
-			if it.Name == "SBOM" && r.ScanRecovery != "" && action == "Run conformline scan." {
+			if it.Name == "SBOM" && r.ScanRecovery != "" && action == "Run fendkit scan." {
 				action = ""
 			}
 			fmt.Fprintln(w, "\n"+strings.TrimSpace(it.Explanation+" "+action))
@@ -105,7 +105,7 @@ func md(s string) string {
 	return strings.NewReplacer("|", "&#124;", "\n", "<br>", "\r", "", "[", "&#91;", "]", "&#93;", "`", "&#96;", "*", "&#42;", "_", "&#95;").Replace(s)
 }
 func Markdown(w io.Writer, r Result) {
-	fmt.Fprintf(w, "# Conformline status\n\n%s %s (%s)\n\nScan: %s\n\n## Next steps\n\n", md(Value(r.Product.Name)), md(Value(r.Product.Version)), md(ProductType(r.Product.Type)), md(ScanLabel(r)))
+	fmt.Fprintf(w, "# Fendkit status\n\n%s %s (%s)\n\nScan: %s\n\n## Next steps\n\n", md(Value(r.Product.Name)), md(Value(r.Product.Version)), md(ProductType(r.Product.Type)), md(ScanLabel(r)))
 	for i, a := range r.Next {
 		fmt.Fprintf(w, "%d. %s\n", i+1, md(a))
 	}
@@ -157,7 +157,7 @@ func Markdown(w io.Writer, r Result) {
 	for _, s := range r.Notes {
 		fmt.Fprintln(w, md(s))
 	}
-	fmt.Fprintln(w, "\nConformline "+version.Version+". Data sources: OSV.dev; GitHub Advisory Database (CC-BY 4.0); CISA KEV.\n\n"+Legal)
+	fmt.Fprintln(w, "\nFendkit "+version.Version+". Data sources: OSV.dev; GitHub Advisory Database (CC-BY 4.0); CISA KEV.\n\n"+Legal)
 }
 func Shipped(c inventory.Component) string {
 	if c.Shipped == nil {

@@ -15,9 +15,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/version"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -64,7 +64,7 @@ func https(value *string) string {
 }
 func securityFields(d data) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "# status: draft\n# reviewed_by:\n# reviewed_on:\n# conformline: %s\n", version.Version)
+	fmt.Fprintf(&b, "# status: draft\n# reviewed_by:\n# reviewed_on:\n# fendkit: %s\n", version.Version)
 	if d.P.SecurityContact.Email != nil {
 		address, err := mail.ParseAddress(*d.P.SecurityContact.Email)
 		if err == nil {
@@ -167,7 +167,7 @@ func documentData(root string, p *profile.Profile, now time.Time) data {
 	if p.Role.Answer == "not-in-scope" {
 		d.Message = "Your recorded role is not-in-scope. Manufacturer documents are skipped; the decision and scan stay."
 	} else if p.Role.Answer == "open-source-steward" {
-		d.Message = "Conformline v0.1 follows the manufacturer preparation steps. It does not assess steward obligations under Art. 24."
+		d.Message = "Fendkit v0.1 follows the manufacturer preparation steps. It does not assess steward obligations under Art. 24."
 	} else if p.Role.Answer == "unknown" {
 		d.Message = "Your role needs your decision first. These manufacturer documents remain preparation drafts."
 	}
@@ -309,7 +309,7 @@ func reportDescription(path string) string {
 			date = report.Metadata.Timestamp
 		}
 		for _, prop := range report.Metadata.Properties {
-			if prop.Name == "conformline:complete" && prop.Value == "false" {
+			if prop.Name == "fendkit:complete" && prop.Value == "false" {
 				incomplete = true
 			}
 		}

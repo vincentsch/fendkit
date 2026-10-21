@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/version"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/version"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -31,7 +31,7 @@ type doctorResult struct {
 }
 
 func doctorCommand(dir *string, client *vulns.Client) *rungrad.Command {
-	return &rungrad.Command{Use: "doctor", Short: "Check project setup and advisory connections", Long: "Check the repository, ecosystems, lockfile coverage, release and cra.yml.\nCheck OSV.dev and CISA KEV reachability without sending project information.\nShow ok, information, warning or problem for each check, with a next action.\nMissing cra.yml is information; unresolved runtime versions are coverage warnings.\nMake no repairs or file changes. Exit 2 when any problem exists, otherwise 0.", Examples: []string{"conformline doctor", "conformline doctor --dir ./my-plugin --json"}, Args: cobra.NoArgs, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Run: func(f *rungrad.Factory, cmd *cobra.Command, _ []string) error {
+	return &rungrad.Command{Use: "doctor", Short: "Check project setup and advisory connections", Long: "Check the repository, ecosystems, lockfile coverage, release and cra.yml.\nCheck OSV.dev and CISA KEV reachability without sending project information.\nShow ok, information, warning or problem for each check, with a next action.\nMissing cra.yml is information; unresolved runtime versions are coverage warnings.\nMake no repairs or file changes. Exit 2 when any problem exists, otherwise 0.", Examples: []string{"fendkit doctor", "fendkit doctor --dir ./my-plugin --json"}, Args: cobra.NoArgs, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Run: func(f *rungrad.Factory, cmd *cobra.Command, _ []string) error {
 		r := diagnose(cmd.Context(), *dir, client)
 		if err := f.WriteResult(r, func(w io.Writer) {
 			for _, check := range r.Checks {
@@ -73,19 +73,19 @@ func diagnose(ctx context.Context, root string, client *vulns.Client) doctorResu
 		p, loadErr := profile.Load(filepath.Join(root, "cra.yml"))
 		switch {
 		case os.IsNotExist(loadErr):
-			add("information", "cra.yml", "Not created yet.", "Run conformline init.")
+			add("information", "cra.yml", "Not created yet.", "Run fendkit init.")
 		case loadErr != nil:
-			add("problem", "cra.yml", safeError(loadErr), "Correct cra.yml, then run conformline doctor.")
+			add("problem", "cra.yml", safeError(loadErr), "Correct cra.yml, then run fendkit doctor.")
 			p = nil
 		default:
-			add("ok", "cra.yml", "Profile is valid.", "Use conformline check to review evidence and decisions.")
+			add("ok", "cra.yml", "Profile is valid.", "Use fendkit check to review evidence and decisions.")
 		}
 		if p != nil && p.Product.Version != nil {
 			product.Version = p.Product.Version
 		}
 		inv, buildErr := inventory.BuildWithOptions(root, product, inventory.Options{Profile: p})
 		if buildErr != nil {
-			add("problem", "Inventory and release", buildErr.Error(), "Correct the named file or product.release, then run conformline doctor.")
+			add("problem", "Inventory and release", buildErr.Error(), "Correct the named file or product.release, then run fendkit doctor.")
 		} else {
 			for _, note := range inv.Product.Notes {
 				level := "warning"
@@ -100,19 +100,19 @@ func diagnose(ctx context.Context, root string, client *vulns.Client) doctorResu
 				add("ok", "Release", *inv.Release, "Keep this artifact available; scan uses it to confirm what ships.")
 			}
 			if len(inv.CoverageGaps) == 0 {
-				add("ok", "Dependency coverage", "No inventory coverage gaps found.", "Run conformline scan to check known vulnerabilities.")
+				add("ok", "Dependency coverage", "No inventory coverage gaps found.", "Run fendkit scan to check known vulnerabilities.")
 			}
 			for _, gap := range inv.CoverageGaps {
-				add("warning", "Dependency coverage", gap.File+": "+gap.Message, "Supply the named version evidence or a manual component in cra.yml, then run conformline scan and review vulnerability coverage.")
+				add("warning", "Dependency coverage", gap.File+": "+gap.Message, "Supply the named version evidence or a manual component in cra.yml, then run fendkit scan and review vulnerability coverage.")
 			}
 		}
 	}
 	for _, endpoint := range []struct{ name, method, url, body string }{{"OSV.dev", http.MethodPost, strings.TrimRight(client.OSV, "/") + "/v1/querybatch", `{"queries":[]}`}, {"CISA KEV", http.MethodGet, client.KEV, ""}} {
 		err := probe(ctx, client.HTTP, endpoint.method, endpoint.url, endpoint.body)
 		if err != nil {
-			add("problem", endpoint.name, err.Error(), "Check your connection and proxy settings, then run conformline doctor; use scan --offline meanwhile.")
+			add("problem", endpoint.name, err.Error(), "Check your connection and proxy settings, then run fendkit doctor; use scan --offline meanwhile.")
 		} else {
-			add("ok", endpoint.name, "Endpoint is reachable.", "Run conformline scan for current advisory data.")
+			add("ok", endpoint.name, "Endpoint is reachable.", "Run fendkit scan for current advisory data.")
 		}
 	}
 	return r
@@ -125,7 +125,7 @@ func probe(ctx context.Context, client *http.Client, method, endpoint, body stri
 	if err != nil {
 		return fmt.Errorf("cannot create connection check")
 	}
-	req.Header.Set("User-Agent", "conformline/"+version.Version)
+	req.Header.Set("User-Agent", "fendkit/"+version.Version)
 	if body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}

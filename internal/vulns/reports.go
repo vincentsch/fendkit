@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/profile"
 )
 
 func text(s string) string {

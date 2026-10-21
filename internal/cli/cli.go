@@ -15,12 +15,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/sbom"
-	"github.com/vincentsch/conformline/internal/version"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/sbom"
+	"github.com/vincentsch/fendkit/internal/version"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -41,7 +41,7 @@ type Report struct {
 func New() *rungrad.App { return newApp(vulns.NewClient()) }
 
 func newApp(client *vulns.Client) *rungrad.App {
-	app := rungrad.New(rungrad.AppConfig{Name: "conformline", Short: "Prepare your Cyber Resilience Act evidence", Long: "Find your product and its dependencies, and record what still needs review.", Version: version.Version, ErrorPolicy: &rungrad.ErrorPolicy{
+	app := rungrad.New(rungrad.AppConfig{Name: "fendkit", Short: "Prepare your Cyber Resilience Act evidence", Long: "Find your product and its dependencies, and record what still needs review.", Version: version.Version, ErrorPolicy: &rungrad.ErrorPolicy{
 		Render: func(ctx rungrad.ErrorContext) error {
 			var pending *incomplete
 			var checked *checkExit
@@ -60,10 +60,10 @@ func newApp(client *vulns.Client) *rungrad.App {
 			return e
 		},
 	}})
-	app.Root().SetVersionTemplate(fmt.Sprintf("conformline {{.Version}} (commit %s, %s)\n", version.Commit, runtime.Version()))
+	app.Root().SetVersionTemplate(fmt.Sprintf("fendkit {{.Version}} (commit %s, %s)\n", version.Commit, runtime.Version()))
 	dir := "."
 	app.Root().PersistentFlags().StringVar(&dir, "dir", ".", "Project root")
-	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find dependencies and look up known vulnerabilities", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite inventory.json, sbom.cdx.json, vulnerabilities.json and vulnerabilities.md under cra/reports/.\nExport vex.openvex.json when saved triage matches findings.\nLookups send package names, versions and advisory ids to OSV.dev, and download CISA KEV.\nPackage names and versions can reveal product information.\nExit 0 for complete lookups, 11 for offline or failed lookups.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"conformline scan", "conformline scan --offline", "conformline scan --offline --dir ./my-plugin --json", "conformline scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
+	app.AddCommand(&rungrad.Command{Use: "scan", Short: "Find dependencies and look up known vulnerabilities", Long: "Read WordPress headers, Composer and npm metadata, bundled JavaScript, and release ZIPs or folders.\nWrite inventory.json, sbom.cdx.json, vulnerabilities.json and vulnerabilities.md under cra/reports/.\nExport vex.openvex.json when saved triage matches findings.\nLookups send package names, versions and advisory ids to OSV.dev, and download CISA KEV.\nPackage names and versions can reveal product information.\nExit 0 for complete lookups, 11 for offline or failed lookups.\nApply product settings and manual components from cra.yml.\nA release flag overrides product.release; relative paths start at --dir.\nWithout either, use a single dist/ or build/ ZIP containing the product version.\nDevelopment packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.\nUse --dry-run to preview the result without writing files.", Examples: []string{"fendkit scan", "fendkit scan --offline", "fendkit scan --offline --dir ./my-plugin --json", "fendkit scan --offline --dry-run"}, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Mutates: true, Args: cobra.NoArgs, Configure: func(cmd *cobra.Command) {
 		cmd.Flags().String("release", "", "Release ZIP or folder, relative to --dir (overrides product.release)")
 		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups and mark the scan incomplete")
 	}, Run: func(f *rungrad.Factory, cmd *cobra.Command, args []string) error {
@@ -315,7 +315,7 @@ func scanProject(f *rungrad.Factory, cmd *cobra.Command, dir string, client *vul
 	}
 	e = eLoad
 	if e != nil && !os.IsNotExist(e) {
-		return Report{}, rungrad.NewError(1, "Cannot load cra.yml: "+safeError(e)+"; correct cra.yml and run conformline scan again")
+		return Report{}, rungrad.NewError(1, "Cannot load cra.yml: "+safeError(e)+"; correct cra.yml and run fendkit scan again")
 	}
 	if prof != nil && prof.Product.Version != nil {
 		p.Version = prof.Product.Version
@@ -338,7 +338,7 @@ func scanProject(f *rungrad.Factory, cmd *cobra.Command, dir string, client *vul
 	}
 	id := make([]byte, 16)
 	if _, e = rand.Read(id); e != nil {
-		return Report{}, rungrad.NewError(2, "Cannot create scan identity; run conformline scan again")
+		return Report{}, rungrad.NewError(2, "Cannot create scan identity; run fendkit scan again")
 	}
 	offline, _ := cmd.Flags().GetBool("offline")
 	// A preview avoids disclosing package information through lookups.

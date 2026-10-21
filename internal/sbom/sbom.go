@@ -6,8 +6,8 @@ import (
 	"time"
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
 )
 
 type Provenance struct {
@@ -33,19 +33,19 @@ func New(inv inventory.Inventory, prof *profile.Profile, provenance Provenance, 
 		product.Supplier = &cdx.OrganizationalEntity{Name: *prof.Manufacturer.Name}
 	}
 	properties := []cdx.Property{
-		{Name: "conformline:scan_id", Value: provenance.ScanID},
-		{Name: "conformline:scanned_at", Value: provenance.ScannedAt.Format(time.RFC3339Nano)},
-		{Name: "conformline:inventory_digest", Value: provenance.InventoryDigest},
-		{Name: "conformline:complete", Value: strconv.FormatBool(provenance.Complete)},
-		{Name: "conformline:offline", Value: strconv.FormatBool(provenance.Offline)},
+		{Name: "fendkit:scan_id", Value: provenance.ScanID},
+		{Name: "fendkit:scanned_at", Value: provenance.ScannedAt.Format(time.RFC3339Nano)},
+		{Name: "fendkit:inventory_digest", Value: provenance.InventoryDigest},
+		{Name: "fendkit:complete", Value: strconv.FormatBool(provenance.Complete)},
+		{Name: "fendkit:offline", Value: strconv.FormatBool(provenance.Offline)},
 	}
 	for _, reason := range provenance.IncompleteReasons {
-		properties = append(properties, cdx.Property{Name: "conformline:incomplete_reason", Value: reason})
+		properties = append(properties, cdx.Property{Name: "fendkit:incomplete_reason", Value: reason})
 	}
 	if inv.Release != nil {
-		properties = append(properties, cdx.Property{Name: "conformline:release", Value: *inv.Release})
+		properties = append(properties, cdx.Property{Name: "fendkit:release", Value: *inv.Release})
 	}
-	tools := []cdx.Component{{Type: cdx.ComponentTypeApplication, Name: "conformline", Version: toolVersion}}
+	tools := []cdx.Component{{Type: cdx.ComponentTypeApplication, Name: "fendkit", Version: toolVersion}}
 	bom.Metadata = &cdx.Metadata{Timestamp: provenance.ScannedAt.Format(time.RFC3339), Component: &product, Tools: &cdx.ToolsChoice{Components: &tools}, Properties: &properties}
 	components := []cdx.Component{}
 	for _, c := range inv.Components {
@@ -57,13 +57,13 @@ func New(inv inventory.Inventory, prof *profile.Profile, provenance Provenance, 
 				scope = cdx.ScopeExcluded
 			}
 		}
-		props := []cdx.Property{{Name: "conformline:shipped", Value: shipped}}
+		props := []cdx.Property{{Name: "fendkit:shipped", Value: shipped}}
 		occurrences := []cdx.EvidenceOccurrence{}
 		seen := map[string]bool{}
 		for _, ev := range c.Evidence {
-			props = append(props, cdx.Property{Name: "conformline:source", Value: ev.File + " (" + ev.Method + ")"})
+			props = append(props, cdx.Property{Name: "fendkit:source", Value: ev.File + " (" + ev.Method + ")"})
 			if ev.Banner != "" {
-				props = append(props, cdx.Property{Name: "conformline:banner", Value: ev.Banner})
+				props = append(props, cdx.Property{Name: "fendkit:banner", Value: ev.Banner})
 			}
 			loc := ev.Path
 			if loc == "" {
@@ -75,7 +75,7 @@ func New(inv inventory.Inventory, prof *profile.Profile, provenance Provenance, 
 			}
 		}
 		if c.Note != "" {
-			props = append(props, cdx.Property{Name: "conformline:note", Value: c.Note})
+			props = append(props, cdx.Property{Name: "fendkit:note", Value: c.Note})
 		}
 		item := cdx.Component{Type: cdx.ComponentTypeLibrary, Name: c.Name, PackageURL: c.PURL, BOMRef: c.PURL, Scope: scope, Properties: &props, Evidence: &cdx.Evidence{Occurrences: &occurrences}}
 		if c.Version != nil {

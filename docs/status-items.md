@@ -1,8 +1,8 @@
 # Read the status items
 
-`conformline check` evaluates saved decisions, documents and scan reports.
+`fendkit check` evaluates saved decisions, documents and scan reports.
 It writes `cra/reports/status.md` and `status.html`; it does not do a network
-lookup. Run [scan](reference/conformline_scan.md) first when evidence changes.
+lookup. Run [scan](reference/fendkit_scan.md) first when evidence changes.
 
 ## What the states mean
 
@@ -26,7 +26,7 @@ review; the tool cannot judge its quality. See [document review](documents.md#re
 | Security contact | Both root `SECURITY.md` and `cra/security.txt` must pass document review; either missing makes the item missing. Publish the reviewed policy and security.txt over HTTPS. Local checks cannot verify publication. |
 | Disclosure policy | Review `cra/disclosure-policy.md`, including your reporting and response process. |
 | SBOM | Missing/unreadable SBOM is missing. Evidence must match the current scan and product version; unknown/mismatched versions or stale/incomplete evidence need review. Resolve version conflicts and rescan. |
-| Known vulnerabilities | Evidenced only with complete current evidence, no open shipped/possibly shipped advisory groups and no coverage gaps. Investigate findings and unknown or modified components. Review cra/reports/vulnerabilities.md and record decisions with conformline triage. |
+| Known vulnerabilities | Evidenced only with complete current evidence, no open shipped/possibly shipped advisory groups and no coverage gaps. Investigate findings and unknown or modified components. Review cra/reports/vulnerabilities.md and record decisions with fendkit triage. |
 | Support period | Unknown `support.end` is missing. Otherwise review `cra/support-period.md` and its rationale. |
 | User information | Complete and review `cra/user-information.md`. |
 | Risk assessment | Assess your own product and review `cra/risk-assessment.md`. The component scan does not do this assessment. |
@@ -73,7 +73,7 @@ missing items keep their remaining priorities.
 Recovery explains the scan problem and names local repairs before one rescan
 command. It keeps network-access or doctor advice for incomplete lookups.
 When the saved scan used a release, the command includes its quoted path as
-`conformline scan --release '<path>'`, even if cra.yml does not record it.
+`fendkit scan --release '<path>'`, even if cra.yml does not record it.
 Restore an unavailable release first, or pass a replacement explicitly with
 `--release`. A source-file failure names the actual diagnostic rather than
 blaming an otherwise readable release. Recovery stays available with exit 10.
@@ -104,5 +104,5 @@ Ordinary advisory findings and unknown decisions need review but do not alone
 fail the default policy. `--strict` fails missing items; it does not make every
 needs-review state fail. Scan itself uses 0 for complete and 11 for incomplete,
 not check's policy code. Init returns its final check code after scan/docs.
-See [the check reference](reference/conformline_check.md) and
+See [the check reference](reference/fendkit_check.md) and
 [Action failure policy](github-action.md#reports-and-failure-policy).

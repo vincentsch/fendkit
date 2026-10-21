@@ -1,19 +1,19 @@
-# conformline check
+# fendkit check
 
 Show evidence status and the next actions
 
 ## Usage
 
 ```
-conformline check
+fendkit check
 ```
 
 ## Examples
 
 ```
-conformline check
-conformline check --strict --ci
-conformline check --json
+fendkit check
+fendkit check --strict --ci
+fendkit check --json
 ```
 
 ## Flags

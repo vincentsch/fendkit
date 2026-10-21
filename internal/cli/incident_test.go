@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/incident"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/status"
+	"github.com/vincentsch/fendkit/internal/incident"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/status"
 	"github.com/vincentsch/rungrad"
 	"github.com/vincentsch/rungrad/testutil"
 )
@@ -24,7 +24,7 @@ func TestIncidentLifecycle(t *testing.T) {
 	clock := time.Date(2026, 10, 24, 8, 0, 0, 0, time.UTC)
 	run := func(want int, args ...string) testutil.Result {
 		t.Helper()
-		app := rungrad.New(rungrad.AppConfig{Name: "conformline"})
+		app := rungrad.New(rungrad.AppConfig{Name: "fendkit"})
 		app.AddCommand(incidentCommand(&root, func() time.Time { return clock }))
 		r := testutil.Run(app, append([]string{"incident"}, args...)...)
 		if r.Exit != want {
@@ -123,7 +123,7 @@ func TestAwarenessPromptAndLegalWording(t *testing.T) {
 			root := t.TempDir()
 			put(t, root, "cra.yml", "version: 1\n")
 			put(t, root, "package.json", `{"name":"sample","version":"1.0.0"}`)
-			app := rungrad.New(rungrad.AppConfig{Name: "conformline"})
+			app := rungrad.New(rungrad.AppConfig{Name: "fendkit"})
 			app.AddCommand(incidentCommand(&root, func() time.Time { return time.Date(2026, 10, 24, 8, 0, 0, 0, time.UTC) }))
 			r := testutil.RunWith(app, testutil.Options{Stdin: strings.NewReader(answer), Terminal: true, TerminalSet: true}, "incident", "new", "--type", incident.Severe, "--title", "Disruption")
 			want := 1
@@ -137,7 +137,7 @@ func TestAwarenessPromptAndLegalWording(t *testing.T) {
 				text := r.Stdout
 				for _, name := range []string{"early-warning.md", "notification.md", "final-report.md", "user-notice.md"} {
 					draft := readFile(t, root, "cra/incidents/inc-1/"+name)
-					if !strings.HasPrefix(draft, "Awareness time:") || !strings.Contains(draft, "conformline incident show inc-1") || !strings.Contains(draft, "Check the live form") || !strings.Contains(draft, incident.Legal) {
+					if !strings.HasPrefix(draft, "Awareness time:") || !strings.Contains(draft, "fendkit incident show inc-1") || !strings.Contains(draft, "Check the live form") || !strings.Contains(draft, incident.Legal) {
 						t.Fatal(draft)
 					}
 					text += draft

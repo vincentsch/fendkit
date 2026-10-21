@@ -1,6 +1,6 @@
 # Complete and review the drafts
 
-`conformline docs` creates missing documents using the saved profile. It never
+`fendkit docs` creates missing documents using the saved profile. It never
 replaces existing maker documents, including edited drafts. It refreshes only
 `cra/README.md`, the index of next actions, documents and reports.
 Changed profile answers do not rewrite old drafts: update those facts yourself.
@@ -42,17 +42,17 @@ for a nonblank reviewer, valid date and no placeholders. Expired security.txt
 still needs attention. A marker does not prove the review was adequate.
 Agents must leave review decisions to the maker. Review metadata does not sign
 or final-date the declaration. All generated documents begin as drafts;
-Conformline gives no legal advice.
+Fendkit gives no legal advice.
 
 ## Publish security.txt
 
 Review `Contact`, `Expires`, `Policy` and `Canonical` in `cra/security.txt`.
 Serve the reviewed file over HTTPS at `/.well-known/security.txt` on your
 product's website, following [RFC 9116](https://www.rfc-editor.org/rfc/rfc9116).
-Keep its policy URL reachable and renew it before expiry. Conformline cannot
+Keep its policy URL reachable and renew it before expiry. Fendkit cannot
 check deployment from local files. Root SECURITY.md also needs your review
 and publication where users find your project.
 
-After edits, run `conformline docs` to refresh the index and
-`conformline check` for [status and next actions](status-items.md).
+After edits, run `fendkit docs` to refresh the index and
+`fendkit check` for [status and next actions](status-items.md).
 [Incident drafts](incidents.md) live separately and also require human review.

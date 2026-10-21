@@ -40,7 +40,7 @@ diligence for third-party components. Annex I Part II calls for component
 and vulnerability records, including a machine-readable software bill of
 materials (SBOM). Annex II concerns user instructions; Annex VII describes
 technical documentation. Annex V sets out the EU declaration of conformity.
-Conformline creates [draft documents](documents.md) for you to complete.
+Fendkit creates [draft documents](documents.md) for you to complete.
 It leaves the declaration unsigned and without a final issue date.
 
 Article 13(8) ties support to expected use, generally at least five years
@@ -52,7 +52,7 @@ Classification depends on your product's **core function** in Annex III or IV.
 Using an authentication library does not make your whole plugin an identity
 management product. Init shows the category lists. You choose; unknown is
 allowed. Important and critical classes can require further assessment that
-Conformline does not prepare. See
+Fendkit does not prepare. See
 [Commission conformity assessment guidance](https://digital-strategy.ec.europa.eu/en/policies/cra-conformity-assessment).
 
 Do not assume that a standard mentioned in a draft gives a presumption of

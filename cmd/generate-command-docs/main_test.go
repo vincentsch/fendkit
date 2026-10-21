@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/vincentsch/conformline/internal/version"
+	"github.com/vincentsch/fendkit/internal/version"
 )
 
 func TestReferenceDriftAndPruning(t *testing.T) {
@@ -24,7 +24,7 @@ func TestReferenceDriftAndPruning(t *testing.T) {
 	if err := generate(true); err != nil {
 		t.Fatal(err)
 	}
-	page := filepath.Join("docs", "reference", "conformline_scan.md")
+	page := filepath.Join("docs", "reference", "fendkit_scan.md")
 	if err := os.WriteFile(page, []byte("drift"), 0644); err != nil {
 		t.Fatal(err)
 	}

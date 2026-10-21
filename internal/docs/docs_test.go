@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/version"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -119,7 +119,7 @@ func TestTemplateSectionsAndLegalWording(t *testing.T) {
 			}
 			parts := strings.SplitN(text, "---", 3)
 			var m map[string]string
-			if err := yaml.Unmarshal([]byte(parts[1]), &m); err != nil || m["status"] != "draft" || m["conformline"] != version.Version || m["reviewed_on"] != "" || m["reviewed_by"] != "" {
+			if err := yaml.Unmarshal([]byte(parts[1]), &m); err != nil || m["status"] != "draft" || m["fendkit"] != version.Version || m["reviewed_on"] != "" || m["reviewed_by"] != "" {
 				t.Fatalf("%s: %v %v", file, m, err)
 			}
 			if !strings.Contains(text, "[[") {
@@ -134,7 +134,7 @@ func TestTemplateSectionsAndLegalWording(t *testing.T) {
 	// Normalise wrapping so the assertions protect meaning across paragraph edits.
 	indexText := strings.Join(strings.Fields(string(index)), " ")
 	for _, required := range []string{
-		"Conformline helps prepare evidence and does not give legal advice.",
+		"Fendkit helps prepare evidence and does not give legal advice.",
 		"A scan without findings does not prove the absence of vulnerabilities.",
 		"As of October 20, 2026, no harmonised CRA standard is cited in the Official Journal, so no presumption of conformity is available from one.",
 		"The Commission guidance C(2026) 5252 of July 27, 2026 is non-binding.",
@@ -226,7 +226,7 @@ func TestReportDatesFromContent(t *testing.T) {
 	root := t.TempDir()
 	samples := map[string]string{
 		"inventory.json":     `{"scanned_at":"2026-10-20T12:00:00Z","complete":false}`,
-		"sbom.cdx.json":      `{"metadata":{"timestamp":"2026-10-20T12:00:00Z","properties":[{"name":"conformline:complete","value":"false"}]}}`,
+		"sbom.cdx.json":      `{"metadata":{"timestamp":"2026-10-20T12:00:00Z","properties":[{"name":"fendkit:complete","value":"false"}]}}`,
 		"vulnerabilities.md": "Scan abc is **incomplete**. Scanned at 2026-10-20T12:00:00Z.\n",
 		"vex.openvex.json":   `{"statements":[{"timestamp":"2026-10-20T12:00:00Z"}]}`,
 	}

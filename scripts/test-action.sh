@@ -31,9 +31,9 @@ reset_run() {
 }
 run_action() { expect 0 bash scripts/action.sh run; state=$(value state-dir); artifacts=$(value artifact-dir); }
 # A preexisting version must not override latest. Only the loopback installer is used.
-export CONFORMLINE_VERSION=nonexistent
+export FENDKIT_VERSION=nonexistent
 expect 0 bash scripts/action.sh install
-export REAL_BIN="$(tail -1 "$GITHUB_PATH")/conformline"
+export REAL_BIN="$(tail -1 "$GITHUB_PATH")/fendkit"
 [ -x "$REAL_BIN" ]
 export INPUT_VERSION=v0.1.0
 expect 0 bash scripts/action.sh install
@@ -41,7 +41,7 @@ contains "$fixture_root/server.log" '/download/v0.1.0/'
 contains "$fixture_root/server.log" '/latest/download/'
 # The wrapper stays first even after the runner applies GITHUB_PATH.
 export PATH="$fixture_root/wrapper:$(tail -1 "$GITHUB_PATH"):$PATH"
-cat > "$fixture_root/wrapper/conformline" <<'WRAPPER'
+cat > "$fixture_root/wrapper/fendkit" <<'WRAPPER'
 #!/usr/bin/env python3
 import json, os, subprocess, sys
 args = sys.argv[1:]
@@ -106,7 +106,7 @@ for policy in policy never; do
  [ "$(find "$artifacts" -type f | wc -l)" = 4 ]
  [ ! -e "$artifacts/status.md" ]; [ ! -e "$artifacts/status.html" ]; [ ! -e "$artifacts/private.txt" ]
  contains "$project/cra/reports/status.md" old
- contains "$GITHUB_STEP_SUMMARY" 'Conformline check failed (exit 2); status reports omitted from this run'
+ contains "$GITHUB_STEP_SUMMARY" 'Fendkit check failed (exit 2); status reports omitted from this run'
  expect 0 bash scripts/action.sh attach "$state"; contains "$GH_LOG" sbom.cdx.json
  expect 1 bash scripts/action.sh verdict "$state"
 done
@@ -139,14 +139,14 @@ for code in 1 2 5; do
  [ "$(value scan-exit-code)" = "$code" ]; [ -z "$(value check-exit-code)" ]
  [ "$(value reports-ready)" = false ]; [ -z "$(ls -A "$artifacts")" ]
  [ "$(wc -l < "$CALL_LOG")" = 1 ]; [ ! -s "$GH_LOG" ]
- [ "$(cat "$GITHUB_STEP_SUMMARY")" = "Conformline scan failed (exit $code); no reports from this run" ]
+ [ "$(cat "$GITHUB_STEP_SUMMARY")" = "Fendkit scan failed (exit $code); no reports from this run" ]
  contains "$project/cra/reports/status.md" 'current status.md'
  expect 1 bash scripts/action.sh verdict "$state"
  export SCAN_CODE=11 CHECK_CODE=$code VEX=true
  reset_run; run_action
  [ "$(value check-exit-code)" = "$code" ]
  [ "$(find "$artifacts" -type f | wc -l)" = 5 ]; [ ! -e "$artifacts/status.md" ]; [ ! -e "$artifacts/status.html" ]
- contains "$GITHUB_STEP_SUMMARY" "Conformline check failed (exit $code); status reports omitted from this run"
+ contains "$GITHUB_STEP_SUMMARY" "Fendkit check failed (exit $code); status reports omitted from this run"
  expect 0 bash scripts/action.sh attach "$state"
  expect 1 bash scripts/action.sh verdict "$state"
 done
@@ -206,7 +206,7 @@ export INPUT_VERSION=latest RUNNER_OS=Windows
 reset_run; expect 1 bash scripts/action.sh run; contains "$fixture_root/last.log" 'Ubuntu runner'
 export RUNNER_OS=Linux INPUT_WORKING_DIRECTORY=.
 reset_run; expect 1 bash scripts/action.sh run
-contains "$fixture_root/last.log" 'Run `conformline init` locally and commit cra.yml'
+contains "$fixture_root/last.log" 'Run `fendkit init` locally and commit cra.yml'
 [ ! -s "$CALL_LOG" ]; [ -z "$(value artifact-dir)" ]
 export INPUT_WORKING_DIRECTORY='nested project/acme-booking'
 # Missing required scan/status reports are collection errors, regardless of policy.

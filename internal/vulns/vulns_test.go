@@ -16,10 +16,10 @@ import (
 	"time"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/version"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/version"
 )
 
 func fixture(t *testing.T, id string) Advisory {
@@ -93,7 +93,7 @@ func TestLookupPaginationCacheAndFailures(t *testing.T) {
 	var mu sync.Mutex
 	querySizes := []int{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if got := r.Header.Get("User-Agent"); got != "conformline/"+version.Version {
+		if got := r.Header.Get("User-Agent"); got != "fendkit/"+version.Version {
 			t.Errorf("User-Agent = %q", got)
 		}
 		calls.Add(1)

@@ -1,25 +1,25 @@
-Contributors working on Conformline itself: read [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributors working on Fendkit itself: read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 # Prepare a maker's product
 
 These steps apply to another product, where the maker wants CRA evidence.
 Locate that project's root first. Check immediately whether it has `cra.yml`.
 Branch on that fact before inventory or questions. Do not mistake a checkout
-of Conformline for the maker's project.
+of Fendkit for the maker's project.
 
 ## Get the tool
 
-Use `conformline` already on PATH. Otherwise follow [installation](docs/install.md):
+Use `fendkit` already on PATH. Otherwise follow [installation](docs/install.md):
 download the release installer, run it and let it verify the SHA-256 checksum.
 If no release exists, say that installation is blocked by the missing release.
 When Go is available, offer this fallback:
 
 ```bash
-go install github.com/vincentsch/conformline/cmd/conformline@latest
+go install github.com/vincentsch/fendkit/cmd/fendkit@latest
 ```
 
 Windows without Bash needs the manual checksummed download in the install guide.
-Never silently use an unverified binary. Run `conformline doctor --dir /path/to/product`.
+Never silently use an unverified binary. Run `fendkit doctor --dir /path/to/product`.
 A missing profile is expected on first use; explain connection failures.
 
 ## If cra.yml exists
@@ -28,9 +28,9 @@ Preserve saved answers, comments and maker documents. Use the saved release
 configuration, unless the maker explicitly overrides it. Go directly to:
 
 ```bash
-conformline scan --dir /path/to/product
-conformline docs --dir /path/to/product
-conformline check --dir /path/to/product
+fendkit scan --dir /path/to/product
+fendkit docs --dir /path/to/product
+fendkit check --dir /path/to/product
 ```
 
 A request such as “Run the release check again” means **all three commands
@@ -46,7 +46,7 @@ Then give the final explanation below.
 
 ## If cra.yml does not exist
 
-1. Run `conformline scan --offline --dir /path/to/product`, adding
+1. Run `fendkit scan --offline --dir /path/to/product`, adding
    `--release ../dist/product.zip` when the product release is known.
    Show its Found block before asking questions. Exit 11 means incomplete
    evidence, expected offline. Ask about surprising findings. Never invent a
@@ -68,7 +68,7 @@ Then give the final explanation below.
    using only the maker's answers. Run init with the chosen project and release:
 
    ```bash
-   conformline init --no-prompt --answers /tmp/maker-answers.yml --dir /path/to/product --release ../dist/product.zip
+   fendkit init --no-prompt --answers /tmp/maker-answers.yml --dir /path/to/product --release ../dist/product.zip
    ```
 
    Remove that temporary file after init, including after a failure. Check

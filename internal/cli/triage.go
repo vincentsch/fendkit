@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vincentsch/conformline/internal/detect"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/detect"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -36,7 +36,7 @@ func (t *TextInput) Ask(f *rungrad.Factory, prompt string) (string, error) {
 	return strings.TrimSpace(line), nil
 }
 func triageCommand(dir *string) *rungrad.Command {
-	return &rungrad.Command{Use: "triage <advisory-id>", Short: "Record a decision and export product-specific VEX", Long: "Select any advisory id or alias from the saved vulnerabilities report.\nRequires cra.yml and manufacturer.name. No network requests are made.\nUse --component with the exact versioned purl printed in vulnerabilities.md when several components match.\nEvery status requires --reason. For affected, describe the intended response.\nnot_affected also requires an OpenVEX --justification.\nA new decision replaces the current decision for this advisory group and component version.\nUse --dry-run to preview the decision without writing files.", Examples: []string{"conformline triage GHSA-f2wf-25xc-69c9 --status under_investigation --reason 'Reviewing product usage'", "conformline triage GHSA-f2wf-25xc-69c9 --status not_affected --justification vulnerable_code_not_in_execute_path --reason 'The product does not use the affected code path'"}, Mutates: true, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Args: cobra.ExactArgs(1), Configure: func(cmd *cobra.Command) {
+	return &rungrad.Command{Use: "triage <advisory-id>", Short: "Record a decision and export product-specific VEX", Long: "Select any advisory id or alias from the saved vulnerabilities report.\nRequires cra.yml and manufacturer.name. No network requests are made.\nUse --component with the exact versioned purl printed in vulnerabilities.md when several components match.\nEvery status requires --reason. For affected, describe the intended response.\nnot_affected also requires an OpenVEX --justification.\nA new decision replaces the current decision for this advisory group and component version.\nUse --dry-run to preview the decision without writing files.", Examples: []string{"fendkit triage GHSA-f2wf-25xc-69c9 --status under_investigation --reason 'Reviewing product usage'", "fendkit triage GHSA-f2wf-25xc-69c9 --status not_affected --justification vulnerable_code_not_in_execute_path --reason 'The product does not use the affected code path'"}, Mutates: true, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Args: cobra.ExactArgs(1), Configure: func(cmd *cobra.Command) {
 		cmd.Flags().String("status", "", "affected, not_affected, fixed, or under_investigation")
 		cmd.Flags().String("reason", "", "Reason for the decision; for affected, describe the intended response (required)")
 		cmd.Flags().String("component", "", "Exact component purl with version from vulnerabilities.md")
@@ -52,18 +52,18 @@ func triageCommand(dir *string) *rungrad.Command {
 		}
 		prof, err := profile.Load(filepath.Join(*dir, "cra.yml"))
 		if os.IsNotExist(err) {
-			return rungrad.NewError(1, "Run `conformline init` first; triage needs an existing cra.yml")
+			return rungrad.NewError(1, "Run `fendkit init` first; triage needs an existing cra.yml")
 		}
 		if err != nil {
 			return rungrad.NewError(1, "Cannot load cra.yml: "+safeError(err))
 		}
 		b, err := os.ReadFile(filepath.Join(*dir, "cra/reports/vulnerabilities.json"))
 		if err != nil {
-			return rungrad.NewError(1, "No readable saved vulnerability report; run conformline scan first")
+			return rungrad.NewError(1, "No readable saved vulnerability report; run fendkit scan first")
 		}
 		var r vulns.Report
 		if json.Unmarshal(b, &r) != nil || r.ScanID == "" || r.ProductPURL == "" {
-			return rungrad.NewError(1, "Invalid saved vulnerability report; run conformline scan again")
+			return rungrad.NewError(1, "Invalid saved vulnerability report; run fendkit scan again")
 		}
 		matches := []int{}
 		choices := []string{}
@@ -76,7 +76,7 @@ func triageCommand(dir *string) *rungrad.Command {
 			}
 		}
 		if len(matches) == 0 {
-			return rungrad.NewError(5, "No saved finding matches this advisory and component; check vulnerabilities.md or run conformline scan")
+			return rungrad.NewError(5, "No saved finding matches this advisory and component; check vulnerabilities.md or run fendkit scan")
 		}
 		if len(matches) > 1 {
 			return rungrad.NewError(1, "This advisory matches several components; pass --component with one of: "+strings.Join(choices, ", "))

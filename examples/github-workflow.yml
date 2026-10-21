@@ -1,5 +1,5 @@
-# Copy to .github/workflows/conformline.yml and set your product build below.
-# Guide: https://github.com/vincentsch/conformline/blob/main/docs/github-action.md
+# Copy to .github/workflows/fendkit.yml and set your product build below.
+# Guide: https://github.com/vincentsch/fendkit/blob/main/docs/github-action.md
 name: Check product evidence
 on:
   pull_request:
@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      # Run conformline init locally and commit cra.yml before enabling this job.
+      # Run fendkit init locally and commit cra.yml before enabling this job.
       # Replace this build command with your product's release build.
       - name: Build product ZIP
         run: make release
-      - uses: vincentsch/conformline@v0.1.0
+      - uses: vincentsch/fendkit@v0.1.0
         with:
           version: v0.1.0
           release: dist/*.zip
@@ -35,7 +35,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: gh release download "$RELEASE_TAG" --pattern '*.zip' --dir dist
-      - uses: vincentsch/conformline@v0.1.0
+      - uses: vincentsch/fendkit@v0.1.0
         with:
           version: v0.1.0
           release: dist/*.zip

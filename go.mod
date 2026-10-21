@@ -1,4 +1,4 @@
-module github.com/vincentsch/conformline
+module github.com/vincentsch/fendkit
 
 go 1.27.2
 

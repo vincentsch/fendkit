@@ -11,7 +11,7 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/vincentsch/conformline/internal/profile"
+	"github.com/vincentsch/fendkit/internal/profile"
 	"github.com/vincentsch/rungrad/testutil"
 )
 

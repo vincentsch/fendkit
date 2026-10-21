@@ -108,7 +108,7 @@ func (p *Profile) AddGuidance() {
 	if len(p.node.Content) == 0 {
 		p.node = yaml.Node{Kind: yaml.DocumentNode, Content: []*yaml.Node{{Kind: yaml.MappingNode, Tag: "!!map"}}}
 	}
-	header := "Conformline preparation record. Unknown facts stay null. Review drafts before use."
+	header := "Fendkit preparation record. Unknown facts stay null. Review drafts before use."
 	if old := p.node.Content[0].HeadComment; old != "" && !strings.HasPrefix(old, header) {
 		header += "\n" + old
 	}

@@ -1,18 +1,18 @@
-# conformline incident list
+# fendkit incident list
 
 List incidents with deadlines and submission status
 
 ## Usage
 
 ```
-conformline incident list
+fendkit incident list
 ```
 
 ## Examples
 
 ```
-conformline incident list
-conformline incident list --json
+fendkit incident list
+fendkit incident list --json
 ```
 
 ## Output modes

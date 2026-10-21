@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/vincentsch/conformline/internal/demo"
-	"github.com/vincentsch/conformline/internal/inventory"
-	"github.com/vincentsch/conformline/internal/profile"
-	"github.com/vincentsch/conformline/internal/status"
-	"github.com/vincentsch/conformline/internal/vulns"
+	"github.com/vincentsch/fendkit/internal/demo"
+	"github.com/vincentsch/fendkit/internal/inventory"
+	"github.com/vincentsch/fendkit/internal/profile"
+	"github.com/vincentsch/fendkit/internal/status"
+	"github.com/vincentsch/fendkit/internal/vulns"
 	"github.com/vincentsch/rungrad"
 )
 
@@ -31,8 +31,8 @@ type demoResult struct {
 }
 
 func demoCommand(client *vulns.Client) *rungrad.Command {
-	return &rungrad.Command{Use: "demo", Short: "Try Conformline on the bundled example plugin", Long: "Copy Acme Booking and its release ZIP into ./conformline-demo/ or --out.\nRefuse a non-empty output folder before writing anything.\nRun init, scan, docs and check with bundled demo answers, without prompts or Git.\nLookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.\nUse --offline to skip all network requests. Failed lookups still produce reports.\nExit with the final check code: 10 for policy failures, 11 for incomplete evidence, otherwise 0.\nUse --dry-run to preview without copying files or making network requests.", Examples: []string{"conformline demo", "conformline demo --offline --out ./example"}, Mutates: true, Args: cobra.NoArgs, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Configure: func(cmd *cobra.Command) {
-		cmd.Flags().String("out", "./conformline-demo", "Empty destination folder for the example and release ZIP")
+	return &rungrad.Command{Use: "demo", Short: "Try Fendkit on the bundled example plugin", Long: "Copy Acme Booking and its release ZIP into ./fendkit-demo/ or --out.\nRefuse a non-empty output folder before writing anything.\nRun init, scan, docs and check with bundled demo answers, without prompts or Git.\nLookups send package names, versions and advisory ids to OSV.dev and download CISA KEV.\nUse --offline to skip all network requests. Failed lookups still produce reports.\nExit with the final check code: 10 for policy failures, 11 for incomplete evidence, otherwise 0.\nUse --dry-run to preview without copying files or making network requests.", Examples: []string{"fendkit demo", "fendkit demo --offline --out ./example"}, Mutates: true, Args: cobra.NoArgs, OutputModes: []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON}, Configure: func(cmd *cobra.Command) {
+		cmd.Flags().String("out", "./fendkit-demo", "Empty destination folder for the example and release ZIP")
 		cmd.Flags().Bool("offline", false, "Skip vulnerability lookups and mark the scan incomplete")
 	}, Run: func(f *rungrad.Factory, cmd *cobra.Command, _ []string) error {
 		out, _ := cmd.Flags().GetString("out")
@@ -85,7 +85,7 @@ func demoCommand(client *vulns.Client) *rungrad.Command {
 		}
 		r.Init = &result
 		if !result.Scan.Complete && !result.Scan.Offline {
-			r.LookupHint = "Lookups did not finish. Try conformline demo --offline --out <another-empty-folder>."
+			r.LookupHint = "Lookups did not finish. Try fendkit demo --offline --out <another-empty-folder>."
 		}
 		data, err := os.ReadFile(filepath.Join(root, "cra/reports/vulnerabilities.json"))
 		var findings vulns.Report
@@ -93,7 +93,7 @@ func demoCommand(client *vulns.Client) *rungrad.Command {
 			err = json.Unmarshal(data, &findings)
 		}
 		if err != nil {
-			return rungrad.NewError(2, "Cannot read demo findings; run conformline scan in the example folder")
+			return rungrad.NewError(2, "Cannot read demo findings; run fendkit scan in the example folder")
 		}
 		r.Commands = demoCommands(r.Directory, findings.Findings)
 		if err = f.WriteResult(r, func(w io.Writer) {
@@ -121,10 +121,10 @@ func shellQuote(value string) string { return "'" + strings.ReplaceAll(value, "'
 
 func demoCommands(root string, findings []vulns.Finding) []string {
 	target := " --dir " + shellQuote(root)
-	first := "conformline scan" + target
+	first := "fendkit scan" + target
 	if len(findings) > 0 {
 		finding := findings[0]
-		first = "conformline triage " + shellQuote(finding.Advisories[0].ID) + " --status under_investigation --reason \"Demo exercise only\" --component " + shellQuote(finding.Component.PURL) + target
+		first = "fendkit triage " + shellQuote(finding.Advisories[0].ID) + " --status under_investigation --reason \"Demo exercise only\" --component " + shellQuote(finding.Component.PURL) + target
 	}
-	return []string{first, "conformline incident new --type exploited-vulnerability --title \"Demo vulnerability\"" + target, "conformline check" + target}
+	return []string{first, "fendkit incident new --type exploited-vulnerability --title \"Demo vulnerability\"" + target, "fendkit check" + target}
 }
