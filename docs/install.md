@@ -1,31 +1,27 @@
 # Install Fendkit
 
-Release binaries need no Go runtime. Install the latest release with Bash:
+Install the latest release with Bash. You do not need Go:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o install.sh
-bash install.sh
-export PATH="$HOME/.local/bin:$PATH"
+if (
+  fendkit_installer_dir="$(mktemp -d)" || exit
+  trap 'rm -rf "$fendkit_installer_dir"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o "$fendkit_installer_dir/install.sh" || exit
+  bash "$fendkit_installer_dir/install.sh"
+); then
+  export PATH="$HOME/.local/bin:$PATH"
+  fendkit --version
+  fendkit demo
+fi
 ```
 
 The installer checks SHA-256 before replacing an existing installation.
 It downloads assets from GitHub Releases without calling the GitHub API.
-Linux and macOS are supported, as is Windows with a compatible Bash.
-The default directory is `~/.local/bin`. You can choose another directory or tag:
-
-```bash
-INSTALL_DIR="$HOME/bin" FENDKIT_VERSION=v0.1.0 bash install.sh
-export PATH="$HOME/bin:$PATH"
-fendkit --version
-fendkit demo --offline
-```
-
-The offline demo exits 11 because it has no vulnerability lookup evidence.
-The installer prints an instruction when you need to add its directory to PATH.
-It needs `curl` and either `sha256sum` or `shasum`. It never runs `sudo`.
-`FENDKIT_RELEASES_URL` overrides the release base URL for testing or a mirror.
-Latest downloads use `<url>/latest/download/<asset>`. A selected tag uses
-`<url>/download/<tag>/<asset>`, including for `checksums.txt`.
+It installs into `~/.local/bin` on Linux and macOS, or Windows with a compatible
+Bash. The script is downloaded into a temporary directory, then removed.
+The demo uses a bundled fictional plugin and makes online vulnerability lookups.
+Use `fendkit demo --offline` to skip those requests; it exits 11 because lookup
+evidence is missing. If no release is available, the installer says so.
 
 ## Run it on your product
 
@@ -74,6 +70,23 @@ Get-FileHash .\fendkit-windows-amd64.exe -Algorithm SHA256
 
 Only after the values match, rename the binary to `fendkit.exe` and put it
 in a directory on PATH. Run `fendkit --version` to check the installation.
+
+## Other installation settings
+
+To choose another directory or pin a tag, replace the `bash` line in the install
+block above with:
+
+```bash
+INSTALL_DIR="$HOME/bin" FENDKIT_VERSION=v0.1.0 bash "$fendkit_installer_dir/install.sh"
+```
+
+Then add that directory to PATH with `export PATH="$HOME/bin:$PATH"`.
+The installer also prints the PATH command for your chosen directory.
+It needs `curl` and either `sha256sum` or `shasum`. It never runs `sudo`.
+
+For a mirror, set `FENDKIT_RELEASES_URL` on the same `bash` line.
+Latest downloads use `<url>/latest/download/<asset>`. A selected tag uses
+`<url>/download/<tag>/<asset>`, including for `checksums.txt`.
 
 ## Build from source
 

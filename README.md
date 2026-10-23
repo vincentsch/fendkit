@@ -2,12 +2,12 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/media/fendkit-wordmark-dark.svg">
-  <img src="docs/media/fendkit-wordmark-light.svg" alt="Fendkit" width="240" height="56">
+  <img src="docs/media/fendkit-wordmark-light.svg" alt="Fendkit" width="220" height="56">
 </picture>
 
 Fendkit is a free command-line tool for preparing EU Cyber Resilience Act evidence.
-It checks the third-party components in your release and writes draft documents
-for you to review. It supports WordPress plugins and themes, plus Composer
+It checks the third-party components in your release for known vulnerabilities
+and writes draft CRA documents for you to review. It supports WordPress plugins and themes, plus Composer
 and npm packages.
 
 [Website](https://www.fendkit.com) · [Guides](#read-the-guides) · [AGENTS.md](AGENTS.md)
@@ -30,26 +30,29 @@ it uses your saved answers and runs the release check directly.
 
 ## Install and try the example
 
-Install the checked release with Bash on Linux or macOS:
+Install the latest release with Bash on Linux or macOS:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o install.sh
-bash install.sh
-export PATH="$HOME/.local/bin:$PATH"
-fendkit --version
-fendkit doctor
-fendkit demo
+if (
+  fendkit_installer_dir="$(mktemp -d)" || exit
+  trap 'rm -rf "$fendkit_installer_dir"' EXIT
+  curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o "$fendkit_installer_dir/install.sh" || exit
+  bash "$fendkit_installer_dir/install.sh"
+); then
+  export PATH="$HOME/.local/bin:$PATH"
+  fendkit --version
+  fendkit doctor
+  fendkit demo
+fi
 ```
 
 See [installation](docs/install.md) for other install directories and pinned
 versions. It also covers Go builds and native Windows downloads. If no release
 is available, the installer says so. Doctor checks setup and provider connections;
-a missing profile is normal
-before init. The demo uses a bundled fictional plugin in a new directory.
+a missing profile is normal before init. The demo uses a bundled fictional plugin in a new directory.
 
-Live lookups from the demo, captured on 21 October 2026 (Europe/Berlin).
-The scan time shown is in UTC. Both themes show the same complete scan;
-drafts still need review.
+The fictional Acme Booking plugin after online lookups on 21 October 2026.
+Both themes show the same report; drafts still need review.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/media/status-dark.png">
@@ -102,8 +105,7 @@ missing, incomplete or stale evidence without a higher-priority policy failure.
 Exit 0 does not mean every draft has been reviewed.
 See [all status rules](docs/status-items.md).
 
-A full captured live demo check (21 October 2026 Europe/Berlin,
-21 October 2026 UTC), from the same run as the images:
+Terminal output from an earlier online demo on 21 October 2026, at 12:03 UTC:
 
 ```text
 Fendkit  Acme Booking 2.3.1 (WordPress plugin)   scan: 2026-10-21 12:03 UTC, complete
@@ -124,9 +126,8 @@ Full status: cra/reports/status.html
 Not legal advice. Fendkit helps you prepare; the decisions and the signature are yours.
 ```
 
-The demo product and maker decisions are fictional. Its findings come from
-actual advisory lookups. On your product, unknown decisions stay visible
-until you make them.
+The findings come from actual advisory lookups. On your product, unknown
+decisions stay visible until you make them.
 
 ## Keep it in your release routine
 
@@ -163,8 +164,7 @@ Those names and versions can reveal private product dependencies. Source code
 and maker answers are not uploaded by Fendkit. Doctor sends an empty OSV
 request and checks KEV headers. Offline scan/demo/init skip those lookups.
 Installation downloads come from GitHub. Go installation uses Go's configured
-module services. Your coding agent has
-its own network and privacy settings.
+module services. Your coding agent has its own network and privacy settings.
 
 Reports credit [OSV](https://osv.dev/), the
 [GitHub Advisory Database](https://github.com/advisories) (CC-BY 4.0), and
