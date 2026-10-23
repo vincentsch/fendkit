@@ -1,10 +1,14 @@
 # Fendkit
 
-Prepare your EU Cyber Resilience Act evidence and see what still needs doing.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/fendkit-wordmark-dark.svg">
+  <img src="docs/media/fendkit-wordmark-light.svg" alt="Fendkit" width="240" height="56">
+</picture>
 
-Fendkit checks the third-party components in your software release,
-writes draft evidence documents, and shows what still needs your review.
-It starts with WordPress plugins and themes, Composer packages and npm packages.
+Fendkit is a free command-line tool for preparing EU Cyber Resilience Act evidence.
+It checks the third-party components in your release and writes draft documents
+for you to review. It supports WordPress plugins and themes, plus Composer
+and npm packages.
 
 [Website](https://www.fendkit.com) · [Guides](#read-the-guides) · [AGENTS.md](AGENTS.md)
 
@@ -19,10 +23,10 @@ the steps. Ask me the questions only I can answer, and show me what is still
 missing at the end.
 ```
 
-The agent follows [AGENTS.md](AGENTS.md), shows the inventory first, and asks
-about your role, contact, support period and product categories. You can leave
-answers unknown. With an existing `cra.yml`, it uses your saved answers and
-runs the release check directly.
+The agent follows [AGENTS.md](AGENTS.md) and shows what it found before asking
+questions. You supply the decisions it cannot make, such as your legal role
+and support period. You can leave answers unknown. With an existing `cra.yml`,
+it uses your saved answers and runs the release check directly.
 
 ## Install and try the example
 
@@ -31,14 +35,16 @@ Install the checked release with Bash on Linux or macOS:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o install.sh
 bash install.sh
+export PATH="$HOME/.local/bin:$PATH"
 fendkit --version
 fendkit doctor
 fendkit demo
 ```
 
-See [installation](docs/install.md) for PATH, pinned versions, Go installation
-and native Windows downloads. If no release is available, the installer says
-so. Doctor checks setup and provider connections; a missing profile is normal
+See [installation](docs/install.md) for other install directories and pinned
+versions. It also covers Go builds and native Windows downloads. If no release
+is available, the installer says so. Doctor checks setup and provider connections;
+a missing profile is normal
 before init. The demo uses a bundled fictional plugin in a new directory.
 
 Live lookups from the demo, captured on 21 October 2026 (Europe/Berlin).
@@ -68,14 +74,14 @@ From your plugin root, point init at the ZIP or folder you ship:
 fendkit init --release ../dist/plugin.zip
 ```
 
-Init shows what it found before the interview. Composer runtime packages,
-npm dependencies and recognised bundled JavaScript libraries form the
-[inventory](docs/inventory.md). The release file tells the tool what ships;
+Init shows what it found before the interview. The [inventory](docs/inventory.md)
+includes supported Composer and npm dependencies. Fendkit also recognises
+some bundled JavaScript libraries. The release file tells the tool what ships;
 build tools that stay outside it do not become shipped dependencies.
 Without a release, some shipping decisions remain unknown.
 
-Init writes `cra.yml`, draft documents in `cra/`, a root `SECURITY.md`, and
-reports in `cra/reports/`. Complete and review the drafts yourself.
+Init saves your answers in `cra.yml`. It writes drafts in `cra/` and a root
+`SECURITY.md`, with reports in `cra/reports/`. Complete and review the drafts yourself.
 It refuses to replace an existing profile. On later releases, run each command
 in order. Continue after scan exit 0 or 11. For any other scan exit, stop
 and repair the error before running docs or check:
@@ -87,13 +93,10 @@ fendkit check
 ```
 
 A saved `product.release` is used when you omit `--release`. Keep it current.
-Changing that setting makes earlier evidence stale, even if the old artifact
-still exists. Follow the recovery command in check to scan the new boundary.
-Scans reject conflicting detected product identities or versions before
-replacing reports. Missing comparable identity metadata is shown as unverified.
-Composer package files without installed metadata stay possibly shipped with
-an unknown release version; the repository lockfile cannot establish it.
-Docs preserves existing maker documents and refreshes the index. Check writes
+If check reports stale evidence, run the command it prints. The
+[inventory guide](docs/inventory.md#the-release-boundary) explains how Fendkit
+checks the release identity and handles unknown versions.
+Docs keeps existing documents and refreshes the index. Check writes
 Markdown and HTML status pages. Exit 10 means a policy failure; 11 means
 missing, incomplete or stale evidence without a higher-priority policy failure.
 Exit 0 does not mean every draft has been reviewed.
@@ -127,16 +130,16 @@ until you make them.
 
 ## Keep it in your release routine
 
-Commit your decisions and reviewed documents with your product. Build the
-release first, scan it, refresh the document index with `fendkit docs`,
-review [findings](docs/vulnerabilities.md), then run check.
+Commit your decisions and reviewed documents with your product. After building
+the release, run the three commands above. Review the
+[findings](docs/vulnerabilities.md) and update your decisions as needed.
 The [GitHub Action](docs/github-action.md) runs the saved-profile checks on
 Ubuntu and keeps reports even when the evidence needs attention.
 
 For an actively exploited vulnerability or severe incident, use the
-[incident commands](docs/incidents.md). They record your awareness time,
-show reporting deadlines and prepare drafts. A person checks the live ENISA
-form, files the report and records the submission. Fendkit does not file it.
+[incident commands](docs/incidents.md). Tell Fendkit when you became aware.
+It calculates reporting deadlines and prepares drafts. You check and submit
+the reports through ENISA's live form, then record the submission in Fendkit.
 
 ## Read the guides
 
@@ -159,8 +162,8 @@ advisory details and download CISA's Known Exploited Vulnerabilities catalog.
 Those names and versions can reveal private product dependencies. Source code
 and maker answers are not uploaded by Fendkit. Doctor sends an empty OSV
 request and checks KEV headers. Offline scan/demo/init skip those lookups.
-Installation downloads the installer, binaries and checksums from GitHub;
-Go installation uses Go's configured module services. Your coding agent has
+Installation downloads come from GitHub. Go installation uses Go's configured
+module services. Your coding agent has
 its own network and privacy settings.
 
 Reports credit [OSV](https://osv.dev/), the
@@ -189,3 +192,5 @@ and the [CRA guide](docs/cra-for-plugin-makers.md) for scope and sources.
 ## License
 
 [MIT](LICENSE). See [contributing](CONTRIBUTING.md) to work on Fendkit itself.
+
+Made by [Vincent Schmalbach](https://www.vincentschmalbach.com/).
