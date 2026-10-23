@@ -1,21 +1,23 @@
 # Review vulnerability findings
 
-Online scan asks OSV.dev about package names and exact versions, fetches advisory
-details, and downloads CISA's Known Exploited Vulnerabilities (KEV) catalog.
+Online scans send package names and exact versions to OSV.dev for advisory
+lookups. They also download CISA's Known Exploited Vulnerabilities (KEV) catalog.
 Package names and versions can reveal private dependencies. Offline scans skip
 these requests and remain incomplete. See [privacy](../README.md#privacy-and-limits).
 
 Reports retain attribution to [OSV](https://osv.dev/), the
 [GitHub Advisory Database](https://github.com/advisories) under CC-BY 4.0,
 and [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog).
-Aliases group related advisory identifiers; KEV matching uses aliases too.
-KEV means known exploitation is catalogued, not that your product was exploited.
+Reports group identifiers for the same advisory, including when matching KEV
+entries. A KEV match means exploitation has been reported. It does not establish
+that your product was exploited.
 
 ## Read the reports
 
-Open `cra/reports/vulnerabilities.md` for findings, affected components,
-source links, fixed versions and triage. JSON supplies the same evidence for
-tooling. Coverage gaps include unknown versions and modified copies.
+Open `cra/reports/vulnerabilities.md` to see which components have findings
+and which versions fix them. The report links to sources and shows your saved
+triage decisions. JSON keeps the same evidence for other tools. Coverage gaps
+include unknown versions and modified copies.
 Findings concern third-party components rather than your own code.
 Zero findings cannot prove the absence of vulnerabilities.
 
@@ -32,7 +34,7 @@ fixed versions can suggest an update; unusual version schemes need review
 of the linked source. Test updates in your product before replacing bundles.
 Fendkit does not update libraries for you.
 
-The following is illustrative. Replace the advisory and exact component
+This example uses a finding from the demo. Replace the advisory and exact component
 package URL (purl) with values from your own saved report:
 
 ```bash
@@ -44,13 +46,14 @@ Use `affected` with your intended response, `under_investigation` while checking
 Every decision requires a reason. `not_affected` also requires an OpenVEX
 justification: `component_not_present`, `vulnerable_code_not_present`,
 `vulnerable_code_not_in_execute_path`, `vulnerable_code_cannot_be_controlled_by_adversary`,
-or `inline_mitigations_already_exist`. These are claims you must substantiate.
+or `inline_mitigations_already_exist`. Keep evidence for the justification you choose.
 
 Triage requires `cra.yml` and readable saved findings. It saves an exact
 advisory/component-version decision in the profile and immediately rewrites
 the vulnerability reports and `vex.openvex.json`, without network access.
-A decision for one dependency version does not excuse a later version.
-No matching triage means no current VEX export. Keep decisions tied to this
+A decision for one dependency version does not apply to a later version.
+Fendkit exports VEX only when saved triage matches current findings. VEX records
+whether a vulnerability affects this product. Keep decisions tied to this
 product rather than copying them to unrelated products.
 
 Run [check](status-items.md) after triage. Open KEV findings in shipped or

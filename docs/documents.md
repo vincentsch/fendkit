@@ -25,8 +25,9 @@ See [role and scope](cra-for-plugin-makers.md).
 
 ## Record your review
 
-Fill the `[[placeholders]]`, check the substance and record the reviewer.
-Markdown uses YAML front matter:
+Replace the `[[placeholders]]` with facts about your product. Check that the
+document describes what you do. After reviewing it, add your name and review date.
+Markdown files keep these fields at the top as YAML front matter:
 
 ```yaml
 ---
@@ -40,8 +41,9 @@ Use the date you reviewed it. security.txt uses the same three fields as
 `# status:`, `# reviewed_by:` and `# reviewed_on:` comments. The checker looks
 for a nonblank reviewer, valid date and no placeholders. Expired security.txt
 still needs attention. A marker does not prove the review was adequate.
-Agents must leave review decisions to the maker. Review metadata does not sign
-or final-date the declaration. All generated documents begin as drafts;
+Review the documents yourself rather than letting an agent mark them reviewed.
+Review metadata does not sign the declaration or give it a final issue date.
+All generated documents begin as drafts;
 Fendkit gives no legal advice.
 
 ## Publish security.txt

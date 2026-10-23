@@ -5,6 +5,7 @@ Release binaries need no Go runtime. Install the latest release with Bash:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/vincentsch/fendkit/main/install.sh -o install.sh
 bash install.sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 The installer checks SHA-256 before replacing an existing installation.
@@ -14,6 +15,7 @@ The default directory is `~/.local/bin`. You can choose another directory or tag
 
 ```bash
 INSTALL_DIR="$HOME/bin" FENDKIT_VERSION=v0.1.0 bash install.sh
+export PATH="$HOME/bin:$PATH"
 fendkit --version
 fendkit demo --offline
 ```
@@ -35,8 +37,8 @@ fendkit doctor
 fendkit init --release ../dist/plugin.zip
 ```
 
-A missing profile is normal before init. Init shows the inventory, asks for
-your decisions, then writes `cra.yml`, draft documents and reports. Unknown
+A missing profile is normal before init. Init shows the inventory before asking
+for your decisions. It saves them in `cra.yml` and writes drafts and reports. Unknown
 answers stay visible for later review. Read `cra/README.md` for the document
 index and open `cra/reports/status.html` for next actions.
 
@@ -88,7 +90,7 @@ version can also be installed with:
 go install github.com/vincentsch/fendkit/cmd/fendkit@latest
 ```
 
-If there is no public release yet, report that limitation; do not skip checksum
-verification to install a binary. Source builds are available to contributors
-with checkout access. Return to [the README](../README.md#install-and-try-the-example)
+If no public release is available, build from source with checkout access.
+Keep checksum verification for binary downloads.
+Return to [the README](../README.md#install-and-try-the-example)
 for the complete first run, or use [agent instructions](../AGENTS.md).

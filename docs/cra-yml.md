@@ -1,9 +1,9 @@
 # Keep decisions in cra.yml
 
 `cra.yml` is a versioned YAML record in your product root. Commit it with the
-product. Init detects product facts and merges your partial answers; later
-scan/docs/check read it. Init refuses to replace an existing profile.
-The reader rejects unknown fields, invalid types and unsupported schema versions.
+product. Init combines detected facts with your answers. Later commands read
+this file without repeating the interview. Init refuses to replace an existing
+profile. Invalid fields or values stop the command with an error.
 
 ## Partial answers and unknowns
 
@@ -22,12 +22,11 @@ that none of the Annex III/IV categories apply. Never substitute `[]` for an
 unknown decision. Init derives the highest class from explicitly selected
 categories. Keep an unknown `classification.answer` as `unknown` with null
 categories. An explicit none decision becomes `default` with `[]`.
-Explicit decided answers must match the highest selected class (or `default`
-for `[]`). Explicit `unknown` or null answers require null or omitted categories;
-they cannot coexist with a selected list, even `[]`. Loading and saving reject
-conflicts with a field diagnostic. Categories-only partial answers preserve the
-omitted answer through saves; init then records the derived class. Existing
-answer-only profiles need no category backfill.
+If you supply both an answer and categories, they must agree. `unknown` or null
+answers need null or omitted categories, rather than a list. A conflict stops
+the command and names the field to fix. If you supply only categories, init
+records the highest selected class. Saving partial answers before init keeps
+the answer omitted. Existing profiles with only an answer need no added categories.
 
 Init preserves supplied decision dates, explicit null dates and reviewer names.
 Only an omitted date for a decided answer is filled with today’s date. Unknown
@@ -65,10 +64,10 @@ Each component supports `name`, `version`, `ecosystem`, `purl`, `path`, `shipped
 and `note`. Use `npm` or `composer` for supported vulnerability lookups.
 Omit `shipped` to keep detected behavior; `true` and `false` are explicit
 decisions, and `shipped: null` explicitly makes that occurrence unknown.
-These four states and maker comments survive init and unrelated triage saves.
-Corrections apply before grouping: an occurrence still shipped wins over unknown
-and excluded occurrences; unknown wins when no occurrence remains shipped. Known versions and purls
-must come from evidence.
+Init and triage preserve these values and your comments. When the same component
+appears more than once, one shipped copy makes the group shipped. Otherwise,
+one unknown copy makes the group unknown. Known versions and purls must come
+from evidence.
 
 To add an unrecognized library, omit `path`. That field only matches an
 already detected occurrence. Record the file location and shipping evidence

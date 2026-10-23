@@ -27,15 +27,15 @@ Paths are relative to the project root (`--dir`), including sibling paths.
 Windows releases on another drive are kept as absolute paths that work only
 on that machine and may expose personal directory names when reports are shared.
 A release folder works too. A ZIP may be flat or have one enclosing folder.
-A specified missing/unreadable release is an error, with no guessed fallback.
-A release product version different from source stops the scan with both
-versions. Build the intended release or correct the source facts first.
+If the release is missing or unreadable, the scan stops with an error.
+If its product version differs from source, the error shows both versions.
+Build the intended release or correct the source facts first.
 Detected WordPress plugin/theme names and Composer/npm manifest package names
 are also compared with corresponding release metadata. Conflicting identities
 stop the scan before reports are replaced. A profile display-name override
-does not change the detected identity. Wrapper names and generated PURLs do
-not establish identity. When no comparable metadata exists, scan proceeds
-with a visible **Release identity unverified** note; confirm the artifact yourself.
+does not change the detected identity. An enclosing folder name or a generated
+package URL cannot establish identity. If Fendkit cannot compare the metadata,
+it shows **Release identity unverified**. Confirm that you supplied the right release.
 
 **Shipped** means evidence places the component in the distributed product.
 **Development** means it is outside that boundary or only a development tool.
@@ -46,15 +46,17 @@ Without a release, Composer runtime and recognised bundled JS count as shipped;
 Composer development dependencies do not. npm dependencies can remain unknown:
 a build dependency might be bundled or stay outside the release. A release
 lets the scanner distinguish those cases using files and package evidence.
-For Composer, known package install paths are checked before declaring absence.
-If files remain without installed metadata establishing their version, a
-separate possibly shipped occurrence has null version and lookup version, an
-unversioned PURL, path evidence and a coverage gap. Its SBOM scope is required.
-The lockfile occurrence stays visible separately; its version cannot establish
-the release version. Only known versions are queried. Supported installed
-metadata remains authoritative, including nested vendor trees. A genuinely
-absent package stays excluded. Coverage gaps require vulnerability review
-even when all provider requests succeed and scan exits 0.
+For Composer, Fendkit checks known install paths before treating a package as
+absent. Files without installed version metadata appear separately as possibly
+shipped with an unknown version. The report shows their path and a coverage gap.
+The lockfile entry stays visible, but its version cannot establish what ships.
+Fendkit only looks up advisories for known versions. It uses supported installed
+metadata when available, including nested vendor trees. Absent packages stay excluded.
+Coverage gaps need your review even when all lookups succeed and scan exits 0.
+
+In the JSON report, that unknown release copy has null `version` and
+`lookup_version` fields. Its package URL (PURL) has no version and its SBOM scope
+is `required`.
 
 ## Bundled libraries and gaps
 
@@ -70,7 +72,8 @@ Do not assign a version without evidence. Go, Python, firmware and container
 formats are outside v0.1 dependency coverage. The tool does not scan your own
 code for vulnerabilities.
 
-Scan writes `cra/reports/inventory.json`, `sbom.cdx.json`, and
+Scan writes the inventory to `cra/reports/inventory.json` and the software bill
+of materials (SBOM) to `cra/reports/sbom.cdx.json`. It also writes
 [vulnerability reports](vulnerabilities.md). CycloneDX 1.6 is the SBOM format;
 it records discovered components and shipping evidence, not proof of complete
 coverage. An offline scan still writes inventory but exits 11 because lookups

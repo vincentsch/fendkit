@@ -64,16 +64,21 @@ including stale causes when incomplete evidence takes precedence. Checks use
 content digests, product versions and saved scan times, never file modification
 times. Saved finding counts describe saved results, not current coverage.
 
-Next actions put overdue incident stages first, then known exploited findings
-and missing applicable items under `--strict`. One scan recovery action follows
-these policy actions. With no policy failure, recovery is action 1. It precedes
-upcoming incident stages in deadline order, then component updates ordered by
-severity, advisory count and name. Findings without fixes, pending incident
-stages and decisions follow; Role is the first decision. Draft reviews and
-missing items keep their remaining priorities.
+Next actions show urgent problems before a command to repair scan evidence.
+The order is:
 
-Recovery explains the scan problem and names local repairs before one rescan
-command. It keeps network-access or doctor advice for incomplete lookups.
+1. Overdue incident stages, known exploited findings and missing applicable
+   items under `--strict`.
+2. A recovery action for missing, incomplete or stale scan evidence.
+3. Upcoming incident stages, in deadline order.
+4. Component updates, ordered by severity, advisory count and name.
+5. Findings without fixes, pending incident stages and decisions. Role is the
+   first decision; draft reviews and other missing items follow their usual priorities.
+
+Without a policy failure, scan recovery is the first action.
+
+The recovery action explains what went wrong and what to fix before rescanning.
+Incomplete lookups include advice about network access or `fendkit doctor`.
 Scans record both the selected artifact and the saved `product.release` setting,
 including an unset setting. While that setting is unchanged, recovery retains
 the selected artifact as `fendkit scan --release '<path>'`, even when it came

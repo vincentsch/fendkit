@@ -1,7 +1,8 @@
 # Record an incident and its deadlines
 
-Fendkit records your awareness time, calculates deadlines and writes drafts.
-It does not decide whether an event is reportable or file with ENISA.
+Tell Fendkit when you became aware of an incident. It calculates deadlines
+and writes drafts. You decide whether the event is reportable and submit
+the reports to ENISA.
 Legal timing was checked on **20 October 2026** against
 [Article 14 of Regulation (EU) 2024/2847](https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng)
 and [Commission reporting guidance](https://digital-strategy.ec.europa.eu/en/policies/cra-reporting).
@@ -10,8 +11,8 @@ and [Commission reporting guidance](https://digital-strategy.ec.europa.eu/en/pol
 
 An actively exploited vulnerability and a severe incident affecting product
 security are different incident types. An advisory listing alone does not
-establish either. The maker supplies when they became aware; an agent must
-not infer that time from logs or the current clock.
+establish either. Supply the time you became aware. Logs or the current clock
+cannot establish that time for you.
 
 These examples use a fictional maker-supplied time. Run them only in a test
 project, or replace the title, type and time with your actual record:
@@ -25,8 +26,8 @@ fendkit incident show inc-1
 
 Use the ID printed by new rather than assuming `inc-1`. `--aware` accepts
 RFC 3339 with an offset, or `YYYY-MM-DD HH:MM` in the local time zone.
-Without an explicit time the CLI proposes now and requires confirmation;
-agents must request the maker's actual time instead. Records keep an IANA
+Without an explicit time the CLI proposes now and asks for confirmation.
+When using an agent, give it your actual time. Records keep an IANA
 time zone for display. Elapsed-hour deadlines remain correct across clock changes.
 
 ## Read the current deadlines
