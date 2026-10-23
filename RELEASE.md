@@ -72,13 +72,13 @@ runs and VEX reruns with replacement. A missing local VEX must leave an older re
 asset alone; remove it manually when outdated. These hosted checks are unrun locally.
 See [the Action guide](docs/github-action.md) and [consumer example](examples/github-workflow.yml).
 
-## Public onboarding checks still needed
+## Public onboarding and further consumer checks
 
 After publication, run the README's copied prompt from an unrelated maker
 repository using only the public URL. Verify fresh installation via the latest
 installer, a pinned installer, native Windows checksums and `go install @latest`.
-The local onboarding acceptance uses an already built binary because the origin
-is private; it does not prove public access. Follow the README commands with a
+The original local onboarding acceptance used an already built binary and did
+not establish public access. The dated checks below now record public downloads. Follow the README commands with a
 fresh maker profile and an existing profile, checking preservation of edited
 documents and unknown decisions. Confirm the published Action reference from
 that same product release. Reuse the hosted checks above for permissions,
@@ -90,14 +90,14 @@ Published [fendkit v0.1.0](https://github.com/vincentsch/fendkit/releases/tag/v0
 from `6fbd826db7f9eaf9369e85c261b9e3225f6d306b`. The [release workflow](https://github.com/vincentsch/fendkit/actions/runs/39947703429)
 passed Linux, macOS and Windows CI before the publishing job started. The release
 contains six platform executables and `checksums.txt`. All six downloaded SHA-256
-hashes matched. All six GitHub build attestations verified with `gh attestation
-verify`, the release workflow identity, tag ref and source digest pinned, and
+hashes matched. All six GitHub build attestations verified with `gh attestation verify`, the release workflow identity, tag ref and source digest pinned, and
 `--deny-self-hosted-runners`.
 
 On Linux amd64, latest and pinned (`v0.1.0`) public installers succeeded in fresh
 temporary folders. The installed CLI's version and bundled demo were checked.
 `go install github.com/vincentsch/fendkit/cmd/fendkit@v0.1.0` succeeded with an
-initially empty module cache, the public Go proxy and checksum database. The
+initially empty module cache, the public Go proxy and checksum database. A separate
+empty-cache `go install` with `@latest` also resolved v0.1.0 successfully. The
 README agent prompt and `AGENTS.md` were fetched anonymously from GitHub and
 matched the published source. Fetching the prompt does not establish a trial
 with every supported coding agent.
