@@ -38,10 +38,10 @@ time zone for display. Elapsed-hour deadlines remain correct across clock change
 | Severe incident | Within 24 hours of awareness | Within 72 hours of awareness | Within one month after the incident notification |
 
 The severe-incident final date uses the notification submission time when
-recorded. Until then it shows a provisional basis from the notification due
-time. One month means a calendar month in the recorded zone, clamped to its
-last day where needed. Vulnerability final reporting stays pending until fix
-availability is recorded. Article 14(8) also requires informing affected users
+recorded. Until you record submission, it calculates a provisional date from the
+notification deadline. One month means a calendar month in the recorded zone, clamped to its
+last day where needed. For an exploited vulnerability, the final deadline stays pending until you
+record when a fix or mitigation became available. Article 14(8) also requires informing affected users
 without undue delay, and where appropriate all users.
 
 A fix or mitigation may already exist when you learn about exploitation.
@@ -57,8 +57,8 @@ no legal advice.
 ## Review, file, then record what happened
 
 `cra/incidents/<id>/` contains `incident.yml`, `early-warning.md`,
-`notification.md`, `final-report.md` and `user-notice.md`. Draft text contains
-fields to complete; it does not freeze deadlines. Use `incident show` for the
+`notification.md`, `final-report.md` and `user-notice.md`. The drafts have fields for you to complete. Their dates do not update
+automatically. Use `incident show` for the
 current timing after every update. Existing drafts stay untouched.
 
 Check each draft against the current

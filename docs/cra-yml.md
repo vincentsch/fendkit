@@ -21,7 +21,7 @@ The file must contain your own answers, not the example maker's details.
 that none of the Annex III/IV categories apply. Never substitute `[]` for an
 unknown decision. Init derives the highest class from explicitly selected
 categories. Keep an unknown `classification.answer` as `unknown` with null
-categories. An explicit none decision becomes `default` with `[]`.
+categories. If you decide that no listed category applies, init saves `default` with `[]`.
 If you supply both an answer and categories, they must agree. `unknown` or null
 answers need null or omitted categories, rather than a list. A conflict stops
 the command and names the field to fix. If you supply only categories, init
@@ -52,8 +52,8 @@ Text may be null when unknown. Dates use YYYY-MM-DD. Booleans use `true`,
 | `triage` | List of exact advisory/component-version decisions described below. |
 
 Release paths and patterns resolve relative to the project root, including
-sibling paths. `--release` is an explicit scan override; keep the profile's
-saved path right for later runs. Unknown product versions need a real version
+sibling paths. `--release` overrides the saved path for that scan. Update the profile's
+path when you want later scans to use a different release. Unknown product versions need a real version
 before evidence can be current. See [inventory](inventory.md).
 Windows releases on another drive are kept as absolute paths that work only
 on that machine and may expose personal directory names when reports are shared.

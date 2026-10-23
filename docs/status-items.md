@@ -1,8 +1,7 @@
 # Read the status items
 
 `fendkit check` evaluates saved decisions, documents and scan reports.
-It writes `cra/reports/status.md` and `status.html`; it does not do a network
-lookup. Run [scan](reference/fendkit_scan.md) first when evidence changes.
+It writes `cra/reports/status.md` and `status.html` without network requests. Run [scan](reference/fendkit_scan.md) first when evidence changes.
 
 ## What the states mean
 
@@ -41,9 +40,10 @@ notice that Article 24 is not assessed.
 
 ## Fresh evidence and next actions
 
-The header and JSON `scan_state` distinguish missing, incomplete, stale and
-complete evidence. `scan_complete` is true only for complete, current evidence.
-Labels keep the saved scan time; a missing scan has no invented time.
+The report header shows whether scan evidence is missing, incomplete, stale
+or complete. JSON records the same state in `scan_state`; `scan_complete` is
+true only for complete, current evidence. Reports show the original scan time.
+There is no timestamp when the scan is missing.
 
 | Evidence | State and header label |
 | --- | --- |
@@ -59,10 +59,11 @@ Labels keep the saved scan time; a missing scan has no invented time.
 | Source files or permissions prevent a local inventory rebuild | `stale (inventory unavailable)` |
 | All completeness, provenance and freshness checks pass | `complete` |
 
-The first matching row selects the header. Full reports keep every cause,
-including stale causes when incomplete evidence takes precedence. Checks use
-content digests, product versions and saved scan times, never file modification
-times. Saved finding counts describe saved results, not current coverage.
+The first matching row determines the header. Full reports explain every
+problem, even when more than one applies. Fendkit compares file contents and
+product versions with the saved scan. It uses the scan time to check age;
+changing a file's modification time does not refresh evidence.
+Finding counts come from that saved scan.
 
 Next actions show urgent problems before a command to repair scan evidence.
 The order is:
@@ -87,13 +88,13 @@ intentional override. Changing `product.release` makes the earlier scan stale;
 recovery uses plain `fendkit scan` so the newly saved setting selects the release.
 It must not repeat the old override.
 
-Older reports without this provenance require a rescan. Recovery uses the
+Reports that do not record those release settings need a new scan. Recovery uses the
 current saved release setting when present; otherwise it explicitly retains
 the recorded release path, or uses plain scan if neither exists. Check, docs
 and every status format evaluate these conditions without changing the profile.
 Restore an unavailable release first, or pass a replacement explicitly with
 `--release`. A source-file failure names the actual diagnostic rather than
-blaming an otherwise readable release. Recovery stays available with exit 10.
+blaming an otherwise readable release. Check still shows how to repair the scan when it exits 10.
 
 The report lists up to five actions; urgent actions can fill that limit.
 The terminal highlights three and wraps status groups to fit your terminal.

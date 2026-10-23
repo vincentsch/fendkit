@@ -11,11 +11,11 @@ Composer and npm manifests supply package facts. When versions conflict,
 review the detected header, Stable tag and `product.version`; do not invent
 a version to silence a warning.
 
-Composer inventory reads composer.lock and installed.json, including v1/v2
-installed formats. npm inventory reads package-lock.json v2/v3 and
-npm-shrinkwrap.json. pnpm and Yarn lockfiles are named as unsupported; their
-dependencies are not scanned. Manifests without resolved installed versions
-leave coverage gaps rather than guessed versions.
+For Composer, Fendkit reads composer.lock and installed.json in v1 or v2
+format. For npm, it reads package-lock.json v2/v3 and npm-shrinkwrap.json.
+It detects pnpm and Yarn lockfiles but cannot scan their dependencies.
+A manifest alone does not tell Fendkit which versions are installed.
+Those versions stay unknown.
 
 ## The release boundary
 
@@ -33,13 +33,13 @@ Build the intended release or correct the source facts first.
 Detected WordPress plugin/theme names and Composer/npm manifest package names
 are also compared with corresponding release metadata. Conflicting identities
 stop the scan before reports are replaced. A profile display-name override
-does not change the detected identity. An enclosing folder name or a generated
-package URL cannot establish identity. If Fendkit cannot compare the metadata,
+does not change the detected identity. A folder name or a generated
+package URL does not tell Fendkit which product it is. If Fendkit cannot compare the metadata,
 it shows **Release identity unverified**. Confirm that you supplied the right release.
 
-**Shipped** means evidence places the component in the distributed product.
-**Development** means it is outside that boundary or only a development tool.
-**Unknown** means the tool cannot settle whether it ships. Unknown components
+**Shipped** means Fendkit found evidence that the component is in your release.
+**Development** means it stays outside the release or is only a development tool.
+**Unknown** means Fendkit cannot tell whether it ships. Unknown components
 stay visible for review and possible vulnerability findings.
 
 Without a release, Composer runtime and recognised bundled JS count as shipped;

@@ -21,17 +21,18 @@ include unknown versions and modified copies.
 Findings concern third-party components rather than your own code.
 Zero findings cannot prove the absence of vulnerabilities.
 
-A failed batch, advisory detail or KEV lookup makes the scan incomplete.
-Reports are still written and scan returns 11. A stale scan, missing release
-or mismatched report set also prevents current evidence in check. Use
-`fendkit doctor`, fix the cause and rerun `fendkit scan`.
-Do not describe a failed lookup as a clean result.
+If any advisory or KEV lookup fails, Fendkit still writes reports but scan
+returns 11. Run `fendkit doctor` to check connections, then retry `fendkit scan`.
+Check also needs reports from the same scan, no older than seven days, and
+access to the recorded release. Its next action explains what needs fixing.
+A failed lookup leaves the evidence incomplete.
 
 ## Decide what a finding means for this product
 
-Investigate the affected version, code path and your shipped copy. Numeric
-fixed versions can suggest an update; unusual version schemes need review
-of the linked source. Test updates in your product before replacing bundles.
+Check whether your shipped copy uses the affected code. Fendkit compares
+numeric versions to suggest updates. For other version schemes, check the
+linked advisory for a suitable fix. Test updates in your product before
+replacing bundled libraries.
 Fendkit does not update libraries for you.
 
 This example uses a finding from the demo. Replace the advisory and exact component
@@ -48,9 +49,9 @@ justification: `component_not_present`, `vulnerable_code_not_present`,
 `vulnerable_code_not_in_execute_path`, `vulnerable_code_cannot_be_controlled_by_adversary`,
 or `inline_mitigations_already_exist`. Keep evidence for the justification you choose.
 
-Triage requires `cra.yml` and readable saved findings. It saves an exact
-advisory/component-version decision in the profile and immediately rewrites
-the vulnerability reports and `vex.openvex.json`, without network access.
+Triage needs `cra.yml` and saved findings it can read. It saves your decision
+for that advisory and component version in the profile. It then rewrites the
+vulnerability reports and `vex.openvex.json`, without network access.
 A decision for one dependency version does not apply to a later version.
 Fendkit exports VEX only when saved triage matches current findings. VEX records
 whether a vulnerability affects this product. Keep decisions tied to this
