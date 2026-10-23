@@ -11,8 +11,9 @@ Related commands:
   incident fix-available
   incident list
 
-Output modes:
-  human, json
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
 
 ## Inherited flags
 
@@ -37,9 +38,11 @@ fendkit incident show <id>
 fendkit incident show inc-1
 ```
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
+
+Use --json to get JSON for scripts and other programs.
 
 ## Related commands
 

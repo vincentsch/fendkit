@@ -17,8 +17,9 @@ Without either, use a single dist/ or build/ ZIP containing the product version.
 Development packages bundled without recognizable evidence need a manual shipped correction or a move to dependencies.
 Use --dry-run to preview the result without writing files.
 
-Output modes:
-  human, json
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
 
 ## Flags
 
@@ -53,10 +54,12 @@ fendkit scan --offline --dir ./my-plugin --json
 fendkit scan --offline --dry-run
 ```
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
 
-## Changes state
+Use --json to get JSON for scripts and other programs.
 
-This command changes state and honors `--dry-run`.
+## Preview changes
+
+This command makes changes. Use `--dry-run` to see what would change without changing anything.

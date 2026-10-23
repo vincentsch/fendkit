@@ -10,8 +10,9 @@ Scans become stale after seven days, inventory changes or product version change
 --ci appends the Markdown report to GITHUB_STEP_SUMMARY when set.
 Use --dry-run to evaluate without writing reports or the CI summary.
 
-Output modes:
-  human, json
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
 
 ## Flags
 
@@ -45,10 +46,12 @@ fendkit check --strict --ci
 fendkit check --json
 ```
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
 
-## Changes state
+Use --json to get JSON for scripts and other programs.
 
-This command changes state and honors `--dry-run`.
+## Preview changes
+
+This command makes changes. Use `--dry-run` to see what would change without changing anything.

@@ -10,8 +10,9 @@ Related commands:
   incident new
   check
 
-Output modes:
-  human, json
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
 
 ## Inherited flags
 
@@ -37,9 +38,11 @@ fendkit incident list
 fendkit incident list --json
 ```
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
+
+Use --json to get JSON for scripts and other programs.
 
 ## Related commands
 

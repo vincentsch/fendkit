@@ -15,8 +15,9 @@ Related commands:
   incident list
   check
 
-Output modes:
-  human, json
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
 
 ## Flags
 
@@ -52,13 +53,15 @@ fendkit incident new --type exploited-vulnerability --title 'Active exploitation
 fendkit incident new --type severe-incident --title 'Service disruption' --confirm
 ```
 
-## Output modes
+## Output
 
-human, json
+Shows text you can read in your terminal.
 
-## Changes state
+Use --json to get JSON for scripts and other programs.
 
-This command changes state and honors `--dry-run`.
+## Preview changes
+
+This command makes changes. Use `--dry-run` to see what would change without changing anything.
 
 ## Related commands
 

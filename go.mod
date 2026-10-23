@@ -6,7 +6,7 @@ require (
 	github.com/CycloneDX/cyclonedx-go v0.12.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/spf13/cobra v1.10.2
-	github.com/vincentsch/rungrad v0.3.2
+	github.com/vincentsch/rungrad v0.3.3
 	golang.org/x/term v0.29.0
 	gopkg.in/yaml.v3 v3.0.1
 )

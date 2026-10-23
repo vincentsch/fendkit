@@ -9,7 +9,7 @@ code=0
 "$tmp/fendkit" demo --offline --out "$tmp/demo" > "$tmp/demo.log" || code=$?
 if [ "$code" -ne 11 ]; then cat "$tmp/demo.log"; echo "Offline demo: expected exit 11, got $code" >&2; exit 1; fi
 root="$tmp/demo/acme-booking"
-go run github.com/vincentsch/rungrad/cmd/rungrad@v0.3.2 score "$tmp/fendkit" \
+go run github.com/vincentsch/rungrad/cmd/rungrad@v0.3.3 score "$tmp/fendkit" \
  --manifest auto --strict \
  --read "incident list --dir $root" \
  --mutate "incident new --type exploited-vulnerability --aware 2026-10-01T09:15:00Z --title test --dir $root" \
