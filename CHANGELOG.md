@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.1.0 - 2026-10-23
+
 - Find WordPress, Composer and npm dependencies in source and release files.
 - Prepare a CycloneDX SBOM, vulnerability findings and OpenVEX decisions.
 - Record maker decisions and create draft CRA documents without replacing existing files.

@@ -189,6 +189,8 @@ Article 14 apply from **11 September 2026**; the main obligations apply from
 [Commission overview](https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act)
 and the [CRA guide](docs/cra-for-plugin-makers.md) for scope and sources.
 
+Built with [rungrad](https://rungrad.com).
+
 ## License
 
 [MIT](LICENSE). See [contributing](CONTRIBUTING.md) to work on Fendkit itself.
