@@ -5,10 +5,12 @@
   <img src="docs/media/fendkit-wordmark-light.svg" alt="Fendkit" width="220" height="56">
 </picture>
 
-Fendkit is a free command-line tool for preparing EU Cyber Resilience Act evidence.
-It checks the third-party components in your release for known vulnerabilities
-and writes draft CRA documents for you to review. It supports WordPress plugins and themes, plus Composer
-and npm packages.
+Fendkit is a free tool for small software makers preparing for the EU Cyber
+Resilience Act, a law about product security. You run it by typing commands in
+your computer's terminal. It checks software you include from other developers
+for known security problems. It also writes draft documents for you to review.
+
+It supports WordPress plugins and themes, plus Composer and npm packages.
 
 [Website](https://www.fendkit.com) · [Guides](#read-the-guides) · [AGENTS.md](AGENTS.md)
 

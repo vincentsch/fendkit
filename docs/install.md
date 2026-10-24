@@ -1,5 +1,10 @@
 # Install Fendkit
 
+Fendkit is a free tool for small software makers preparing for the EU Cyber
+Resilience Act, a law about product security. You run it by typing commands in
+your computer's terminal. It checks software you include from other developers
+for known security problems. It also writes draft documents for you to review.
+
 Install the latest release with Bash. You do not need Go:
 
 ```bash
