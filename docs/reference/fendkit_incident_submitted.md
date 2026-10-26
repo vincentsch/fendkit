@@ -13,10 +13,6 @@ Related commands:
   incident list
   check
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Flags
 
 ```text
@@ -46,16 +42,6 @@ fendkit incident submitted <id>
 ```
 fendkit incident submitted inc-1 --stage early-warning
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
-
-## Preview changes
-
-This command makes changes. Use `--dry-run` to see what would change without changing anything.
 
 ## Related commands
 

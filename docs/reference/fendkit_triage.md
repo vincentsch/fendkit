@@ -10,10 +10,6 @@ not_affected also requires an OpenVEX --justification.
 A new decision replaces the current decision for this advisory group and component version.
 Use --dry-run to preview the decision without writing files.
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Flags
 
 ```text
@@ -46,13 +42,3 @@ fendkit triage <advisory-id>
 fendkit triage GHSA-f2wf-25xc-69c9 --status under_investigation --reason 'Reviewing product usage'
 fendkit triage GHSA-f2wf-25xc-69c9 --status not_affected --justification vulnerable_code_not_in_execute_path --reason 'The product does not use the affected code path'
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
-
-## Preview changes
-
-This command makes changes. Use `--dry-run` to see what would change without changing anything.

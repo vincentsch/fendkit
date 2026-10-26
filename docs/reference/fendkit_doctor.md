@@ -8,10 +8,6 @@ Show ok, information, warning or problem for each check, with a next action.
 Missing cra.yml is information; unresolved runtime versions are coverage warnings.
 Make no repairs or file changes. Exit 2 when any problem exists, otherwise 0.
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Inherited flags
 
 ```text
@@ -35,9 +31,3 @@ fendkit doctor
 fendkit doctor
 fendkit doctor --dir ./my-plugin --json
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.

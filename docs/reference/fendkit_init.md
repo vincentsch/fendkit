@@ -13,10 +13,6 @@ Finish with the evidence status, even after incomplete lookups. Exit 10 for poli
 Refuse to replace cra.yml; use scan, docs and check after setup.
 Use --dry-run to preview without writes, lookups or Git subprocesses.
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Flags
 
 ```text
@@ -49,13 +45,3 @@ fendkit init
 fendkit init --answers answers.yml --no-prompt --release dist/plugin.zip
 fendkit init --offline --no-prompt
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
-
-## Preview changes
-
-This command makes changes. Use `--dry-run` to see what would change without changing anything.

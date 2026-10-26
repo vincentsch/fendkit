@@ -15,10 +15,6 @@ Related commands:
   incident list
   check
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Flags
 
 ```text
@@ -52,16 +48,6 @@ fendkit incident new
 fendkit incident new --type exploited-vulnerability --title 'Active exploitation' --aware '2026-10-20T10:00:00+02:00'
 fendkit incident new --type severe-incident --title 'Service disruption' --confirm
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
-
-## Preview changes
-
-This command makes changes. Use `--dry-run` to see what would change without changing anything.
 
 ## Related commands
 

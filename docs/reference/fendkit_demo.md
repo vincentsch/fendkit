@@ -10,10 +10,6 @@ Use --offline to skip all network requests. Failed lookups still produce reports
 Exit with the final check code: 10 for policy failures, 11 for incomplete evidence, otherwise 0.
 Use --dry-run to preview without copying files or making network requests.
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Flags
 
 ```text
@@ -44,13 +40,3 @@ fendkit demo
 fendkit demo
 fendkit demo --offline --out ./example
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
-
-## Preview changes
-
-This command makes changes. Use `--dry-run` to see what would change without changing anything.

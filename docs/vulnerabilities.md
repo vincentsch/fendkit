@@ -16,7 +16,7 @@ that your product was exploited.
 
 Open `cra/reports/vulnerabilities.md` to see which components have findings
 and which versions fix them. The report links to sources and shows your saved
-triage decisions. JSON keeps the same evidence for other tools. Coverage gaps
+triage decisions. The JSON report contains the same evidence. Coverage gaps
 include unknown versions and modified copies.
 Findings concern third-party components rather than your own code.
 Zero findings cannot prove the absence of vulnerabilities.

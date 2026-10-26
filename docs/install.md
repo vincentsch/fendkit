@@ -1,11 +1,10 @@
 # Install Fendkit
 
-Fendkit is a free tool for small software makers preparing for the EU Cyber
-Resilience Act, a law about product security. You run it by typing commands in
-your computer's terminal. It checks software you include from other developers
-for known security problems. It also writes draft documents for you to review.
+Fendkit is a free, open-source CLI for software makers preparing EU Cyber
+Resilience Act evidence. It scans dependencies for known vulnerabilities and
+generates draft CRA documents.
 
-Install the latest release with Bash. You do not need Go:
+Install the latest release with Bash:
 
 ```bash
 if (
@@ -30,8 +29,7 @@ evidence is missing. If no release is available, the installer says so.
 
 ## Run it on your product
 
-From your product's root, use the ZIP or folder you ship. Replace
-`../dist/plugin.zip` with your release path:
+From your product's root, pass your release ZIP or folder to init:
 
 ```bash
 fendkit doctor

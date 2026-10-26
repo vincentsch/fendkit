@@ -8,10 +8,6 @@ Replace the generated cra/README.md index on each run.
 For not-in-scope, write only the index and preserve existing documents.
 Use --dry-run to list changes without writing files.
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Inherited flags
 
 ```text
@@ -35,13 +31,3 @@ fendkit docs
 fendkit docs
 fendkit docs --dry-run --json
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
-
-## Preview changes
-
-This command makes changes. Use `--dry-run` to see what would change without changing anything.

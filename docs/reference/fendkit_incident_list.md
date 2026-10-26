@@ -10,10 +10,6 @@ Related commands:
   incident new
   check
 
-Output:
-  Shows text you can read in your terminal.
-  Use --json to get JSON for scripts and other programs.
-
 ## Inherited flags
 
 ```text
@@ -37,12 +33,6 @@ fendkit incident list
 fendkit incident list
 fendkit incident list --json
 ```
-
-## Output
-
-Shows text you can read in your terminal.
-
-Use --json to get JSON for scripts and other programs.
 
 ## Related commands
 

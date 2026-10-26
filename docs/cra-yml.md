@@ -35,8 +35,7 @@ Later scan/docs/check preserve unknown decisions without repeating the interview
 
 ## Supported fields
 
-Text may be null when unknown. Dates use YYYY-MM-DD. Booleans use `true`,
-`false` or `null`. Lists are YAML sequences, not comma-separated strings.
+Text and booleans may be null when unknown. Dates use YYYY-MM-DD.
 
 | Section | Fields and accepted values |
 | --- | --- |
@@ -46,7 +45,7 @@ Text may be null when unknown. Dates use YYYY-MM-DD. Booleans use `true`,
 | `role` | `answer`: `manufacturer`, `open-source-steward`, `not-in-scope`, `unknown`; `answers` mapping below; `decided_by`, `decided_on`. |
 | `role.answers` | `sold`, `paid_edition`, `paid_support`, `donations_only`, `hosted_only`, all nullable booleans. |
 | `classification` | `answer`: `default`, `important-class-i`, `important-class-ii`, `critical`, `unknown`; `categories`: list of IDs from init's Annex III/IV list or null; `decided_by`, `decided_on`, `note`. |
-| `security_contact` | `email`, `url`, `policy_url`. Use real contact details; drafts require valid addresses/HTTPS links where appropriate. |
+| `security_contact` | `email`, `url`, `policy_url`. Drafts require valid addresses/HTTPS links where appropriate. |
 | `support` | `end` (date), `versions` (text version line), `updates` (text method). |
 | `components` | List of manual component mappings described below. |
 | `triage` | List of exact advisory/component-version decisions described below. |

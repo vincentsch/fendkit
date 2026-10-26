@@ -57,7 +57,7 @@ no legal advice.
 ## Review, file, then record what happened
 
 `cra/incidents/<id>/` contains `incident.yml`, `early-warning.md`,
-`notification.md`, `final-report.md` and `user-notice.md`. The drafts have fields for you to complete. Their dates do not update
+`notification.md`, `final-report.md` and `user-notice.md`. Draft dates do not update
 automatically. Use `incident show` for the
 current timing after every update. Existing drafts stay untouched.
 

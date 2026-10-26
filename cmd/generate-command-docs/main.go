@@ -27,6 +27,12 @@ func main() {
 func reference() map[string]string {
 	app := cli.New()
 	pages := docsgen.Generate(app)
+	// Omit generic output and preview explanations; flags and long help cover them.
+	boilerplate := strings.NewReplacer(
+		"\n\nOutput:\n  Shows text you can read in your terminal.\n  Use --json to get JSON for scripts and other programs.", "",
+		"## Output\n\nShows text you can read in your terminal.\n\nUse --json to get JSON for scripts and other programs.\n\n", "",
+		"## Preview changes\n\nThis command makes changes. Use `--dry-run` to see what would change without changing anything.\n\n", "",
+	)
 	var walk func(*cobra.Command)
 	walk = func(cmd *cobra.Command) {
 		path := strings.ReplaceAll(cmd.CommandPath(), " ", "_") + ".md"
@@ -52,7 +58,7 @@ func reference() map[string]string {
 				}
 			}
 			page = strings.Replace(page, "## Usage\n", flags+"## Usage\n", 1)
-			pages[path] = strings.TrimRight(page, "\n") + "\n"
+			pages[path] = strings.TrimRight(boilerplate.Replace(page+"\n"), "\n") + "\n"
 		}
 		for _, child := range cmd.Commands() {
 			walk(child)
