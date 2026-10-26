@@ -1,102 +1,115 @@
-# Check a product release in GitHub Actions
+# GitHub Action
 
-Fendkit scans your product release, writes a job summary and uploads its
-reports. Use an Ubuntu runner with Bash, curl, checksum tools, jq and GitHub
-CLI available. GitHub-hosted Ubuntu runners include these tools. macOS and
-Windows runners are not supported by this Action.
+The Fendkit GitHub Action runs Fendkit, a free, open-source CLI for a
+software maker's Cyber Resilience Act evidence, on the release your job
+builds. It runs the scan and the check, writes a job summary and uploads the
+reports. It needs an Ubuntu runner. GitHub-hosted Ubuntu runners have all
+the tools it uses. macOS and Windows runners are not supported.
 
-Run `fendkit init` locally, review your answers and commit `cra.yml`.
-The Action fails before scanning if that file is missing. CI does not run
-the interview. Check out your project and build or download its product
-release before calling the Action.
+A self-hosted Ubuntu runner needs these tools:
 
-See the [consumer example](../examples/github-workflow.yml) for pull requests
-and release events. Use `vincentsch/fendkit@v0.1.0` or pin its commit.
-The example's `make release` is a placeholder for your own product build.
+- Bash and curl
+- sha256sum or shasum
+- jq
+- the GitHub CLI
+
+Run `fendkit init` on your machine, review your answers and commit `cra.yml`.
+Without that file the Action fails before it scans. CI never runs the
+interview. Check out your project and build or download the product release
+before the Action step.
+
+The [example workflow](../examples/github-workflow.yml) covers pull requests
+and release events. Reference the Action as `vincentsch/fendkit@v0.1.0` or pin
+its commit. The `make release` in the example stands for your own build
+command.
 
 ## Inputs and outputs
 
 | Input | Default | Meaning |
 | --- | --- | --- |
-| `version` | `latest` | Fendkit release tag, such as `v0.1.0`. |
-| `working-directory` | `.` | Project root relative to `GITHUB_WORKSPACE`, or an absolute directory. |
-| `release` | omitted | Product ZIP/folder path or glob relative to that project root. |
-| `fail-on` | `policy` | `policy` fails on policy or incomplete evidence; `never` suppresses only those verdicts. |
-| `attach-to-release` | `false` | `true` attaches scan evidence on release events; other events log why attachment was skipped. |
+| `version` | `latest` | The Fendkit release tag, such as `v0.1.0`. |
+| `working-directory` | `.` | Project root, relative to `GITHUB_WORKSPACE` or absolute. |
+| `release` | omitted | Your product ZIP or folder, or a glob, relative to the project root. |
+| `fail-on` | `policy` | `policy` fails on a policy failure or incomplete evidence. `never` keeps the reports without that verdict. |
+| `attach-to-release` | `false` | `true` attaches the scan evidence on release events. On other events the log says why it skipped. |
 
-`release` selects **your product**. `version` selects **Fendkit**.
-An omitted release lets the CLI use `cra.yml` or discover the release.
-A literal folder or ZIP may include spaces or sibling paths such as
-`../dist/product.zip`. A glob must match one file. Zero matches explain what
-to build; multiple matches are listed for you to narrow the pattern.
-Existing literal paths take precedence over wildcard characters in their names.
-Quote input values in YAML when needed; the Action passes them as data.
+`release` selects **your product**. `version` selects **Fendkit**. Without a
+release input, the CLI uses `cra.yml` or looks for the release itself. A
+literal folder or ZIP path may contain spaces or point to a sibling
+directory, like `../dist/product.zip`. A glob has to match a single file.
+With zero matches the log says what to build. With several matches it lists
+them so you can narrow the pattern. A path that exists wins over glob
+characters in its name. Quote the values in YAML when needed. The Action
+passes them as data.
 
-Named outputs `scan-exit-code` and `check-exit-code` contain each command's
-numeric result. A command that did not run has an empty output. The logs also
-show both codes. A fatal scan exposes its code and leaves the check code empty.
+The outputs `scan-exit-code` and `check-exit-code` hold each command's exit
+code. A command that did not run leaves its output empty. The log also shows
+both codes. A fatal scan leaves the check code empty.
 
-The installer verifies the downloaded checksum and uses a runner temporary
-directory. `latest` uses the installer's latest route; a pinned version uses
-its tag route. Installation failures keep their diagnostic output in the log.
-The scan sends package names and versions to OSV.dev and downloads CISA KEV.
-These details can reveal information about your product.
+The installer checks the downloaded checksum and uses a temporary directory
+on the runner. `latest` uses the installer's latest route, a pinned version
+its tag route. When the installation fails, the log keeps the diagnostic. The
+scan sends package names and versions to OSV.dev and downloads CISA KEV. Those
+details can reveal information about your product.
 
 ## Reports and failure policy
 
-The Action runs `scan --no-prompt`, followed by `check --ci --no-prompt`.
-Both receive the resolved project root as `--dir`; scan also receives the
-resolved literal release path when you supply one.
+The Action runs `scan --no-prompt` and then `check --ci --no-prompt`. Both get
+the resolved project root as `--dir`. Scan also gets the resolved release path
+when you supplied one.
 
 After scan exit 0 or 11, it collects `inventory.json`, `sbom.cdx.json`,
 `vulnerabilities.json` and `vulnerabilities.md`, plus `vex.openvex.json` when
-present. Check exit 0, 10 or 11 also collects `status.md` and `status.html`.
-Missing required reports fail collection. Only these files go into a fresh
-artifact directory, uploaded with a pinned artifact Action before the verdict.
-Other files under `cra/reports/` stay out of the upload.
+it exists. After check exit 0, 10 or 11, it adds `status.md` and
+`status.html`. A missing required report fails the collection. Only these
+files go into a fresh artifact directory, which a pinned artifact Action
+uploads before the verdict. Other files under `cra/reports/` stay out of the
+upload.
 
 | CLI results | `policy` | `never` |
 | --- | --- | --- |
 | Scan 0 and check 0 | Succeed | Succeed |
-| Check 10 or either command 11, without an operational error | Fail | Succeed |
-| Unexpected nonzero code, including 1, 2 or 5 | Fail | Fail |
+| Check 10, or either command 11, without an operational error | Fail | Succeed |
+| Any other nonzero code, including 1, 2 or 5 | Fail | Fail |
 
-A scan exit other than 0 or 11 stops check, collection and attachment.
-The summary says `Fendkit scan failed (exit N); no reports from this run`.
-Committed reports remain untouched and are not presented as current output.
+A scan exit other than 0 or 11 stops check, collection and attachment. The
+summary says `Fendkit scan failed (exit N); no reports from this run`.
+Committed reports stay untouched and are not presented as the result of this
+run.
 
 An unexpected check code keeps the scan reports available for upload and
-attachment. Both status pages are omitted, including old copies. The summary
+attachment. Both status pages are left out, including old copies. The summary
 says `Fendkit check failed (exit N); status reports omitted from this run`.
-The Action fails after collection and eligible attachment under either policy.
-Invalid inputs, installation, collection, upload and attachment errors also fail
-under either policy. Incomplete lookups remain visible in the summary and reports.
+The Action fails after the collection and any eligible attachment, under
+either policy. An invalid input or an error in any other step also fails the
+job under either policy. Incomplete lookups stay visible in the summary and
+the reports.
 
 ## Release attachments and permissions
 
-Pull-request checks need only `contents: read`. The release attachment job
-needs `contents: write`. The Action supplies `GH_TOKEN` from `github.token`;
-there is no token input. Keep privileged release jobs separate from untrusted
-pull-request code, as shown in the example. Do not use `pull_request_target`
-to run an untrusted product build with a release token.
+A pull-request check needs only `contents: read`. The release attachment job
+needs `contents: write`. The Action takes `GH_TOKEN` from `github.token`.
+There is no token input. Keep the privileged release job separate from
+untrusted pull-request code, as in the example. Do not use
+`pull_request_target` to build an untrusted product with a release token.
 
-On a release event, the Action uses that event's tag and repository with
-`gh release upload --clobber`. It supplies the current SBOM and any current VEX.
-No VEX is normal when saved triage does not match current findings. Attachment
-runs before the verdict, including incomplete scans and operational check
-failures. A fatal scan or missing current SBOM prevents attachment.
+On a release event, the Action uploads to that event's tag and repository
+with `gh release upload --clobber`. It attaches the current SBOM and the
+current VEX, when there is one. No VEX is normal when the saved triage does
+not match the current findings. The attachment runs before the verdict, also
+for incomplete scans and operational check failures. A fatal scan or a
+missing current SBOM prevents it.
 
-Reruns replace only the files supplied by that invocation. If a rerun has no
-local VEX, an older remote VEX asset remains. Remove that outdated release
-asset manually. The Action never deletes release assets.
+A rerun replaces only the files it supplies. If a rerun has no local VEX, an
+older VEX asset stays on the release. Remove such an outdated asset yourself.
+The Action never deletes release assets.
 
 ## Review the evidence locally
 
-Use [the README quickstart](../README.md#start-on-your-plugin) for the first
-interview. [cra.yml](cra-yml.md) holds saved answers; [inventory](inventory.md)
-explains release boundaries. Read [status items](status-items.md) and
-[vulnerabilities](vulnerabilities.md) before choosing a failure policy.
-Reports cover third-party components rather than your own code. Zero findings
-cannot prove the absence of vulnerabilities. Outputs are drafts and give no
-legal advice. Review [documents](documents.md) locally; the Action does not
-mark them reviewed or file [incident reports](incidents.md).
+Use the [README quickstart](../README.md#start-on-your-plugin) for the first
+interview. [cra.yml](cra-yml.md) holds your saved answers.
+[Inventory](inventory.md) explains the release boundary. Read
+[status items](status-items.md) and [vulnerabilities](vulnerabilities.md)
+before you choose a failure policy. The Action does not mark
+[documents](documents.md) reviewed and does not file
+[incident reports](incidents.md). Review the documents on your machine.

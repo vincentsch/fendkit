@@ -1,64 +1,72 @@
-# Review vulnerability findings
+# Vulnerability findings
 
-Online scans send package names and exact versions to OSV.dev for advisory
-lookups. They also download CISA's Known Exploited Vulnerabilities (KEV) catalog.
-Package names and versions can reveal private dependencies. Offline scans skip
-these requests and remain incomplete. See [privacy](../README.md#privacy-and-limits).
+Fendkit is a free, open-source CLI for software makers who have to prepare
+Cyber Resilience Act evidence. An online scan sends the package names and
+exact versions of your components to OSV.dev and downloads CISA's Known
+Exploited Vulnerabilities (KEV) catalog. Those names and versions can reveal
+private dependencies. An offline scan skips the requests and stays
+incomplete.
 
-Reports retain attribution to [OSV](https://osv.dev/), the
-[GitHub Advisory Database](https://github.com/advisories) under CC-BY 4.0,
-and [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog).
-Reports group identifiers for the same advisory, including when matching KEV
-entries. A KEV match means exploitation has been reported. It does not establish
-that your product was exploited.
+See [privacy and limits](../README.md#privacy-and-limits) for the full list
+of network requests.
+
+The reports keep the attribution to [OSV](https://osv.dev/), the
+[GitHub Advisory Database](https://github.com/advisories) under CC-BY 4.0 and
+[CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog).
+Identifiers for the same advisory are grouped, even when a KEV entry matches.
+A KEV match means that exploitation has been reported somewhere. It does not
+mean that your product was exploited.
 
 ## Read the reports
 
-Open `cra/reports/vulnerabilities.md` to see which components have findings
-and which versions fix them. The report links to sources and shows your saved
-triage decisions. The JSON report contains the same evidence. Coverage gaps
-include unknown versions and modified copies.
-Findings concern third-party components rather than your own code.
-Zero findings cannot prove the absence of vulnerabilities.
+Open `cra/reports/vulnerabilities.md`. It shows which components have
+findings and which versions fix them. It links to the sources and shows your
+saved triage decisions. The JSON report has the same evidence. Coverage gaps
+are components with an unknown version and modified copies. The findings
+cover third-party components. Fendkit does not check your own code. Zero
+findings do not prove that there are no vulnerabilities.
 
-If any advisory or KEV lookup fails, Fendkit still writes reports but scan
-returns 11. Run `fendkit doctor` to check connections, then retry `fendkit scan`.
-Check also needs reports from the same scan, no older than seven days, and
-access to the recorded release. Its next action explains what needs fixing.
-A failed lookup leaves the evidence incomplete.
+If an advisory or KEV lookup fails, Fendkit still writes the reports, but
+scan returns 11. Run `fendkit doctor` to check the connection, then run
+`fendkit scan` again. Check also needs reports from the same scan, no older
+than seven days, and access to the recorded release. Its next action says
+what to fix. A failed lookup leaves the evidence incomplete.
 
 ## Decide what a finding means for this product
 
-Check whether your shipped copy uses the affected code. Fendkit compares
-numeric versions to suggest updates. For other version schemes, check the
-linked advisory for a suitable fix. Test updates in your product before
-replacing bundled libraries.
-Fendkit does not update libraries for you.
+Check whether the copy you ship uses the affected code. Fendkit compares
+numeric versions and suggests an update. For other version schemes, read the
+linked advisory to find a fix. Test an update in your product before you
+replace a bundled library. Fendkit does not update libraries for you.
 
-This example uses a finding from the demo. Replace the advisory and exact component
-package URL (purl) with values from your own saved report:
+The example uses a finding from the demo. Replace the advisory ID and the
+component package URL (purl) with values from your own report:
 
 ```bash
 fendkit triage GHSA-f2wf-25xc-69c9 --component 'pkg:npm/moment@2.24.0' --status under_investigation --reason 'Reviewing where this product uses the affected code'
 ```
 
-Use `affected` with your intended response, `under_investigation` while checking,
-`fixed` when the finding has been addressed, or `not_affected` with evidence.
-Every decision requires a reason. `not_affected` also requires an OpenVEX
+The status is `affected` with your intended response, `under_investigation`
+while you check, `fixed` once you have addressed it, or `not_affected` with
+evidence. Every decision needs a reason. `not_affected` also needs an OpenVEX
 justification: `component_not_present`, `vulnerable_code_not_present`,
-`vulnerable_code_not_in_execute_path`, `vulnerable_code_cannot_be_controlled_by_adversary`,
-or `inline_mitigations_already_exist`. Keep evidence for the justification you choose.
+`vulnerable_code_not_in_execute_path`,
+`vulnerable_code_cannot_be_controlled_by_adversary` or
+`inline_mitigations_already_exist`. Keep the evidence for the justification
+you choose.
 
-Triage needs `cra.yml` and saved findings it can read. It saves your decision
-for that advisory and component version in the profile. It then rewrites the
-vulnerability reports and `vex.openvex.json`, without network access.
-A decision for one dependency version does not apply to a later version.
-Fendkit exports VEX only when saved triage matches current findings. VEX records
-whether a vulnerability affects this product. Keep decisions tied to this
-product rather than copying them to unrelated products.
+Triage needs `cra.yml` with `manufacturer.name` set, and saved findings it
+can read. It saves your decision for that advisory and component version in
+the profile and rewrites the vulnerability reports and `vex.openvex.json`.
+VEX (Vulnerability Exploitability eXchange) is a machine-readable record of
+whether a vulnerability affects this product. Fendkit exports it only when
+the saved triage matches the current findings. Triage makes no network
+requests. A decision for one version does not carry over to a later version.
+Keep the decisions tied to this product and do not copy them to another one.
 
 Run [check](status-items.md) after triage. Open KEV findings in shipped or
-possibly shipped components fail policy. Ordinary findings still need review
-even when check exits 0. If exploitation or a severe incident affects your
-product, review [incident handling](incidents.md); advisory discovery alone
-does not establish the maker's awareness time for a reportable event.
+possibly shipped components fail the policy. Ordinary findings still need
+your review, even when check exits 0. If your product is affected by
+exploitation or by a severe incident, read [incident handling](incidents.md).
+Finding an advisory is not by itself the moment you became aware of a
+reportable event.

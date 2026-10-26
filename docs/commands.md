@@ -1,11 +1,10 @@
 # Command reference
 
-The [generated reference](reference/index.md) lists commands and flags from the
-same command tree as `fendkit --help`. Each page shows usage and help text, with defaults for its flags.
+Fendkit is a free, open-source CLI for software makers preparing Cyber
+Resilience Act evidence. The [generated reference](reference/index.md) lists
+every command and flag from the same command tree as `fendkit --help`. Each
+page shows the usage, the help text and the defaults of its flags.
 
-Start with [the README quickstart](../README.md#start-on-your-plugin).
-For decisions and outputs, read [cra.yml](cra-yml.md),
-[inventory](inventory.md), [vulnerabilities](vulnerabilities.md),
-[documents](documents.md), [status items](status-items.md) and
-[incidents](incidents.md). Use [the GitHub Action](github-action.md)
-to run saved-profile checks on releases.
+Start with [the README quickstart](../README.md#start-on-your-plugin). The
+[GitHub Action](github-action.md) runs the saved-profile checks on your
+releases.

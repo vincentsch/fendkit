@@ -1,37 +1,38 @@
-# Keep decisions in cra.yml
+# cra.yml
 
-`cra.yml` is a versioned YAML record in your product root. Commit it with the
-product. Init combines detected facts with your answers. Later commands read
-this file without repeating the interview. Init refuses to replace an existing
-profile. Invalid fields or values stop the command with an error.
+`cra.yml` is where Fendkit, a free, open-source CLI for Cyber Resilience Act
+evidence, keeps a software maker's answers and decisions. It is a versioned
+YAML file in your product root. Commit it with the product. Init
+combines the detected facts with your answers and writes the file. Later
+commands read it and do not repeat the interview. Init refuses to replace an
+existing profile. An invalid field or value stops the command with an error.
 
 ## Partial answers and unknowns
 
-An answers file uses the same schema, starting with `version: 1`. Omitted fields
-remain for detection or the interview. With `--no-prompt`, unanswered decisions
-stay unknown. Use a temporary file outside your product repository, then remove
-it. See the [tested partial answers example](../AGENTS.md#partial-answers-example).
+An answers file uses the same schema and starts with `version: 1`. Fields you
+leave out come from detection or from the interview. With `--no-prompt`,
+decisions you did not answer stay unknown. Put the file outside your product
+repository and remove it afterwards. See the
+[tested partial answers example](../AGENTS.md#partial-answers-example).
 
 ```bash
 fendkit init --no-prompt --answers /tmp/maker-answers.yml --release ../dist/plugin.zip
 ```
 
-The file must contain your own answers, not the example maker's details.
-`classification.categories: null` means unknown; `[]` deliberately records
-that none of the Annex III/IV categories apply. Never substitute `[]` for an
-unknown decision. Init derives the highest class from explicitly selected
-categories. Keep an unknown `classification.answer` as `unknown` with null
-categories. If you decide that no listed category applies, init saves `default` with `[]`.
-If you supply both an answer and categories, they must agree. `unknown` or null
-answers need null or omitted categories, rather than a list. A conflict stops
-the command and names the field to fix. If you supply only categories, init
-records the highest selected class. Saving partial answers before init keeps
-the answer omitted. Existing profiles with only an answer need no added categories.
+The file has to hold your own answers. `classification.categories: null`
+means unknown. `[]` records on purpose that none of the Annex III/IV
+categories applies, so never write `[]` for a decision you have not made. If
+you give categories, init records the highest class among them. The answer
+may stay out of the file. If you give both, they have to agree, or init stops
+and names the field. An `unknown` or null answer goes with null or omitted
+categories. When you decide in the interview that no listed category applies,
+init saves `default` with `[]`. An existing profile with only an answer does
+not need categories added.
 
-Init preserves supplied decision dates, explicit null dates and reviewer names.
-Only an omitted date for a decided answer is filled with today’s date. Unknown
-or unanswered decisions remain undated.
-Later scan/docs/check preserve unknown decisions without repeating the interview.
+Init keeps the decision dates and reviewer names you supply. An explicit null
+date stays null. Only a decided answer without a date gets today's date. Unknown or
+unanswered decisions stay without a date. Later scan, docs and check keep
+unknown decisions and do not repeat the interview.
 
 ## Supported fields
 
@@ -45,32 +46,34 @@ Text and booleans may be null when unknown. Dates use YYYY-MM-DD.
 | `role` | `answer`: `manufacturer`, `open-source-steward`, `not-in-scope`, `unknown`; `answers` mapping below; `decided_by`, `decided_on`. |
 | `role.answers` | `sold`, `paid_edition`, `paid_support`, `donations_only`, `hosted_only`, all nullable booleans. |
 | `classification` | `answer`: `default`, `important-class-i`, `important-class-ii`, `critical`, `unknown`; `categories`: list of IDs from init's Annex III/IV list or null; `decided_by`, `decided_on`, `note`. |
-| `security_contact` | `email`, `url`, `policy_url`. Drafts require valid addresses/HTTPS links where appropriate. |
+| `security_contact` | `email`, `url`, `policy_url`. Drafts need valid addresses and HTTPS links where they ask for them. |
 | `support` | `end` (date), `versions` (text version line), `updates` (text method). |
-| `components` | List of manual component mappings described below. |
-| `triage` | List of exact advisory/component-version decisions described below. |
+| `components` | List of manual component mappings, described below. |
+| `triage` | List of decisions per advisory and component version, described below. |
 
-Release paths and patterns resolve relative to the project root, including
-sibling paths. `--release` overrides the saved path for that scan. Update the profile's
-path when you want later scans to use a different release. Unknown product versions need a real version
-before evidence can be current. See [inventory](inventory.md).
-Windows releases on another drive are kept as absolute paths that work only
-on that machine and may expose personal directory names when reports are shared.
+Release paths and patterns count from the project root, even for sibling
+paths. `--release` overrides the saved path for one scan. Change the path in
+the profile when later scans should use another release. An unknown product
+version needs a known version before the evidence can be current. See
+[inventory](inventory.md). A release on another Windows drive is kept as an
+absolute path. That path works only on that machine and can show a personal
+directory name when you share the reports.
 
 ## Manual components
 
-Each component supports `name`, `version`, `ecosystem`, `purl`, `path`, `shipped`
-and `note`. Use `npm` or `composer` for supported vulnerability lookups.
-Omit `shipped` to keep detected behavior; `true` and `false` are explicit
-decisions, and `shipped: null` explicitly makes that occurrence unknown.
-Init and triage preserve these values and your comments. When the same component
-appears more than once, one shipped copy makes the group shipped. Otherwise,
-one unknown copy makes the group unknown. Known versions and purls must come
-from evidence.
+Each component takes `name`, `version`, `ecosystem`, `purl`, `path`, `shipped`
+and `note`. Use the ecosystem `npm` or `composer` to get vulnerability
+lookups. Leave `shipped` out to keep what detection found. `true` and `false`
+are explicit decisions, and `shipped: null` marks that occurrence as unknown
+on purpose. Init and triage keep these values and your comments. When the
+same component appears more than once, one shipped copy makes the group
+shipped. Otherwise one unknown copy makes the group unknown. Known versions
+and purls have to come from evidence.
 
-To add an unrecognized library, omit `path`. That field only matches an
-already detected occurrence. Record the file location and shipping evidence
-in `note`. This example leaves the version unknown until you verify it:
+To add a library that detection did not recognise, leave `path` out. That
+field only matches an occurrence that was already detected. Put the file
+location and the shipping evidence in `note`. This example leaves the version
+unknown until you have verified it:
 
 ```yaml
 components:
@@ -82,8 +85,9 @@ components:
     note: "assets/js/widget.min.js is present in the shipped ZIP; version not yet verified"
 ```
 
-To correct an already detected occurrence, use its exact path from
-`cra/reports/inventory.json`. For example, after verifying the shipped banner:
+To correct an occurrence that was detected, use its exact path from
+`cra/reports/inventory.json`. For example, after you verified the version in
+the shipped banner:
 
 ```yaml
 components:
@@ -96,18 +100,19 @@ components:
     note: Version verified from the shipped banner
 ```
 
-Manual entries can add or correct detected evidence; they do not make unsupported
-formats covered or prove the absence of other bundles.
+Manual entries add to or correct the detected evidence. They do not make an
+unsupported format covered and do not prove that there are no other bundles.
 
 ## Saved triage
 
 Prefer [the triage command](vulnerabilities.md#decide-what-a-finding-means-for-this-product).
-Each record has `advisory`, `component` (exact purl including version), `status`,
-`justification`, `reason`, `decided_on`. Status is `affected`, `not_affected`,
-`fixed` or `under_investigation`. All need a reason and decision date;
-`not_affected` also needs a supported OpenVEX justification. See
-[the generated reference](reference/fendkit_triage.md) for its values.
+Each record has `advisory`, `component` (the exact purl with version),
+`status`, `justification`, `reason` and `decided_on`. The status is
+`affected`, `not_affected`, `fixed` or `under_investigation`. All need a
+reason and a decision date. `not_affected` also needs a supported OpenVEX
+justification. See [the generated reference](reference/fendkit_triage.md)
+for the values.
 
-Profile updates by triage preserve YAML comments. Scan and docs do not save
-new answers. Existing maker documents also remain untouched; review changed
-facts yourself using [the documents guide](documents.md).
+When triage updates the profile, it keeps your YAML comments. Scan and docs do
+not save new answers. Your existing documents also stay untouched. Review
+changed facts yourself with [the documents guide](documents.md).

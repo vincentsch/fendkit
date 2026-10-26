@@ -1,10 +1,11 @@
 # Install Fendkit
 
-Fendkit is a free, open-source CLI for software makers preparing EU Cyber
-Resilience Act evidence. It scans dependencies for known vulnerabilities and
-generates draft CRA documents.
+Fendkit is a free, open-source CLI for software makers who sell or distribute
+software in the EU and have to prepare for the Cyber Resilience Act. It finds
+the third-party components you ship, checks them for known vulnerabilities and
+writes the CRA documents as drafts. It runs on Linux, macOS and Windows.
 
-Install the latest release with Bash:
+Install the latest release with Bash on Linux or macOS:
 
 ```bash
 if (
@@ -19,33 +20,38 @@ if (
 fi
 ```
 
-The installer checks SHA-256 before replacing an existing installation.
-It downloads assets from GitHub Releases without calling the GitHub API.
-It installs into `~/.local/bin` on Linux and macOS, or Windows with a compatible
-Bash. The script is downloaded into a temporary directory, then removed.
-The demo uses a bundled fictional plugin and makes online vulnerability lookups.
-Use `fendkit demo --offline` to skip those requests; it exits 11 because lookup
-evidence is missing. If no release is available, the installer says so.
+The installer downloads the binary and `checksums.txt` straight from GitHub
+Releases, without the GitHub API. It checks the SHA-256 hash before it
+replaces an installed version. It installs into `~/.local/bin`. On Windows it
+works in Git Bash or another Bash. The script itself lands in a temporary
+directory and is removed afterwards.
+
+`fendkit demo` copies a fictional plugin into `./fendkit-demo/` and runs the
+whole sequence on it, with online vulnerability lookups. `fendkit demo
+--offline` skips those lookups. The demo then exits 11, because the evidence
+is incomplete without them.
 
 ## Run it on your product
 
-From your product's root, pass your release ZIP or folder to init:
+Go to your product's root and point init at the ZIP or folder you ship:
 
 ```bash
 fendkit doctor
 fendkit init --release ../dist/plugin.zip
 ```
 
-A missing profile is normal before init. Init shows the inventory before asking
-for your decisions. It saves them in `cra.yml` and writes drafts and reports. Unknown
-answers stay visible for later review. Read `cra/README.md` for the document
-index and open `cra/reports/status.html` for next actions.
+Doctor checks your setup and the connection to OSV.dev and CISA. Before init
+there is no `cra.yml` yet. Doctor says so, and that is normal. Init shows what
+it found before it asks you anything. It saves your answers in `cra.yml`,
+writes the drafts and the reports, and leaves unknown answers visible for
+later. `cra/README.md` is the index of all documents. `cra/reports/status.html`
+shows the next actions.
 
-From another directory, add `--dir /path/to/product` to each command.
-Relative release paths resolve from that product directory, not your current
-shell directory; absolute release paths also work.
+To run Fendkit from another directory, add `--dir /path/to/product` to each
+command. A relative release path then counts from that product directory, not
+from the directory your shell is in. Absolute paths also work.
 
-For later checks, keep `product.release` in `cra.yml` current and run:
+For each later release, keep `product.release` in `cra.yml` current and run:
 
 ```bash
 fendkit scan
@@ -53,60 +59,62 @@ fendkit docs
 fendkit check
 ```
 
-Run docs and check after scan exits 0 (complete) or 11 (incomplete).
-For any other scan exit, stop and repair the operational error first.
-Use `scan --release ../dist/plugin.zip` only to override the saved release.
-Check exit 10 means a policy failure; 11 means missing, incomplete or stale
-evidence without a higher-priority policy failure. Exit 0 does not mean the
-drafts are reviewed. Review the drafts yourself; outputs give no legal advice.
-See [status rules](status-items.md) and [network requests and limits](../README.md#privacy-and-limits).
+Run docs and check after scan exits 0 (complete) or 11 (incomplete). Any
+other scan exit is an error. Stop and fix it first. Pass
+`--release ../dist/plugin.zip` to scan only when you want to override the
+saved release. Check exits 10 for a policy failure. It exits 11 when the scan
+evidence is missing, incomplete or stale and nothing worse applies. Exit 0
+does not mean you have reviewed the drafts. Fendkit gives no legal advice.
+See [status items](status-items.md) and
+[privacy and limits](../README.md#privacy-and-limits).
 
 ## Native Windows
 
-Download `fendkit-windows-amd64.exe` or `fendkit-windows-arm64.exe`
-and `checksums.txt` from the same [release](https://github.com/vincentsch/fendkit/releases).
-In PowerShell, compare the SHA-256 hash with that asset's line in `checksums.txt`:
+Download `fendkit-windows-amd64.exe` or `fendkit-windows-arm64.exe` and
+`checksums.txt` from the [release](https://github.com/vincentsch/fendkit/releases).
+In PowerShell, compare the SHA-256 hash with the line for that file in
+`checksums.txt`:
 
 ```powershell
 Get-FileHash .\fendkit-windows-amd64.exe -Algorithm SHA256
 ```
 
-Only after the values match, rename the binary to `fendkit.exe` and put it
-in a directory on PATH. Run `fendkit --version` to check the installation.
+When the hashes match, rename the file to `fendkit.exe` and put it in a
+directory on PATH. `fendkit --version` shows that it works.
 
 ## Other installation settings
 
-To choose another directory or pin a tag, replace the `bash` line in the install
-block above with:
+To install into another directory or pin a version, replace the `bash` line
+in the block above with:
 
 ```bash
 INSTALL_DIR="$HOME/bin" FENDKIT_VERSION=v0.1.0 bash "$fendkit_installer_dir/install.sh"
 ```
 
-Then add that directory to PATH with `export PATH="$HOME/bin:$PATH"`.
-The installer also prints the PATH command for your chosen directory.
-It needs `curl` and either `sha256sum` or `shasum`. It never runs `sudo`.
+Then add that directory to PATH with `export PATH="$HOME/bin:$PATH"`. The
+installer prints this command for the directory you chose. It needs `curl`
+and either `sha256sum` or `shasum`. It never runs `sudo`.
 
-For a mirror, set `FENDKIT_RELEASES_URL` on the same `bash` line.
-Latest downloads use `<url>/latest/download/<asset>`. A selected tag uses
-`<url>/download/<tag>/<asset>`, including for `checksums.txt`.
+For a mirror, set `FENDKIT_RELEASES_URL` on the same `bash` line. The latest
+release is downloaded from `<url>/latest/download/<asset>`. A pinned tag uses
+`<url>/download/<tag>/<asset>`, for the binary and for `checksums.txt`.
 
 ## Build from source
 
-Use the Go version in `go.mod`. Run `make build` to create `bin/fendkit`,
-or run `go install ./cmd/fendkit` to install into your Go bin directory.
-An untagged source build reports `dev`. Once a tag is public, a versioned install
-such as `go install github.com/vincentsch/fendkit/cmd/fendkit@v0.1.0`
-uses its module version.
+Use the Go version in `go.mod`. `make build` writes `bin/fendkit`.
+`go install ./cmd/fendkit` installs into your Go bin directory. A build from
+an untagged checkout reports the version `dev`. Once a tag is public,
+`go install github.com/vincentsch/fendkit/cmd/fendkit@v0.1.0` reports that
+module version.
 
-When Go is available and the public module is reachable, the latest tagged
-version can also be installed with:
+With Go and access to the public module, you can also install the latest
+tagged version:
 
 ```bash
 go install github.com/vincentsch/fendkit/cmd/fendkit@latest
 ```
 
-If no public release is available, build from source with checkout access.
-Keep checksum verification for binary downloads.
-Return to [the README](../README.md#install-and-try-the-example)
-for the complete first run, or use [agent instructions](../AGENTS.md).
+If you download a binary by hand, compare its SHA-256 hash with
+`checksums.txt` as in the Windows section. The
+[README](../README.md#install-and-try-the-example) has the complete first run.
+[AGENTS.md](../AGENTS.md) has the steps for a coding agent.
